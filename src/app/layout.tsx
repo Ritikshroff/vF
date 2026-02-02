@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ViralFluencer - Premier Influencer Marketing Platform",
-  description: "Connect with top influencers and grow your brand. The leading platform for influencer marketing campaigns.",
+  description:
+    "Connect with top influencers and grow your brand. The leading platform for influencer marketing campaigns.",
 };
 
 export default function RootLayout({
@@ -27,10 +28,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
