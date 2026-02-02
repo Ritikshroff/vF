@@ -1,69 +1,74 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Bell, CheckCheck, X } from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
-import { getUserNotifications, getUnreadCount, markAsRead, markAllAsRead } from '@/mock-data/notifications'
-import type { Notification } from '@/mock-data/notifications'
+import { useState, useEffect } from "react";
+import { Bell, CheckCheck, X } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+  getUserNotifications,
+  getUnreadCount,
+  markAsRead,
+  markAllAsRead,
+} from "@/mock-data/notifications";
+import type { Notification } from "@/mock-data/notifications";
 
 interface NotificationsDropdownProps {
-  userId: string
+  userId: string;
 }
 
 export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    loadNotifications()
-  }, [userId])
+    loadNotifications();
+  }, [userId]);
 
   const loadNotifications = () => {
-    const userNotifs = getUserNotifications(userId)
-    setNotifications(userNotifs)
-    setUnreadCount(getUnreadCount(userId))
-  }
+    const userNotifs = getUserNotifications(userId);
+    setNotifications(userNotifs);
+    setUnreadCount(getUnreadCount(userId));
+  };
 
   const handleMarkAsRead = (notificationId: string) => {
-    markAsRead(notificationId)
-    loadNotifications()
-  }
+    markAsRead(notificationId);
+    loadNotifications();
+  };
 
   const handleMarkAllAsRead = () => {
-    markAllAsRead(userId)
-    loadNotifications()
-  }
+    markAllAsRead(userId);
+    loadNotifications();
+  };
 
-  const getNotificationIcon = (type: Notification['type']) => {
+  const getNotificationIcon = (type: Notification["type"]) => {
     const iconMap = {
-      campaign_invite: '🎯',
-      campaign_application: '📝',
-      campaign_accepted: '✅',
-      campaign_rejected: '❌',
-      message: '💬',
-      payment: '💰',
-      content_approved: '👍',
-      content_revision: '✏️',
-      deadline_reminder: '⏰',
-      milestone: '🎉',
-    }
-    return iconMap[type] || '🔔'
-  }
+      campaign_invite: "🎯",
+      campaign_application: "📝",
+      campaign_accepted: "✅",
+      campaign_rejected: "❌",
+      message: "💬",
+      payment: "💰",
+      content_approved: "👍",
+      content_revision: "✏️",
+      deadline_reminder: "⏰",
+      milestone: "🎉",
+    };
+    return iconMap[type] || "🔔";
+  };
 
   const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (seconds < 60) return 'Just now'
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-    return `${Math.floor(seconds / 86400)}d ago`
-  }
+    if (seconds < 60) return "Just now";
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+  };
 
   return (
     <div className="relative">
@@ -75,10 +80,10 @@ export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
         <Bell className="h-6 w-6" />
         {unreadCount > 0 && (
           <Badge
-            variant="destructive"
+            variant="secondary"
             className="absolute -top-1 -right-1 h-5 min-w-[20px] p-0 flex items-center justify-center text-xs"
           >
-            {unreadCount > 9 ? '9+' : unreadCount}
+            {unreadCount > 9 ? "9+" : unreadCount}
           </Badge>
         )}
       </button>
@@ -127,13 +132,15 @@ export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
                   {notifications.map((notification) => (
                     <Link
                       key={notification.id}
-                      href={notification.link || '#'}
+                      href={notification.link || "#"}
                       onClick={() => {
-                        handleMarkAsRead(notification.id)
-                        setIsOpen(false)
+                        handleMarkAsRead(notification.id);
+                        setIsOpen(false);
                       }}
                       className={`block p-4 border-b border-[rgb(var(--border))] hover:bg-[rgb(var(--surface))] transition-colors ${
-                        !notification.read ? 'bg-[rgb(var(--brand-primary))]/5' : ''
+                        !notification.read
+                          ? "bg-[rgb(var(--brand-primary))]/5"
+                          : ""
                       }`}
                     >
                       <div className="flex gap-3">
@@ -184,5 +191,5 @@ export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
         </>
       )}
     </div>
-  )
+  );
 }
