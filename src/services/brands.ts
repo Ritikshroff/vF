@@ -122,7 +122,7 @@ export const fetchBrandAnalytics = async (brandId: string) => {
       completed_campaigns: brand.completed_campaigns,
       total_spend: brand.total_spent,
       total_reach: brand.metrics.total_reach,
-      avg_roi: brand.metrics.avg_roi,
+      avg_roi: brand.metrics?.avg_campaign_roi,
       avg_campaign_budget: brand.avg_campaign_budget,
     },
     performance: brand.metrics,
