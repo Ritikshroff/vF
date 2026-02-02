@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Filter,
@@ -16,173 +16,178 @@ import {
   ExternalLink,
   Calendar,
   User,
-} from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Avatar } from '@/components/ui/avatar'
-import { useAuth } from '@/contexts/auth-context'
-import { fetchInfluencerContent } from '@/services/content'
-import { fetchBrandCampaigns } from '@/services/campaigns'
-import { getBrandByUserId, getAllBrands } from '@/mock-data/brands'
-import { getAllInfluencers } from '@/mock-data/influencers'
-import type { ContentItem } from '@/mock-data/content'
-import { formatCompactNumber } from '@/lib/utils'
-import { staggerContainer, staggerItem } from '@/lib/animations'
+} from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/auth-context";
+import { fetchInfluencerContent } from "@/services/content";
+import { fetchBrandCampaigns } from "@/services/campaigns";
+import { getBrandByUserId, getAllBrands } from "@/mock-data/brands";
+import { getAllInfluencers } from "@/mock-data/influencers";
+import type { ContentItem } from "@/mock-data/content";
+import { formatCompactNumber } from "@/lib/utils";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 
 // Extended content type with approval status
 type ReviewableContent = ContentItem & {
-  influencer_name?: string
-  influencer_avatar?: string
-  review_status?: 'pending' | 'approved' | 'rejected' | 'revision_requested'
-}
+  influencer_name?: string;
+  influencer_avatar?: string;
+  review_status?: "pending" | "approved" | "rejected" | "revision_requested";
+};
 
 export default function BrandContentReviewPage() {
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [content, setContent] = useState<ReviewableContent[]>([])
-  const [campaigns, setCampaigns] = useState<any[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterCampaign, setFilterCampaign] = useState<string>('all')
-  const [filterStatus, setFilterStatus] = useState<string>('pending')
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState<ReviewableContent[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCampaign, setFilterCampaign] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("pending");
 
   useEffect(() => {
-    loadContent()
-  }, [user])
+    loadContent();
+  }, [user]);
 
   const loadContent = async () => {
-    if (!user) return
+    if (!user) return;
 
     try {
-      let brand = getBrandByUserId(user.id)
+      let brand = getBrandByUserId(user.id);
 
       // Fallback: use first brand for demo
       if (!brand) {
-        console.warn(`No brand found for user ID: ${user.id}, using fallback brand`)
-        brand = getAllBrands()[0]
+        console.warn(
+          `No brand found for user ID: ${user.id}, using fallback brand`,
+        );
+        brand = getAllBrands()[0];
       }
 
       if (brand) {
         // Get brand's campaigns
-        const campaignsData = await fetchBrandCampaigns(brand.id)
-        setCampaigns(campaignsData)
+        const campaignsData = await fetchBrandCampaigns(brand.id);
+        setCampaigns(campaignsData);
 
         // Get all influencers
-        const allInfluencers = getAllInfluencers()
+        const allInfluencers = getAllInfluencers();
 
         // Get content from all accepted influencers across all campaigns
-        const allContent: ReviewableContent[] = []
+        const allContent: ReviewableContent[] = [];
 
         for (const campaign of campaignsData) {
           for (const infId of campaign.accepted_influencers) {
-            const influencer = allInfluencers.find((i) => i.id === infId)
+            const influencer = allInfluencers.find((i) => i.id === infId);
             if (influencer) {
               const infContent = await fetchInfluencerContent(infId, {
                 campaign_id: campaign.id,
-                status: 'published',
-              })
+                status: "published",
+              });
 
               // Add influencer info and mock review status
               const enrichedContent = infContent.map((c) => ({
                 ...c,
-                influencer_name: influencer.name,
+                influencer_name: influencer.fullName,
                 influencer_avatar: influencer.avatar,
                 review_status: (Math.random() > 0.7
-                  ? 'pending'
+                  ? "pending"
                   : Math.random() > 0.5
-                  ? 'approved'
-                  : 'revision_requested') as any,
-              }))
+                    ? "approved"
+                    : "revision_requested") as any,
+              }));
 
-              allContent.push(...enrichedContent)
+              allContent.push(...enrichedContent);
             }
           }
         }
 
-        setContent(allContent)
+        setContent(allContent);
       }
     } catch (error) {
-      console.error('Error loading content:', error)
+      console.error("Error loading content:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleApprove = (contentId: string) => {
     setContent(
       content.map((c) =>
-        c.id === contentId ? { ...c, review_status: 'approved' as const } : c
-      )
-    )
-  }
+        c.id === contentId ? { ...c, review_status: "approved" as const } : c,
+      ),
+    );
+  };
 
   const handleReject = (contentId: string) => {
     setContent(
       content.map((c) =>
-        c.id === contentId ? { ...c, review_status: 'rejected' as const } : c
-      )
-    )
-  }
+        c.id === contentId ? { ...c, review_status: "rejected" as const } : c,
+      ),
+    );
+  };
 
   const handleRequestRevision = (contentId: string) => {
     setContent(
       content.map((c) =>
-        c.id === contentId ? { ...c, review_status: 'revision_requested' as const } : c
-      )
-    )
-  }
+        c.id === contentId
+          ? { ...c, review_status: "revision_requested" as const }
+          : c,
+      ),
+    );
+  };
 
   const filteredContent = content.filter((item) => {
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.influencer_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      item.influencer_name?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCampaign =
-      filterCampaign === 'all' || item.campaign_id === filterCampaign
+      filterCampaign === "all" || item.campaign_id === filterCampaign;
 
     const matchesStatus =
-      filterStatus === 'all' || item.review_status === filterStatus
+      filterStatus === "all" || item.review_status === filterStatus;
 
-    return matchesSearch && matchesCampaign && matchesStatus
-  })
+    return matchesSearch && matchesCampaign && matchesStatus;
+  });
 
   const stats = {
     total: content.length,
-    pending: content.filter((c) => c.review_status === 'pending').length,
-    approved: content.filter((c) => c.review_status === 'approved').length,
-    revision: content.filter((c) => c.review_status === 'revision_requested').length,
-  }
+    pending: content.filter((c) => c.review_status === "pending").length,
+    approved: content.filter((c) => c.review_status === "approved").length,
+    revision: content.filter((c) => c.review_status === "revision_requested")
+      .length,
+  };
 
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case 'approved':
-        return 'success'
-      case 'rejected':
-        return 'destructive'
-      case 'revision_requested':
-        return 'warning'
-      case 'pending':
-        return 'default'
+      case "approved":
+        return "success";
+      case "rejected":
+        return "destructive";
+      case "revision_requested":
+        return "warning";
+      case "pending":
+        return "default";
       default:
-        return 'default'
+        return "default";
     }
-  }
+  };
 
   const getStatusIcon = (status?: string) => {
     switch (status) {
-      case 'approved':
-        return CheckCircle2
-      case 'rejected':
-        return XCircle
-      case 'revision_requested':
-      case 'pending':
-        return Clock
+      case "approved":
+        return CheckCircle2;
+      case "rejected":
+        return XCircle;
+      case "revision_requested":
+      case "pending":
+        return Clock;
       default:
-        return Clock
+        return Clock;
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -196,7 +201,7 @@ export default function BrandContentReviewPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -249,7 +254,9 @@ export default function BrandContentReviewPage() {
                 <div className="text-2xl md:text-3xl font-bold text-green-500 mb-1">
                   {stats.approved}
                 </div>
-                <div className="text-xs md:text-sm text-[rgb(var(--muted))]">Approved</div>
+                <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
+                  Approved
+                </div>
               </CardContent>
             </Card>
 
@@ -283,18 +290,18 @@ export default function BrandContentReviewPage() {
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
               {/* Status Filters */}
               {[
-                { value: 'pending', label: 'Pending Review' },
-                { value: 'approved', label: 'Approved' },
-                { value: 'revision_requested', label: 'Needs Revision' },
-                { value: 'all', label: 'All' },
+                { value: "pending", label: "Pending Review" },
+                { value: "approved", label: "Approved" },
+                { value: "revision_requested", label: "Needs Revision" },
+                { value: "all", label: "All" },
               ].map((status) => (
                 <button
                   key={status.value}
                   onClick={() => setFilterStatus(status.value)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                     filterStatus === status.value
-                      ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
-                      : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                      ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg"
+                      : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
                   }`}
                 >
                   {status.label}
@@ -305,11 +312,11 @@ export default function BrandContentReviewPage() {
 
               {/* Campaign Filters */}
               <button
-                onClick={() => setFilterCampaign('all')}
+                onClick={() => setFilterCampaign("all")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  filterCampaign === 'all'
-                    ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
-                    : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                  filterCampaign === "all"
+                    ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg"
+                    : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
                 }`}
               >
                 All Campaigns
@@ -320,8 +327,8 @@ export default function BrandContentReviewPage() {
                   onClick={() => setFilterCampaign(campaign.id)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                     filterCampaign === campaign.id
-                      ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
-                      : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                      ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg"
+                      : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
                   }`}
                 >
                   {campaign.title.slice(0, 20)}...
@@ -337,18 +344,20 @@ export default function BrandContentReviewPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
                   <CheckCircle2 className="h-8 w-8 md:h-10 md:w-10 text-[rgb(var(--muted))]" />
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2">No content to review</h3>
+                <h3 className="text-lg md:text-xl font-semibold mb-2">
+                  No content to review
+                </h3>
                 <p className="text-sm md:text-base text-[rgb(var(--muted))]">
                   {searchQuery
-                    ? 'Try adjusting your search or filters'
-                    : 'All content has been reviewed'}
+                    ? "Try adjusting your search or filters"
+                    : "All content has been reviewed"}
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-4 md:space-y-6">
               {filteredContent.map((item) => {
-                const StatusIcon = getStatusIcon(item.review_status)
+                const StatusIcon = getStatusIcon(item.review_status);
 
                 return (
                   <motion.div
@@ -381,9 +390,13 @@ export default function BrandContentReviewPage() {
                                 </p>
                               </div>
 
-                              <Badge variant={getStatusColor(item.review_status) as any}>
+                              <Badge
+                                variant={
+                                  getStatusColor(item.review_status) as any
+                                }
+                              >
                                 <StatusIcon className="h-3 w-3 mr-1" />
-                                {item.review_status?.replace('_', ' ')}
+                                {item.review_status?.replace("_", " ")}
                               </Badge>
                             </div>
 
@@ -436,21 +449,27 @@ export default function BrandContentReviewPage() {
                                   <div className="text-lg font-bold">
                                     {formatCompactNumber(item.metrics.views)}
                                   </div>
-                                  <div className="text-xs text-[rgb(var(--muted))]">Views</div>
+                                  <div className="text-xs text-[rgb(var(--muted))]">
+                                    Views
+                                  </div>
                                 </div>
                                 <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
                                   <ThumbsUp className="h-5 w-5 mx-auto mb-2 text-[rgb(var(--muted))]" />
                                   <div className="text-lg font-bold">
                                     {formatCompactNumber(item.metrics.likes)}
                                   </div>
-                                  <div className="text-xs text-[rgb(var(--muted))]">Likes</div>
+                                  <div className="text-xs text-[rgb(var(--muted))]">
+                                    Likes
+                                  </div>
                                 </div>
                                 <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
                                   <MessageCircle className="h-5 w-5 mx-auto mb-2 text-[rgb(var(--muted))]" />
                                   <div className="text-lg font-bold">
                                     {formatCompactNumber(item.metrics.comments)}
                                   </div>
-                                  <div className="text-xs text-[rgb(var(--muted))]">Comments</div>
+                                  <div className="text-xs text-[rgb(var(--muted))]">
+                                    Comments
+                                  </div>
                                 </div>
                                 <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
                                   <CheckCircle2 className="h-5 w-5 mx-auto mb-2 text-[rgb(var(--muted))]" />
@@ -466,10 +485,10 @@ export default function BrandContentReviewPage() {
 
                             {/* Actions */}
                             <div className="flex flex-wrap gap-2">
-                              {item.review_status === 'pending' && (
+                              {item.review_status === "pending" && (
                                 <>
                                   <Button
-                                    variant="default"
+                                    variant="secondary"
                                     size="sm"
                                     className="bg-green-500 hover:bg-green-600"
                                     onClick={() => handleApprove(item.id)}
@@ -480,7 +499,9 @@ export default function BrandContentReviewPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleRequestRevision(item.id)}
+                                    onClick={() =>
+                                      handleRequestRevision(item.id)
+                                    }
                                   >
                                     Request Revision
                                   </Button>
@@ -496,8 +517,12 @@ export default function BrandContentReviewPage() {
                               )}
 
                               {item.url && (
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={item.url} target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="sm">
+                                  <a
+                                    href={item.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
                                     <ExternalLink className="h-4 w-4 mr-1" />
                                     View Original
                                   </a>
@@ -521,12 +546,12 @@ export default function BrandContentReviewPage() {
                       </CardContent>
                     </Card>
                   </motion.div>
-                )
+                );
               })}
             </div>
           )}
         </motion.div>
       </div>
     </div>
-  )
+  );
 }

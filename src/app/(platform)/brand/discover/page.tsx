@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Filter,
@@ -19,27 +19,29 @@ import {
   Clock,
   DollarSign,
   Sparkles,
-} from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+} from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   searchInfluencers,
   type InfluencerSearchFilters,
-} from '@/services/influencers'
-import type { InfluencerProfile } from '@/mock-data/influencers'
-import { INFLUENCER_CATEGORIES, SOCIAL_PLATFORMS } from '@/lib/constants'
-import { formatCompactNumber, formatCurrency } from '@/lib/utils'
-import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations'
+} from "@/services/influencers";
+import type { InfluencerProfile } from "@/mock-data/influencers";
+import { INFLUENCER_CATEGORIES, SOCIAL_PLATFORMS } from "@/lib/constants";
+import { formatCompactNumber, formatCurrency } from "@/lib/utils";
+import { fadeInUp, staggerContainer, staggerItem } from "@/lib/animations";
 
 export default function InfluencerDiscoveryPage() {
-  const [influencers, setInfluencers] = useState<InfluencerProfile[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
-  const [savedInfluencers, setSavedInfluencers] = useState<Set<string>>(new Set())
+  const [influencers, setInfluencers] = useState<InfluencerProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [savedInfluencers, setSavedInfluencers] = useState<Set<string>>(
+    new Set(),
+  );
 
   const [filters, setFilters] = useState<InfluencerSearchFilters>({
     categories: [],
@@ -48,44 +50,44 @@ export default function InfluencerDiscoveryPage() {
     max_followers: undefined,
     min_engagement: undefined,
     max_engagement: undefined,
-    availability: 'all',
+    availability: "all",
     verified_only: false,
-    sort_by: 'relevance',
-    sort_order: 'desc',
-  })
+    sort_by: "relevance",
+    sort_order: "desc",
+  });
 
-  const [totalResults, setTotalResults] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [totalResults, setTotalResults] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch influencers
   useEffect(() => {
-    loadInfluencers()
-  }, [filters, currentPage])
+    loadInfluencers();
+  }, [filters, currentPage]);
 
   const loadInfluencers = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const result = await searchInfluencers(filters, currentPage, 12)
-      setInfluencers(result.influencers)
-      setTotalResults(result.total)
+      const result = await searchInfluencers(filters, currentPage, 12);
+      setInfluencers(result.influencers);
+      setTotalResults(result.total);
     } catch (error) {
-      console.error('Error loading influencers:', error)
+      console.error("Error loading influencers:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const toggleSaveInfluencer = (influencerId: string) => {
     setSavedInfluencers((prev) => {
-      const newSet = new Set(prev)
+      const newSet = new Set(prev);
       if (newSet.has(influencerId)) {
-        newSet.delete(influencerId)
+        newSet.delete(influencerId);
       } else {
-        newSet.add(influencerId)
+        newSet.add(influencerId);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   const toggleCategory = (category: string) => {
     setFilters((prev) => ({
@@ -93,9 +95,9 @@ export default function InfluencerDiscoveryPage() {
       categories: prev.categories?.includes(category)
         ? prev.categories.filter((c) => c !== category)
         : [...(prev.categories || []), category],
-    }))
-    setCurrentPage(1)
-  }
+    }));
+    setCurrentPage(1);
+  };
 
   const togglePlatform = (platform: string) => {
     setFilters((prev) => ({
@@ -103,21 +105,21 @@ export default function InfluencerDiscoveryPage() {
       platforms: prev.platforms?.includes(platform)
         ? prev.platforms.filter((p) => p !== platform)
         : [...(prev.platforms || []), platform],
-    }))
-    setCurrentPage(1)
-  }
+    }));
+    setCurrentPage(1);
+  };
 
   const clearAllFilters = () => {
     setFilters({
       categories: [],
       platforms: [],
-      availability: 'all',
+      availability: "all",
       verified_only: false,
-      sort_by: 'relevance',
-      sort_order: 'desc',
-    })
-    setCurrentPage(1)
-  }
+      sort_by: "relevance",
+      sort_order: "desc",
+    });
+    setCurrentPage(1);
+  };
 
   const hasActiveFilters =
     (filters.categories?.length || 0) > 0 ||
@@ -125,7 +127,7 @@ export default function InfluencerDiscoveryPage() {
     filters.min_followers ||
     filters.max_followers ||
     filters.min_engagement ||
-    filters.verified_only
+    filters.verified_only;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
@@ -142,8 +144,8 @@ export default function InfluencerDiscoveryPage() {
               Discover Influencers
             </h1>
             <p className="text-lg text-[rgb(var(--muted))] max-w-2xl">
-              Find the perfect creators for your campaigns. Browse our curated network
-              of verified influencers across all major platforms.
+              Find the perfect creators for your campaigns. Browse our curated
+              network of verified influencers across all major platforms.
             </p>
           </motion.div>
 
@@ -163,7 +165,7 @@ export default function InfluencerDiscoveryPage() {
             </div>
 
             <Button
-              variant={showFilters ? 'gradient' : 'outline'}
+              variant={showFilters ? "gradient" : "outline"}
               size="lg"
               onClick={() => setShowFilters(!showFilters)}
               className="h-14 px-8"
@@ -202,7 +204,7 @@ export default function InfluencerDiscoveryPage() {
           {showFilters && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="mb-8 overflow-hidden"
             >
@@ -232,15 +234,15 @@ export default function InfluencerDiscoveryPage() {
                           key={category}
                           variant={
                             filters.categories?.includes(category)
-                              ? 'default'
-                              : 'outline'
+                              ? "primary"
+                              : "primary"
                           }
                           size="sm"
                           onClick={() => toggleCategory(category)}
                           className={
                             filters.categories?.includes(category)
-                              ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]'
-                              : ''
+                              ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]"
+                              : ""
                           }
                         >
                           {category}
@@ -270,15 +272,15 @@ export default function InfluencerDiscoveryPage() {
                           key={platform.id}
                           variant={
                             filters.platforms?.includes(platform.name)
-                              ? 'default'
-                              : 'outline'
+                              ? "primary"
+                              : "outline"
                           }
                           size="sm"
                           onClick={() => togglePlatform(platform.name)}
                           className={
                             filters.platforms?.includes(platform.name)
-                              ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]'
-                              : ''
+                              ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]"
+                              : ""
                           }
                         >
                           {platform.name}
@@ -296,7 +298,7 @@ export default function InfluencerDiscoveryPage() {
                       <Input
                         type="number"
                         placeholder="e.g., 10000"
-                        value={filters.min_followers || ''}
+                        value={filters.min_followers || ""}
                         onChange={(e) =>
                           setFilters((prev) => ({
                             ...prev,
@@ -314,7 +316,7 @@ export default function InfluencerDiscoveryPage() {
                       <Input
                         type="number"
                         placeholder="e.g., 500000"
-                        value={filters.max_followers || ''}
+                        value={filters.max_followers || ""}
                         onChange={(e) =>
                           setFilters((prev) => ({
                             ...prev,
@@ -337,7 +339,7 @@ export default function InfluencerDiscoveryPage() {
                         type="number"
                         step="0.1"
                         placeholder="e.g., 3.5"
-                        value={filters.min_engagement || ''}
+                        value={filters.min_engagement || ""}
                         onChange={(e) =>
                           setFilters((prev) => ({
                             ...prev,
@@ -389,7 +391,10 @@ export default function InfluencerDiscoveryPage() {
                       <Button variant="ghost" onClick={clearAllFilters}>
                         Clear All Filters
                       </Button>
-                      <Button variant="gradient" onClick={() => setShowFilters(false)}>
+                      <Button
+                        variant="gradient"
+                        onClick={() => setShowFilters(false)}
+                      >
                         Apply Filters
                       </Button>
                     </div>
@@ -403,8 +408,15 @@ export default function InfluencerDiscoveryPage() {
         {/* Results Count */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-[rgb(var(--muted))]">
-            Showing <span className="font-semibold text-[rgb(var(--foreground))]">{influencers.length}</span> of{' '}
-            <span className="font-semibold text-[rgb(var(--foreground))]">{totalResults}</span> influencers
+            Showing{" "}
+            <span className="font-semibold text-[rgb(var(--foreground))]">
+              {influencers.length}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold text-[rgb(var(--foreground))]">
+              {totalResults}
+            </span>{" "}
+            influencers
           </p>
         </div>
 
@@ -425,7 +437,9 @@ export default function InfluencerDiscoveryPage() {
           <Card className="text-center py-16">
             <CardContent>
               <Users className="h-16 w-16 mx-auto mb-4 text-[rgb(var(--muted))]" />
-              <h3 className="text-xl font-semibold mb-2">No influencers found</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                No influencers found
+              </h3>
               <p className="text-[rgb(var(--muted))] mb-6">
                 Try adjusting your filters or search criteria
               </p>
@@ -459,8 +473,14 @@ export default function InfluencerDiscoveryPage() {
                     {/* Overlay Actions */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-                        <Link href={`/brand/discover/${influencer.id}`} className="flex-1">
-                          <Button variant="outline" className="w-full bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20">
+                        <Link
+                          href={`/brand/discover/${influencer.id}`}
+                          className="flex-1"
+                        >
+                          <Button
+                            variant="outline"
+                            className="w-full bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+                          >
                             <Eye className="h-4 w-4 mr-2" />
                             View Profile
                           </Button>
@@ -476,8 +496,8 @@ export default function InfluencerDiscoveryPage() {
                       <Heart
                         className={`h-5 w-5 ${
                           savedInfluencers.has(influencer.id)
-                            ? 'fill-red-500 text-red-500'
-                            : 'text-gray-600'
+                            ? "fill-red-500 text-red-500"
+                            : "text-gray-600"
                         }`}
                       />
                     </button>
@@ -515,7 +535,11 @@ export default function InfluencerDiscoveryPage() {
                       {/* Categories */}
                       <div className="flex flex-wrap gap-1 mb-4">
                         {influencer.categories.slice(0, 3).map((cat) => (
-                          <Badge key={cat} variant="outline" className="text-xs">
+                          <Badge
+                            key={cat}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {cat}
                           </Badge>
                         ))}
@@ -531,7 +555,9 @@ export default function InfluencerDiscoveryPage() {
                         </div>
                         <div className="font-bold">
                           {formatCompactNumber(
-                            Math.max(...influencer.platforms.map((p) => p.followers))
+                            Math.max(
+                              ...influencer.platforms.map((p) => p.followers),
+                            ),
                           )}
                         </div>
                       </div>
@@ -554,10 +580,10 @@ export default function InfluencerDiscoveryPage() {
                           className="w-8 h-8 rounded-full bg-[rgb(var(--surface))] flex items-center justify-center"
                           title={`${platform.platform}: ${formatCompactNumber(platform.followers)}`}
                         >
-                          {platform.platform === 'Instagram' && (
+                          {platform.platform === "Instagram" && (
                             <Instagram className="h-4 w-4" />
                           )}
-                          {platform.platform === 'YouTube' && (
+                          {platform.platform === "YouTube" && (
                             <Youtube className="h-4 w-4" />
                           )}
                         </div>
@@ -590,41 +616,45 @@ export default function InfluencerDiscoveryPage() {
         )}
 
         {/* Pagination */}
-        {!loading && influencers.length > 0 && Math.ceil(totalResults / 12) > 1 && (
-          <div className="flex justify-center gap-2 mt-12">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            {[...Array(Math.min(5, Math.ceil(totalResults / 12)))].map((_, i) => {
-              const page = i + 1
-              return (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? 'gradient' : 'outline'}
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </Button>
-              )
-            })}
-            <Button
-              variant="outline"
-              onClick={() =>
-                setCurrentPage((p) =>
-                  Math.min(Math.ceil(totalResults / 12), p + 1)
-                )
-              }
-              disabled={currentPage === Math.ceil(totalResults / 12)}
-            >
-              Next
-            </Button>
-          </div>
-        )}
+        {!loading &&
+          influencers.length > 0 &&
+          Math.ceil(totalResults / 12) > 1 && (
+            <div className="flex justify-center gap-2 mt-12">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              {[...Array(Math.min(5, Math.ceil(totalResults / 12)))].map(
+                (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "gradient" : "outline"}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  );
+                },
+              )}
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setCurrentPage((p) =>
+                    Math.min(Math.ceil(totalResults / 12), p + 1),
+                  )
+                }
+                disabled={currentPage === Math.ceil(totalResults / 12)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
       </div>
     </div>
-  )
+  );
 }
