@@ -264,14 +264,14 @@ export default function ContentLibraryPage() {
               {/* View Toggle - Desktop Only */}
               <div className="hidden md:flex gap-2">
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  variant={viewMode === 'grid' ? 'primary' : 'outline'}
                   size="lg"
                   onClick={() => setViewMode('grid')}
                 >
                   <Grid3x3 className="h-5 w-5" />
                 </Button>
                 <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  variant={viewMode === 'list' ? 'primary' : 'outline'}
                   size="lg"
                   onClick={() => setViewMode('list')}
                 >
@@ -541,11 +541,14 @@ export default function ContentLibraryPage() {
                                 Edit
                               </Button>
                               {item.url && (
-                                <Button variant="ghost" size="sm" asChild>
-                                  <a href={item.url} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </Button>
+                                <a
+                                  href={item.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center h-8 px-3 rounded-md text-sm font-medium hover:bg-[rgb(var(--surface))] transition-colors"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
                               )}
                             </div>
                           </div>

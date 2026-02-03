@@ -67,14 +67,14 @@ export default function InfluencerProfilePage() {
       if (inf) {
         setInfluencer(inf)
         setFormData({
-          name: inf.name,
+          name: inf.fullName,
           bio: inf.bio,
-          email: inf.email,
+          email: '',
           location: inf.location,
-          website: inf.website || '',
+          website: '',
           categories: inf.categories,
-          pricing_min: inf.pricing.min,
-          pricing_max: inf.pricing.max,
+          pricing_min: inf.pricing.instagram_post || 0,
+          pricing_max: inf.pricing.youtube_video || inf.pricing.tiktok_video || 0,
           available: inf.availability === 'available',
         })
         setPlatforms(inf.platforms)
