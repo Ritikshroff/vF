@@ -1,41 +1,98 @@
 import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { type LucideIcon } from 'lucide-react'
 
+const inputVariants = cva(
+  'flex w-full rounded-xl border text-base transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] placeholder:text-[rgb(var(--muted))] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+  {
+    variants: {
+      variant: {
+        // Default - Elegant dark
+        default:
+          'border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] hover:border-[rgb(var(--border-hover))] focus-visible:border-[rgb(var(--brand-primary)/0.5)] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.2)] focus-visible:shadow-[0_0_20px_-5px_rgb(212_175_55/0.15)]',
+        // Gold - Gold accent border
+        gold:
+          'border-[rgb(var(--brand-primary)/0.3)] bg-[rgb(var(--surface-elevated))] hover:border-[rgb(var(--brand-primary)/0.5)] focus-visible:border-[rgb(var(--brand-primary))] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.3)] focus-visible:shadow-[0_0_24px_-4px_rgb(212_175_55/0.25)]',
+        // Ghost - Minimal border
+        ghost:
+          'border-transparent bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] focus-visible:bg-[rgb(var(--surface-elevated))] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.2)]',
+        // Glass - Frosted effect
+        glass:
+          'border-[rgb(var(--border)/0.5)] bg-[rgb(var(--surface-elevated)/0.5)] backdrop-blur-md hover:border-[rgb(var(--border))] focus-visible:border-[rgb(var(--brand-primary)/0.5)] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.2)]',
+      },
+      inputSize: {
+        sm: 'h-9 px-3 text-sm',
+        md: 'h-11 px-4 text-base',
+        lg: 'h-13 px-5 text-lg',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      inputSize: 'md',
+    },
+  }
+)
+
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
+    VariantProps<typeof inputVariants> {
   icon?: LucideIcon
+  rightIcon?: LucideIcon
   error?: string
+  onRightIconClick?: () => void
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, icon: Icon, error, ...props }, ref) => {
+  (
+    {
+      className,
+      type,
+      variant,
+      inputSize,
+      icon: Icon,
+      rightIcon: RightIcon,
+      error,
+      onRightIconClick,
+      ...props
+    },
+    ref
+  ) => {
     return (
       <div className="w-full">
-        <div className="relative">
+        <div className="relative group">
           {Icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))] transition-colors duration-300 group-focus-within:text-[rgb(var(--brand-primary))]">
               <Icon className="h-4 w-4" />
             </div>
           )}
           <input
             type={type}
             className={cn(
-              'flex h-11 w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-4 py-2 text-base transition-colors',
-              'placeholder:text-[rgb(var(--muted))]',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary))] focus-visible:ring-offset-2',
-              'disabled:cursor-not-allowed disabled:opacity-50',
-              'hover:border-[rgb(var(--border-hover))]',
+              inputVariants({ variant, inputSize }),
               Icon && 'pl-10',
-              error && 'border-[rgb(var(--error))] focus-visible:ring-[rgb(var(--error))]',
+              RightIcon && 'pr-10',
+              error &&
+                'border-[rgb(var(--error))] focus-visible:border-[rgb(var(--error))] focus-visible:ring-[rgb(var(--error)/0.2)]',
               className
             )}
             ref={ref}
             {...props}
           />
+          {RightIcon && (
+            <button
+              type="button"
+              onClick={onRightIconClick}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))] transition-colors duration-300 hover:text-[rgb(var(--foreground))] focus:outline-none"
+            >
+              <RightIcon className="h-4 w-4" />
+            </button>
+          )}
         </div>
         {error && (
-          <p className="mt-1.5 text-sm text-[rgb(var(--error))]">{error}</p>
+          <p className="mt-2 text-sm text-[rgb(var(--error))] animate-in fade-in slide-in-from-top-1 duration-200">
+            {error}
+          </p>
         )}
       </div>
     )
@@ -44,4 +101,4 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = 'Input'
 
-export { Input }
+export { Input, inputVariants }

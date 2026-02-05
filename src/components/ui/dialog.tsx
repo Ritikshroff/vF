@@ -11,9 +11,24 @@ export interface DialogProps {
   onClose: () => void
   children: React.ReactNode
   className?: string
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
 }
 
-const Dialog: React.FC<DialogProps> = ({ open, onClose, children, className }) => {
+const dialogSizes = {
+  sm: 'max-w-sm',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+  full: 'max-w-[90vw]',
+}
+
+const Dialog: React.FC<DialogProps> = ({
+  open,
+  onClose,
+  children,
+  className,
+  size = 'md',
+}) => {
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -34,14 +49,14 @@ const Dialog: React.FC<DialogProps> = ({ open, onClose, children, className }) =
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - Luxurious dark overlay */}
           <motion.div
             variants={backdropVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
           />
 
           {/* Dialog */}
@@ -53,7 +68,9 @@ const Dialog: React.FC<DialogProps> = ({ open, onClose, children, className }) =
               exit="exit"
               onClick={(e) => e.stopPropagation()}
               className={cn(
-                'relative w-full max-w-lg rounded-2xl bg-[rgb(var(--surface-elevated))] p-6 shadow-2xl',
+                'relative w-full rounded-2xl bg-[rgb(var(--surface-elevated))] p-6 border border-[rgb(var(--border))]',
+                'shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7),0_0_32px_-8px_rgb(212_175_55/0.1)]',
+                dialogSizes[size],
                 className
               )}
             >
@@ -71,7 +88,10 @@ const DialogHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => (
   <div
-    className={cn('flex flex-col space-y-2 text-center sm:text-left mb-4', className)}
+    className={cn(
+      'flex flex-col space-y-2 text-center sm:text-left mb-6',
+      className
+    )}
     {...props}
   />
 )
@@ -82,17 +102,22 @@ const DialogTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
   ...props
 }) => (
   <h2
-    className={cn('text-2xl font-semibold leading-none tracking-tight', className)}
+    className={cn(
+      'text-2xl font-semibold leading-none tracking-tight text-[rgb(var(--foreground))]',
+      className
+    )}
     {...props}
   />
 )
 DialogTitle.displayName = 'DialogTitle'
 
-const DialogDescription: React.FC<React.HTMLAttributes<HTMLParagraphElement>> = ({
-  className,
-  ...props
-}) => (
-  <p className={cn('text-sm text-[rgb(var(--muted))]', className)} {...props} />
+const DialogDescription: React.FC<
+  React.HTMLAttributes<HTMLParagraphElement>
+> = ({ className, ...props }) => (
+  <p
+    className={cn('text-sm text-[rgb(var(--muted))] leading-relaxed', className)}
+    {...props}
+  />
 )
 DialogDescription.displayName = 'DialogDescription'
 
@@ -107,7 +132,10 @@ const DialogFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => (
   <div
-    className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6', className)}
+    className={cn(
+      'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 mt-6 pt-6 border-t border-[rgb(var(--border)/0.5)]',
+      className
+    )}
     {...props}
   />
 )
@@ -116,7 +144,7 @@ DialogFooter.displayName = 'DialogFooter'
 const DialogClose: React.FC<{ onClose: () => void }> = ({ onClose }) => (
   <button
     onClick={onClose}
-    className="absolute right-4 top-4 rounded-lg p-1.5 text-[rgb(var(--muted))] hover:bg-[rgb(var(--surface-hover))] hover:text-[rgb(var(--foreground))] transition-colors"
+    className="absolute right-4 top-4 rounded-xl p-2 text-[rgb(var(--muted))] hover:bg-[rgb(var(--surface-hover))] hover:text-[rgb(var(--foreground))] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand-primary)/0.3)]"
   >
     <X className="h-4 w-4" />
     <span className="sr-only">Close</span>

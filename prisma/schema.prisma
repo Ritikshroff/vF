@@ -1,0 +1,1100 @@
+// Prisma Schema for Viralfluencer Platform
+// PostgreSQL Database with comprehensive influencer marketing models
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  ADMIN
+  BRAND
+  INFLUENCER
+}
+
+enum CompanySize {
+  STARTUP_1_10
+  SMALL_11_50
+  MEDIUM_51_200
+  LARGE_201_500
+  ENTERPRISE_501_1000
+  ENTERPRISE_1000_PLUS
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignVisibility {
+  PUBLIC
+  PRIVATE
+  INVITE_ONLY
+}
+
+enum CompensationType {
+  FIXED
+  PERFORMANCE
+  PRODUCT
+  HYBRID
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum DeliverableStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  REVISION_REQUESTED
+  APPROVED
+  REJECTED
+}
+
+enum ContentType {
+  IMAGE
+  VIDEO
+  REEL
+  STORY
+  POST
+}
+
+enum ContentStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum Platform {
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  TWITTER
+  FACEBOOK
+  LINKEDIN
+}
+
+enum NotificationType {
+  CAMPAIGN_INVITE
+  CAMPAIGN_APPLICATION
+  CAMPAIGN_ACCEPTED
+  CAMPAIGN_REJECTED
+  MESSAGE
+  PAYMENT
+  CONTENT_APPROVED
+  CONTENT_REVISION
+  DEADLINE_REMINDER
+  MILESTONE
+  SYSTEM
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BUSY
+  BOOKED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  ALL
+  OTHER
+}
+
+// ==================== USER MODELS ====================
+
+model User {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  passwordHash        String
+  name                String
+  role                UserRole
+  avatar              String?
+  emailVerified       Boolean   @default(false)
+  emailVerifiedAt     DateTime?
+  onboardingCompleted Boolean   @default(false)
+  isActive            Boolean   @default(true)
+  lastLoginAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  brand               Brand?
+  influencer          Influencer?
+  sessions            Session[]
+  passwordResets      PasswordReset[]
+  notifications       Notification[]
+  sentMessages        Message[]         @relation("SentMessages")
+  receivedMessages    Message[]         @relation("ReceivedMessages")
+  conversations       ConversationParticipant[]
+
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  refreshToken String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([refreshToken])
+  @@index([expiresAt])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model EmailVerification {
+  id         String    @id @default(cuid())
+  email      String
+  token      String    @unique
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([token])
+  @@index([email])
+}
+
+// ==================== BRAND MODELS ====================
+
+model Brand {
+  id                 String       @id @default(cuid())
+  userId             String       @unique
+  companyName        String
+  logo               String?
+  coverImage         String?
+  industry           String
+  website            String?
+  description        String?
+  location           String?
+  companySize        CompanySize?
+  foundedYear        Int?
+  verified           Boolean      @default(false)
+  verifiedAt         DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  // Relations
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferences        BrandPreferences?
+  settings           BrandSettings?
+  campaigns          Campaign[]
+  savedInfluencers   SavedInfluencer[]
+  blockedInfluencers BlockedInfluencer[]
+  reviewsGiven       InfluencerReview[]
+  reviewsReceived    BrandReview[]
+  payments           Payment[]
+
+  @@index([userId])
+  @@index([industry])
+  @@index([verified])
+  @@index([companyName])
+}
+
+model BrandPreferences {
+  id                  String     @id @default(cuid())
+  brandId             String     @unique
+  preferredPlatforms  Platform[]
+  preferredCategories String[]
+  typicalBudgetMin    Decimal?   @db.Decimal(10, 2)
+  typicalBudgetMax    Decimal?   @db.Decimal(10, 2)
+  campaignGoals       String[]
+  targetAgeGroups     String[]
+  targetGenders       Gender[]
+  targetLocations     String[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  brand               Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+}
+
+model BrandSettings {
+  id                     String   @id @default(cuid())
+  brandId                String   @unique
+  emailNotifications     Boolean  @default(true)
+  campaignUpdates        Boolean  @default(true)
+  newApplications        Boolean  @default(true)
+  messageNotifications   Boolean  @default(true)
+  profileVisibility      String   @default("public")
+  showSpending           Boolean  @default(false)
+  defaultPaymentMethodId String?
+  autoRecharge           Boolean  @default(false)
+  billingEmail           String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  brand                  Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+}
+
+model SavedInfluencer {
+  id           String   @id @default(cuid())
+  brandId      String
+  influencerId String
+  notes        String?
+  tags         String[]
+  createdAt    DateTime @default(now())
+
+  brand        Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@unique([brandId, influencerId])
+  @@index([brandId])
+  @@index([influencerId])
+}
+
+model BlockedInfluencer {
+  id           String   @id @default(cuid())
+  brandId      String
+  influencerId String
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  brand        Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@unique([brandId, influencerId])
+  @@index([brandId])
+}
+
+// ==================== INFLUENCER MODELS ====================
+
+model Influencer {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  username             String             @unique
+  fullName             String
+  bio                  String?
+  avatar               String?
+  coverImage           String?
+  location             String?
+  languages            String[]
+  categories           String[]
+  contentTypes         String[]
+  verified             Boolean            @default(false)
+  verifiedAt           DateTime?
+  availability         AvailabilityStatus @default(AVAILABLE)
+  nextAvailableDate    DateTime?
+  rating               Decimal            @default(0) @db.Decimal(2, 1)
+  totalReviews         Int                @default(0)
+  totalCampaigns       Int                @default(0)
+  campaignSuccessRate  Decimal            @default(0) @db.Decimal(5, 2)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  // Relations
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platforms            InfluencerPlatform[]
+  pricing              InfluencerPricing?
+  metrics              InfluencerMetrics?
+  audience             AudienceDemographics?
+  settings             InfluencerSettings?
+  growthTrend          GrowthTrendEntry[]
+  recentPosts          RecentPost[]
+  pastBrands           PastBrandCollab[]
+  applications         CampaignApplication[]
+  invitations          CampaignInvitation[]
+  contents             Content[]
+  payments             Payment[]
+  savedBy              SavedInfluencer[]
+  blockedBy            BlockedInfluencer[]
+  reviewsReceived      InfluencerReview[]
+  reviewsGiven         BrandReview[]
+  instagramData        InstagramProfile?
+
+  @@index([userId])
+  @@index([username])
+  @@index([verified])
+  @@index([availability])
+  @@index([rating])
+  @@index([location])
+}
+
+model InfluencerPlatform {
+  id              String   @id @default(cuid())
+  influencerId    String
+  platform        Platform
+  handle          String
+  profileUrl      String?
+  followers       Int      @default(0)
+  verified        Boolean  @default(false)
+  engagementRate  Decimal  @default(0) @db.Decimal(5, 2)
+  avgLikes        Int      @default(0)
+  avgComments     Int      @default(0)
+  avgViews        Int      @default(0)
+  accessToken     String?
+  refreshToken    String?
+  tokenExpiresAt  DateTime?
+  lastSyncedAt    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  influencer      Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@unique([influencerId, platform])
+  @@index([influencerId])
+  @@index([platform])
+  @@index([followers])
+}
+
+model InfluencerPricing {
+  id               String   @id @default(cuid())
+  influencerId     String   @unique
+  instagramPost    Decimal? @db.Decimal(10, 2)
+  instagramStory   Decimal? @db.Decimal(10, 2)
+  instagramReel    Decimal? @db.Decimal(10, 2)
+  tiktokVideo      Decimal? @db.Decimal(10, 2)
+  youtubeVideo     Decimal? @db.Decimal(10, 2)
+  youtubeShort     Decimal? @db.Decimal(10, 2)
+  twitterPost      Decimal? @db.Decimal(10, 2)
+  facebookPost     Decimal? @db.Decimal(10, 2)
+  customPricing    Json?
+  currency         String   @default("USD")
+  negotiable       Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  influencer       Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+}
+
+model InfluencerMetrics {
+  id                String   @id @default(cuid())
+  influencerId      String   @unique
+  totalReach        BigInt   @default(0)
+  avgEngagementRate Decimal  @default(0) @db.Decimal(5, 2)
+  authenticityScore Int      @default(0)
+  brandSafetyScore  Int      @default(0)
+  responseRate      Int      @default(0)
+  avgResponseTime   String?
+  lastCalculatedAt  DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  influencer        Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+}
+
+model AudienceDemographics {
+  id            String   @id @default(cuid())
+  influencerId  String   @unique
+  ageRanges     Json
+  genderSplit   Json
+  topCountries  Json
+  topCities     Json
+  interests     String[]
+  lastUpdatedAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  influencer    Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+}
+
+model InfluencerSettings {
+  id                   String   @id @default(cuid())
+  influencerId         String   @unique
+  emailNotifications   Boolean  @default(true)
+  campaignInvites      Boolean  @default(true)
+  messageNotifications Boolean  @default(true)
+  paymentNotifications Boolean  @default(true)
+  profileVisibility    String   @default("public")
+  showPricing          Boolean  @default(true)
+  showEarnings         Boolean  @default(false)
+  autoReplyEnabled     Boolean  @default(false)
+  autoReplyMessage     String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  influencer           Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+}
+
+model GrowthTrendEntry {
+  id             String   @id @default(cuid())
+  influencerId   String
+  month          DateTime @db.Date
+  followers      Int
+  engagementRate Decimal  @db.Decimal(5, 2)
+  createdAt      DateTime @default(now())
+
+  influencer     Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@unique([influencerId, month])
+  @@index([influencerId])
+}
+
+model RecentPost {
+  id             String      @id @default(cuid())
+  influencerId   String
+  type           ContentType
+  platform       Platform
+  thumbnail      String?
+  postUrl        String?
+  likes          Int         @default(0)
+  comments       Int         @default(0)
+  views          Int         @default(0)
+  engagementRate Decimal     @db.Decimal(5, 2)
+  postedAt       DateTime
+  createdAt      DateTime    @default(now())
+
+  influencer     Influencer  @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@index([influencerId])
+  @@index([postedAt])
+}
+
+model PastBrandCollab {
+  id           String   @id @default(cuid())
+  influencerId String
+  brandName    String
+  brandLogo    String?
+  campaignName String?
+  completedAt  DateTime
+  createdAt    DateTime @default(now())
+
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@index([influencerId])
+}
+
+// ==================== CAMPAIGN MODELS ====================
+
+model Campaign {
+  id                  String             @id @default(cuid())
+  brandId             String
+  title               String
+  description         String
+  longDescription     String?
+  category            String
+  status              CampaignStatus     @default(DRAFT)
+  visibility          CampaignVisibility @default(PUBLIC)
+  compensationType    CompensationType   @default(FIXED)
+
+  // Budget
+  budgetMin           Decimal            @db.Decimal(10, 2)
+  budgetMax           Decimal            @db.Decimal(10, 2)
+  currency            String             @default("USD")
+  totalSpent          Decimal            @default(0) @db.Decimal(10, 2)
+
+  // Timeline
+  applicationDeadline DateTime?
+  startDate           DateTime
+  endDate             DateTime
+  contentDueDate      DateTime?
+
+  // Limits
+  maxInfluencers      Int                @default(10)
+
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  publishedAt         DateTime?
+  completedAt         DateTime?
+
+  // Relations
+  brand               Brand              @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  platforms           CampaignPlatform[]
+  goals               CampaignGoal[]
+  requirements        CampaignRequirements?
+  targetAudience      CampaignTargetAudience?
+  deliverables        CampaignDeliverable[]
+  guidelines          CampaignGuidelines?
+  applications        CampaignApplication[]
+  invitations         CampaignInvitation[]
+  contents            Content[]
+  payments            Payment[]
+  performance         CampaignPerformance?
+  hashtags            CampaignHashtag[]
+
+  @@index([brandId])
+  @@index([status])
+  @@index([visibility])
+  @@index([category])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([createdAt])
+}
+
+model CampaignPlatform {
+  id         String   @id @default(cuid())
+  campaignId String
+  platform   Platform
+  createdAt  DateTime @default(now())
+
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, platform])
+  @@index([campaignId])
+}
+
+model CampaignGoal {
+  id         String   @id @default(cuid())
+  campaignId String
+  goal       String
+  createdAt  DateTime @default(now())
+
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+model CampaignRequirements {
+  id                     String   @id @default(cuid())
+  campaignId             String   @unique
+  minFollowers           Int      @default(0)
+  maxFollowers           Int?
+  minEngagementRate      Decimal  @default(0) @db.Decimal(5, 2)
+  contentTypes           String[]
+  additionalRequirements String[]
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  campaign               Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model CampaignTargetAudience {
+  id         String   @id @default(cuid())
+  campaignId String   @unique
+  ageRanges  String[]
+  genders    Gender[]
+  locations  String[]
+  languages  String[]
+  interests  String[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model CampaignDeliverable {
+  id           String                  @id @default(cuid())
+  campaignId   String
+  type         String
+  quantity     Int                     @default(1)
+  description  String?
+  compensation Decimal?                @db.Decimal(10, 2)
+  deadline     DateTime?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  campaign     Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  submissions  DeliverableSubmission[]
+
+  @@index([campaignId])
+}
+
+model CampaignGuidelines {
+  id              String   @id @default(cuid())
+  campaignId      String   @unique
+  dosList         String[]
+  dontsList       String[]
+  brandGuidelines String?
+  exampleContent  String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model CampaignHashtag {
+  id         String   @id @default(cuid())
+  campaignId String
+  hashtag    String
+  required   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, hashtag])
+  @@index([campaignId])
+}
+
+model CampaignPerformance {
+  id               String   @id @default(cuid())
+  campaignId       String   @unique
+  totalReach       BigInt   @default(0)
+  totalEngagement  BigInt   @default(0)
+  totalImpressions BigInt   @default(0)
+  totalClicks      BigInt   @default(0)
+  totalConversions Int      @default(0)
+  roi              Decimal? @db.Decimal(10, 2)
+  lastCalculatedAt DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  campaign         Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+// ==================== APPLICATION & INVITATION MODELS ====================
+
+model CampaignApplication {
+  id              String            @id @default(cuid())
+  campaignId      String
+  influencerId    String
+  status          ApplicationStatus @default(PENDING)
+  proposal        String?
+  proposedPrice   Decimal?          @db.Decimal(10, 2)
+  estimatedReach  Int?
+  message         String?
+  rejectionReason String?
+  appliedAt       DateTime          @default(now())
+  reviewedAt      DateTime?
+  acceptedAt      DateTime?
+  rejectedAt      DateTime?
+  updatedAt       DateTime          @updatedAt
+
+  campaign        Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  influencer      Influencer        @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  contract        Contract?
+
+  @@unique([campaignId, influencerId])
+  @@index([campaignId])
+  @@index([influencerId])
+  @@index([status])
+}
+
+model CampaignInvitation {
+  id           String   @id @default(cuid())
+  campaignId   String
+  influencerId String
+  message      String?
+  status       String   @default("pending")
+  expiresAt    DateTime
+  invitedAt    DateTime @default(now())
+  respondedAt  DateTime?
+  updatedAt    DateTime @updatedAt
+
+  campaign     Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, influencerId])
+  @@index([campaignId])
+  @@index([influencerId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model Contract {
+  id                 String              @id @default(cuid())
+  applicationId      String              @unique
+  terms              String
+  agreedAmount       Decimal             @db.Decimal(10, 2)
+  signedByBrand      Boolean             @default(false)
+  signedByInfluencer Boolean             @default(false)
+  brandSignedAt      DateTime?
+  influencerSignedAt DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  application        CampaignApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+// ==================== CONTENT MODELS ====================
+
+model Content {
+  id             String        @id @default(cuid())
+  influencerId   String
+  campaignId     String?
+  title          String
+  description    String?
+  type           ContentType
+  platform       Platform
+  url            String?
+  thumbnail      String?
+  status         ContentStatus @default(DRAFT)
+  tags           String[]
+
+  // Metrics
+  views          Int           @default(0)
+  likes          Int           @default(0)
+  comments       Int           @default(0)
+  shares         Int           @default(0)
+  engagementRate Decimal?      @db.Decimal(5, 2)
+
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  influencer     Influencer    @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  campaign       Campaign?     @relation(fields: [campaignId], references: [id])
+  submissions    DeliverableSubmission[]
+  revisionHistory ContentRevision[]
+
+  @@index([influencerId])
+  @@index([campaignId])
+  @@index([status])
+  @@index([platform])
+  @@index([createdAt])
+}
+
+model DeliverableSubmission {
+  id            String              @id @default(cuid())
+  deliverableId String
+  contentId     String
+  status        DeliverableStatus   @default(SUBMITTED)
+  feedback      String?
+  submittedAt   DateTime            @default(now())
+  reviewedAt    DateTime?
+  approvedAt    DateTime?
+  updatedAt     DateTime            @updatedAt
+
+  deliverable   CampaignDeliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  content       Content             @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([deliverableId, contentId])
+  @@index([deliverableId])
+  @@index([contentId])
+  @@index([status])
+}
+
+model ContentRevision {
+  id            String   @id @default(cuid())
+  contentId     String
+  version       Int
+  changes       String
+  reviewerNotes String?
+  createdAt     DateTime @default(now())
+
+  content       Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([contentId])
+}
+
+// ==================== MESSAGING MODELS ====================
+
+model Conversation {
+  id            String   @id @default(cuid())
+  campaignId    String?
+  campaignTitle String?
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  participants  ConversationParticipant[]
+  messages      Message[]
+
+  @@index([lastMessageAt])
+}
+
+model ConversationParticipant {
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  unreadCount    Int       @default(0)
+  lastReadAt     DateTime?
+  joinedAt       DateTime  @default(now())
+  leftAt         DateTime?
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  conversationId String
+  senderId       String
+  recipientId    String?
+  content        String
+  status         MessageStatus @default(SENT)
+  readAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User          @relation("SentMessages", fields: [senderId], references: [id])
+  recipient      User?         @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  attachments    MessageAttachment[]
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([createdAt])
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  type      String
+  url       String
+  filename  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+// ==================== NOTIFICATION MODELS ====================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  read      Boolean          @default(false)
+  readAt    DateTime?
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ==================== PAYMENT MODELS ====================
+
+model Payment {
+  id               String        @id @default(cuid())
+  brandId          String
+  influencerId     String
+  campaignId       String?
+  amount           Decimal       @db.Decimal(10, 2)
+  currency         String        @default("USD")
+  status           PaymentStatus @default(PENDING)
+  description      String?
+
+  // Payment processor
+  stripePaymentId  String?
+  stripeTransferId String?
+
+  processedAt      DateTime?
+  failedAt         DateTime?
+  failureReason    String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  brand            Brand         @relation(fields: [brandId], references: [id])
+  influencer       Influencer    @relation(fields: [influencerId], references: [id])
+  campaign         Campaign?     @relation(fields: [campaignId], references: [id])
+
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([campaignId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PaymentMethod {
+  id                    String   @id @default(cuid())
+  userId                String
+  type                  String
+  last4                 String
+  brand                 String?
+  expiryMonth           Int?
+  expiryYear            Int?
+  isDefault             Boolean  @default(false)
+  stripePaymentMethodId String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isDefault])
+}
+
+// ==================== REVIEW MODELS ====================
+
+model InfluencerReview {
+  id           String   @id @default(cuid())
+  influencerId String
+  brandId      String
+  campaignId   String?
+  rating       Int
+  comment      String?
+  verified     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  brand        Brand      @relation(fields: [brandId], references: [id])
+
+  @@unique([influencerId, brandId, campaignId])
+  @@index([influencerId])
+  @@index([brandId])
+  @@index([rating])
+}
+
+model BrandReview {
+  id           String     @id @default(cuid())
+  brandId      String
+  influencerId String
+  campaignId   String?
+  rating       Int
+  comment      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  brand        Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencer   Influencer @relation(fields: [influencerId], references: [id])
+
+  @@unique([brandId, influencerId, campaignId])
+  @@index([brandId])
+  @@index([rating])
+}
+
+// ==================== INSTAGRAM GRAPH API MODELS ====================
+
+model InstagramProfile {
+  id                  String   @id @default(cuid())
+  influencerId        String   @unique
+  instagramUserId     String   @unique
+  username            String
+  name                String?
+  biography           String?
+  profilePictureUrl   String?
+  website             String?
+  followersCount      Int      @default(0)
+  followsCount        Int      @default(0)
+  mediaCount          Int      @default(0)
+  accountType         String?
+
+  accessToken         String
+  tokenExpiresAt      DateTime
+
+  lastSyncedAt        DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  influencer          Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  media               InstagramMedia[]
+  insights            InstagramInsights[]
+  audienceInsights    InstagramAudienceInsights?
+
+  @@index([instagramUserId])
+  @@index([username])
+}
+
+model InstagramMedia {
+  id                 String   @id @default(cuid())
+  instagramProfileId String
+  mediaId            String   @unique
+  mediaType          String
+  mediaUrl           String?
+  thumbnailUrl       String?
+  permalink          String?
+  caption            String?
+  timestamp          DateTime
+
+  likeCount          Int      @default(0)
+  commentsCount      Int      @default(0)
+
+  videoViews         Int?
+  plays              Int?
+
+  reach              Int?
+  impressions        Int?
+  engagement         Int?
+  saved              Int?
+  shares             Int?
+
+  lastSyncedAt       DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  profile            InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
+
+  @@index([instagramProfileId])
+  @@index([timestamp])
+  @@index([mediaType])
+}
+
+model InstagramInsights {
+  id                  String   @id @default(cuid())
+  instagramProfileId  String
+  period              String
+  date                DateTime @db.Date
+
+  impressions         Int?
+  reach               Int?
+  profileViews        Int?
+  websiteClicks       Int?
+  emailContacts       Int?
+  getDirectionsClicks Int?
+  phoneCallClicks     Int?
+  textMessageClicks   Int?
+  followerCount       Int?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  profile             InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([instagramProfileId, period, date])
+  @@index([instagramProfileId])
+  @@index([date])
+}
+
+model InstagramAudienceInsights {
+  id                 String   @id @default(cuid())
+  instagramProfileId String   @unique
+
+  audienceGenderAge  Json?
+  audienceLocale     Json?
+  audienceCountry    Json?
+  audienceCity       Json?
+  onlineFollowers    Json?
+
+  lastSyncedAt       DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  profile            InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
+}
