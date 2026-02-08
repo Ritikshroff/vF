@@ -181,6 +181,17 @@ model User {
   subscriptions Subscription[]
   usageRecords  UsageRecord[]
 
+  // Phase 4: Platform Completeness
+  messageReactions       MessageReaction[]
+  contentApprovalSteps   ContentApprovalStep[]
+  searchHistories        SearchHistory[]
+  teamMemberships        TeamMember[]
+  connectedApps          ConnectedApp[]
+  webhooks               Webhook[]
+  apiKeys                APIKey[]
+  alertRules             AlertRule[]
+  notificationPreference NotificationPreference?
+
   @@index([email])
   @@index([role])
   @@index([createdAt])
@@ -273,6 +284,22 @@ model Brand {
 
   // Phase 3: AI
   aiMatchScores AIMatchScore[]
+
+  // Phase 4: Platform Completeness
+  comparisons        InfluencerComparison[]
+  productCatalog     ProductCatalog[]
+  giftingOrders      GiftingOrder[]
+  organization       Organization?
+  reportTemplates    ReportTemplate[]
+  generatedReports   GeneratedReport[]
+  outreachTemplates  OutreachTemplate[]
+  outreachCampaigns  OutreachCampaign[]
+  brandMentions      BrandMention[]
+  keywordTrackers    KeywordTracker[]
+  sentimentReports   SentimentReport[]
+  budgetPlans        BudgetPlan[]
+  roiProjections     ROIProjection[]
+  ugcContent         UGCContent[]
 
   @@index([userId])
   @@index([industry])
@@ -404,6 +431,13 @@ model Influencer {
   aiMatchScores            AIMatchScore[]
   aiPricingRecommendations AIPricingRecommendation[]
   aiFraudFlags             AIFraudFlag[]
+
+  // Phase 4: Platform Completeness
+  trackingLinks  TrackingLink[]
+  promoCodes     PromoCode[]
+  mediaKit       MediaKit?
+  giftingOrders  GiftingOrder[]
+  ugcContent     UGCContent[]
 
   @@index([userId])
   @@index([username])
@@ -832,6 +866,8 @@ model Content {
   campaign        Campaign?               @relation(fields: [campaignId], references: [id])
   submissions     DeliverableSubmission[]
   revisionHistory ContentRevision[]
+  approvalSteps   ContentApprovalStep[]
+  ftcChecks       FTCComplianceCheck[]
 
   @@index([influencerId])
   @@index([campaignId])
@@ -921,6 +957,7 @@ model Message {
   sender       User                @relation("SentMessages", fields: [senderId], references: [id])
   recipient    User?               @relation("ReceivedMessages", fields: [recipientId], references: [id])
   attachments  MessageAttachment[]
+  reactions    MessageReaction[]
 
   @@index([conversationId])
   @@index([senderId])
@@ -2535,4 +2572,689 @@ model FeatureGate {
 
   @@index([feature])
   @@index([minTier])
+}
+
+// ==================== PHASE 4: PLATFORM COMPLETENESS ====================
+
+// ---------- Module 1: Real-time Messaging Enhancement ----------
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
+}
+
+// ---------- Module 2: Content Approval Workflow ----------
+
+enum ApprovalStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+model ContentApprovalStep {
+  id         String         @id @default(cuid())
+  contentId  String
+  stepOrder  Int
+  reviewerId String
+  status     ApprovalStatus @default(DRAFT)
+  feedback   String?
+  approvedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  content  Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  reviewer User    @relation(fields: [reviewerId], references: [id])
+
+  @@index([contentId])
+  @@index([reviewerId])
+  @@index([status])
+}
+
+// ---------- Module 3: Advanced Influencer Discovery ----------
+
+model InfluencerComparison {
+  id            String   @id @default(cuid())
+  brandId       String
+  influencerIds String[]
+  name          String?
+  createdAt     DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+}
+
+model SearchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  query       String
+  filters     Json
+  resultCount Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ---------- Module 4: Affiliate & Link Tracking ----------
+
+model TrackingLink {
+  id              String   @id @default(cuid())
+  collaborationId String?
+  campaignId      String?
+  influencerId    String
+  originalUrl     String
+  shortCode       String   @unique
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  influencer  Influencer             @relation(fields: [influencerId], references: [id])
+  clicks      TrackingLinkClick[]
+  conversions TrackingLinkConversion[]
+
+  @@index([influencerId])
+  @@index([shortCode])
+  @@index([campaignId])
+}
+
+model PromoCode {
+  id            String    @id @default(cuid())
+  campaignId    String?
+  influencerId  String
+  code          String    @unique
+  discountType  String // PERCENTAGE, FIXED
+  discountValue Decimal   @db.Decimal(10, 2)
+  maxUses       Int?
+  usedCount     Int       @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  influencer Influencer @relation(fields: [influencerId], references: [id])
+
+  @@index([influencerId])
+  @@index([code])
+}
+
+model TrackingLinkClick {
+  id        String   @id @default(cuid())
+  linkId    String
+  ipHash    String
+  userAgent String?
+  referrer  String?
+  country   String?
+  device    String?
+  createdAt DateTime @default(now())
+
+  link TrackingLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId])
+  @@index([createdAt])
+}
+
+model TrackingLinkConversion {
+  id          String   @id @default(cuid())
+  linkId      String
+  promoCodeId String?
+  orderValue  Decimal? @db.Decimal(10, 2)
+  commission  Decimal? @db.Decimal(10, 2)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  link TrackingLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId])
+  @@index([createdAt])
+}
+
+// ---------- Module 5: Contract & Legal Management ----------
+
+model ContractSignatureAudit {
+  id         String   @id @default(cuid())
+  contractId String
+  signerId   String
+  signerRole String
+  ipAddress  String
+  userAgent  String
+  signedAt   DateTime @default(now())
+
+  @@index([contractId])
+  @@index([signerId])
+}
+
+model FTCComplianceCheck {
+  id             String   @id @default(cuid())
+  contentId      String
+  hasDisclosure  Boolean
+  disclosureType String?
+  isCompliant    Boolean
+  issues         String[]
+  checkedAt      DateTime @default(now())
+
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([contentId])
+  @@index([isCompliant])
+}
+
+// ---------- Module 6: Creator Media Kit ----------
+
+model MediaKit {
+  id            String   @id @default(cuid())
+  influencerId  String   @unique
+  bio           String?
+  headline      String?
+  brandColors   String[]
+  coverImageUrl String?
+  isPublic      Boolean  @default(true)
+  customSlug    String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  influencer Influencer       @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  sections   MediaKitSection[]
+  rateCards  RateCard[]
+
+  @@index([customSlug])
+}
+
+model MediaKitSection {
+  id         String  @id @default(cuid())
+  mediaKitId String
+  type       String // STATS, PORTFOLIO, TESTIMONIALS, BRANDS_WORKED_WITH, AUDIENCE
+  title      String
+  content    Json
+  order      Int
+  isVisible  Boolean @default(true)
+
+  mediaKit MediaKit @relation(fields: [mediaKitId], references: [id], onDelete: Cascade)
+
+  @@index([mediaKitId])
+}
+
+model RateCard {
+  id           String  @id @default(cuid())
+  mediaKitId   String
+  platform     String
+  contentType  String // Post, Story, Reel, Video
+  price        Decimal @db.Decimal(10, 2)
+  description  String?
+  deliveryDays Int?
+
+  mediaKit MediaKit @relation(fields: [mediaKitId], references: [id], onDelete: Cascade)
+
+  @@index([mediaKitId])
+}
+
+// ---------- Module 7: Product Seeding & Gifting ----------
+
+enum GiftingStatus {
+  GIFTING_PENDING
+  GIFTING_APPROVED
+  GIFTING_SHIPPED
+  GIFTING_DELIVERED
+  GIFTING_CONTENT_RECEIVED
+  GIFTING_COMPLETED
+  GIFTING_CANCELLED
+}
+
+model ProductCatalog {
+  id          String   @id @default(cuid())
+  brandId     String
+  name        String
+  description String?
+  imageUrl    String?
+  value       Decimal  @db.Decimal(10, 2)
+  category    String?
+  sku         String?
+  inStock     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  brand         Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  giftingOrders GiftingOrder[]
+
+  @@index([brandId])
+  @@index([category])
+}
+
+model GiftingOrder {
+  id                  String        @id @default(cuid())
+  productId           String
+  influencerId        String
+  brandId             String
+  status              GiftingStatus @default(GIFTING_PENDING)
+  shippingAddress     Json?
+  trackingNumber      String?
+  expectedContentDate DateTime?
+  notes               String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  product    ProductCatalog @relation(fields: [productId], references: [id])
+  influencer Influencer     @relation(fields: [influencerId], references: [id])
+  brand      Brand          @relation(fields: [brandId], references: [id])
+
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([status])
+}
+
+// ---------- Module 8: Team Collaboration & Permissions ----------
+
+enum TeamRole {
+  OWNER
+  TEAM_ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  brandId   String   @unique
+  createdAt DateTime @default(now())
+
+  brand   Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  members TeamMember[]
+  invites TeamInvite[]
+  logs    TeamActivityLog[]
+
+  @@index([brandId])
+}
+
+model TeamMember {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           TeamRole @default(MEMBER)
+  permissions    String[]
+  joinedAt       DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model TeamInvite {
+  id             String    @id @default(cuid())
+  organizationId String
+  email          String
+  role           TeamRole  @default(MEMBER)
+  token          String    @unique
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([token])
+}
+
+model TeamActivityLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  action         String
+  entityType     String?
+  entityId       String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([createdAt])
+}
+
+// ---------- Module 9: Campaign Reporting & Export ----------
+
+model ReportTemplate {
+  id        String   @id @default(cuid())
+  brandId   String
+  name      String
+  sections  String[]
+  format    String   @default("PDF")
+  createdAt DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+}
+
+model GeneratedReport {
+  id          String   @id @default(cuid())
+  templateId  String?
+  brandId     String
+  campaignId  String?
+  reportType  String // CAMPAIGN, INFLUENCER, PLATFORM, CUSTOM
+  dateRange   Json
+  data        Json
+  fileUrl     String?
+  generatedAt DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@index([reportType])
+}
+
+model ScheduledReport {
+  id         String   @id @default(cuid())
+  templateId String
+  brandId    String
+  frequency  String // DAILY, WEEKLY, MONTHLY
+  recipients String[]
+  nextRunAt  DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([brandId])
+  @@index([isActive])
+}
+
+// ---------- Module 10: Influencer Outreach ----------
+
+model OutreachTemplate {
+  id        String   @id @default(cuid())
+  brandId   String
+  name      String
+  subject   String
+  body      String
+  type      String   @default("EMAIL")
+  createdAt DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+}
+
+model OutreachCampaign {
+  id         String   @id @default(cuid())
+  brandId    String
+  templateId String
+  name       String
+  status     String   @default("DRAFT")
+  createdAt  DateTime @default(now())
+
+  brand  Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  emails OutreachEmail[]
+
+  @@index([brandId])
+  @@index([status])
+}
+
+model OutreachEmail {
+  id           String    @id @default(cuid())
+  campaignId   String
+  influencerId String
+  email        String
+  status       String    @default("PENDING")
+  sentAt       DateTime?
+  openedAt     DateTime?
+  repliedAt    DateTime?
+
+  campaign OutreachCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([status])
+}
+
+// ---------- Module 11: Social Listening ----------
+
+model BrandMention {
+  id           String   @id @default(cuid())
+  brandId      String
+  platform     String
+  authorName   String
+  authorHandle String?
+  content      String
+  url          String?
+  sentiment    String? // POSITIVE, NEUTRAL, NEGATIVE
+  reach        Int?
+  engagement   Int?
+  detectedAt   DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@index([sentiment])
+  @@index([detectedAt])
+}
+
+model KeywordTracker {
+  id        String   @id @default(cuid())
+  brandId   String
+  keyword   String
+  platforms String[]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@index([isActive])
+}
+
+model SentimentReport {
+  id          String   @id @default(cuid())
+  brandId     String
+  period      String
+  periodStart DateTime
+  positive    Int      @default(0)
+  neutral     Int      @default(0)
+  negative    Int      @default(0)
+  topMentions Json
+  createdAt   DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@index([periodStart])
+}
+
+// ---------- Module 12: Integration Hub ----------
+
+model ConnectedApp {
+  id           String    @id @default(cuid())
+  userId       String
+  appName      String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  config       Json?
+  isActive     Boolean   @default(true)
+  connectedAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([appName])
+}
+
+model Webhook {
+  id         String   @id @default(cuid())
+  userId     String
+  url        String
+  events     String[]
+  secret     String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  webhookId   String
+  event       String
+  payload     Json
+  statusCode  Int?
+  response    String?
+  deliveredAt DateTime @default(now())
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@index([deliveredAt])
+}
+
+model APIKey {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  keyHash    String    @unique
+  prefix     String
+  scopes     String[]
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([keyHash])
+}
+
+// ---------- Module 13: ROI & Budget Calculator ----------
+
+model BudgetPlan {
+  id          String   @id @default(cuid())
+  brandId     String
+  campaignId  String?
+  name        String
+  totalBudget Decimal  @db.Decimal(12, 2)
+  allocations Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+}
+
+model ROIProjection {
+  id                   String   @id @default(cuid())
+  brandId              String
+  campaignId           String?
+  budget               Decimal  @db.Decimal(12, 2)
+  estimatedReach       Int
+  estimatedEngagement  Int
+  estimatedConversions Int
+  estimatedROI         Decimal  @db.Decimal(8, 2)
+  assumptions          Json
+  createdAt            DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+}
+
+// ---------- Module 14: UGC Content Library ----------
+
+model UGCContent {
+  id              String   @id @default(cuid())
+  brandId         String
+  influencerId    String?
+  collaborationId String?
+  title           String?
+  mediaUrl        String
+  mediaType       String // IMAGE, VIDEO, STORY, REEL
+  platform        String?
+  tags            String[]
+  createdAt       DateTime @default(now())
+
+  brand      Brand       @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencer Influencer? @relation(fields: [influencerId], references: [id])
+  rights     ContentRightsRecord?
+  usages     ContentUsageRecord[]
+
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([mediaType])
+}
+
+model ContentRightsRecord {
+  id           String    @id @default(cuid())
+  ugcContentId String    @unique
+  licenseType  String // EXCLUSIVE, NON_EXCLUSIVE, LIMITED
+  usageRights  String[]
+  territory    String?
+  duration     Int?
+  expiresAt    DateTime?
+  agreementUrl String?
+
+  ugcContent UGCContent @relation(fields: [ugcContentId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model ContentUsageRecord {
+  id           String   @id @default(cuid())
+  ugcContentId String
+  platform     String
+  usageType    String // AD, SOCIAL_POST, WEBSITE, EMAIL
+  url          String?
+  usedAt       DateTime @default(now())
+
+  ugcContent UGCContent @relation(fields: [ugcContentId], references: [id], onDelete: Cascade)
+
+  @@index([ugcContentId])
+}
+
+// ---------- Module 15: Notification & Alert Center ----------
+
+model AlertRule {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  eventType String
+  conditions Json?
+  channels  String[]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model NotificationPreference {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  emailEnabled    Boolean @default(true)
+  pushEnabled     Boolean @default(true)
+  digestFrequency String  @default("INSTANT")
+  mutedCategories String[]
+  quietHoursStart String?
+  quietHoursEnd   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
