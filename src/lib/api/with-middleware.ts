@@ -15,7 +15,8 @@ type MiddlewareFn = (
 /**
  * Route context type (Next.js 16 uses Promise for params)
  */
-type RouteContext = { params: Promise<Record<string, string>> };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RouteContext = { params: Promise<any> };
 
 /**
  * Route handler type

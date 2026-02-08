@@ -50,6 +50,7 @@ enum CompensationType {
 
 enum ApplicationStatus {
   PENDING
+  SHORTLISTED
   ACCEPTED
   REJECTED
   WITHDRAWN
@@ -149,14 +150,36 @@ model User {
   updatedAt           DateTime  @updatedAt
 
   // Relations
-  brand               Brand?
-  influencer          Influencer?
-  sessions            Session[]
-  passwordResets      PasswordReset[]
-  notifications       Notification[]
-  sentMessages        Message[]         @relation("SentMessages")
-  receivedMessages    Message[]         @relation("ReceivedMessages")
-  conversations       ConversationParticipant[]
+  brand            Brand?
+  influencer       Influencer?
+  sessions         Session[]
+  passwordResets   PasswordReset[]
+  notifications    Notification[]
+  sentMessages     Message[]                 @relation("SentMessages")
+  receivedMessages Message[]                 @relation("ReceivedMessages")
+  conversations    ConversationParticipant[]
+
+  // Phase 1: Collaboration & Payments
+  collaborationMessages CollaborationMessage[]
+  wallet                Wallet?
+  payoutMethods         PayoutMethod[]
+  reputationScore       ReputationScore?
+  verificationRequests  VerificationRequest[]
+  disputesRaised        Dispute[]              @relation("DisputeRaiser")
+  disputesAgainst       Dispute[]              @relation("DisputeAgainst")
+
+  // Phase 2: Social Feed & CRM
+  feedPosts     FeedPost[]
+  feedLikes     FeedLike[]
+  feedComments  FeedComment[]
+  feedShares    FeedShare[]
+  feedPollVotes FeedPollVote[]
+  following     UserFollow[]   @relation("Following")
+  followers     UserFollow[]   @relation("Followers")
+
+  // Phase 3: Monetization
+  subscriptions Subscription[]
+  usageRecords  UsageRecord[]
 
   @@index([email])
   @@index([role])
@@ -173,7 +196,7 @@ model Session {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -182,14 +205,14 @@ model Session {
 }
 
 model PasswordReset {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  token     String   @unique
+  token     String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
@@ -210,24 +233,24 @@ model EmailVerification {
 // ==================== BRAND MODELS ====================
 
 model Brand {
-  id                 String       @id @default(cuid())
-  userId             String       @unique
-  companyName        String
-  logo               String?
-  coverImage         String?
-  industry           String
-  website            String?
-  description        String?
-  location           String?
-  companySize        CompanySize?
-  foundedYear        Int?
-  verified           Boolean      @default(false)
-  verifiedAt         DateTime?
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  companyName String
+  logo        String?
+  coverImage  String?
+  industry    String
+  website     String?
+  description String?
+  location    String?
+  companySize CompanySize?
+  foundedYear Int?
+  verified    Boolean      @default(false)
+  verifiedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   // Relations
-  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   preferences        BrandPreferences?
   settings           BrandSettings?
   campaigns          Campaign[]
@@ -236,6 +259,20 @@ model Brand {
   reviewsGiven       InfluencerReview[]
   reviewsReceived    BrandReview[]
   payments           Payment[]
+
+  // Phase 1: Collaboration & Payments
+  collaborations    Collaboration[]
+  escrowAccounts    EscrowAccount[]
+  contractTemplates ContractTemplate[]
+  invoices          Invoice[]
+
+  // Phase 2: CRM & Marketplace
+  crmContacts         CRMContact[]
+  crmLists            CRMList[]
+  marketplaceListings MarketplaceListing[]
+
+  // Phase 3: AI
+  aiMatchScores AIMatchScore[]
 
   @@index([userId])
   @@index([industry])
@@ -257,7 +294,7 @@ model BrandPreferences {
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
-  brand               Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
 }
 
 model BrandSettings {
@@ -275,7 +312,7 @@ model BrandSettings {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
-  brand                  Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
 }
 
 model SavedInfluencer {
@@ -286,8 +323,8 @@ model SavedInfluencer {
   tags         String[]
   createdAt    DateTime @default(now())
 
-  brand        Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  brand      Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 
   @@unique([brandId, influencerId])
   @@index([brandId])
@@ -301,8 +338,8 @@ model BlockedInfluencer {
   reason       String?
   createdAt    DateTime @default(now())
 
-  brand        Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  brand      Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 
   @@unique([brandId, influencerId])
   @@index([brandId])
@@ -311,47 +348,62 @@ model BlockedInfluencer {
 // ==================== INFLUENCER MODELS ====================
 
 model Influencer {
-  id                   String             @id @default(cuid())
-  userId               String             @unique
-  username             String             @unique
-  fullName             String
-  bio                  String?
-  avatar               String?
-  coverImage           String?
-  location             String?
-  languages            String[]
-  categories           String[]
-  contentTypes         String[]
-  verified             Boolean            @default(false)
-  verifiedAt           DateTime?
-  availability         AvailabilityStatus @default(AVAILABLE)
-  nextAvailableDate    DateTime?
-  rating               Decimal            @default(0) @db.Decimal(2, 1)
-  totalReviews         Int                @default(0)
-  totalCampaigns       Int                @default(0)
-  campaignSuccessRate  Decimal            @default(0) @db.Decimal(5, 2)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  id                  String             @id @default(cuid())
+  userId              String             @unique
+  username            String             @unique
+  fullName            String
+  bio                 String?
+  avatar              String?
+  coverImage          String?
+  location            String?
+  languages           String[]
+  categories          String[]
+  contentTypes        String[]
+  verified            Boolean            @default(false)
+  verifiedAt          DateTime?
+  availability        AvailabilityStatus @default(AVAILABLE)
+  nextAvailableDate   DateTime?
+  rating              Decimal            @default(0) @db.Decimal(2, 1)
+  totalReviews        Int                @default(0)
+  totalCampaigns      Int                @default(0)
+  campaignSuccessRate Decimal            @default(0) @db.Decimal(5, 2)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
   // Relations
-  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platforms            InfluencerPlatform[]
-  pricing              InfluencerPricing?
-  metrics              InfluencerMetrics?
-  audience             AudienceDemographics?
-  settings             InfluencerSettings?
-  growthTrend          GrowthTrendEntry[]
-  recentPosts          RecentPost[]
-  pastBrands           PastBrandCollab[]
-  applications         CampaignApplication[]
-  invitations          CampaignInvitation[]
-  contents             Content[]
-  payments             Payment[]
-  savedBy              SavedInfluencer[]
-  blockedBy            BlockedInfluencer[]
-  reviewsReceived      InfluencerReview[]
-  reviewsGiven         BrandReview[]
-  instagramData        InstagramProfile?
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platforms       InfluencerPlatform[]
+  pricing         InfluencerPricing?
+  metrics         InfluencerMetrics?
+  audience        AudienceDemographics?
+  settings        InfluencerSettings?
+  growthTrend     GrowthTrendEntry[]
+  recentPosts     RecentPost[]
+  pastBrands      PastBrandCollab[]
+  applications    CampaignApplication[]
+  invitations     CampaignInvitation[]
+  contents        Content[]
+  payments        Payment[]
+  savedBy         SavedInfluencer[]
+  blockedBy       BlockedInfluencer[]
+  reviewsReceived InfluencerReview[]
+  reviewsGiven    BrandReview[]
+  instagramData   InstagramProfile?
+
+  // Phase 1: Collaboration & Payments
+  collaborations Collaboration[]
+  escrowAccounts EscrowAccount[]
+  invoices       Invoice[]
+
+  // Phase 2: CRM & Marketplace & Analytics
+  crmContacts             CRMContact[]
+  marketplaceApplications MarketplaceApplication[]
+  analytics               InfluencerAnalytics?
+
+  // Phase 3: AI
+  aiMatchScores            AIMatchScore[]
+  aiPricingRecommendations AIPricingRecommendation[]
+  aiFraudFlags             AIFraudFlag[]
 
   @@index([userId])
   @@index([username])
@@ -362,25 +414,25 @@ model Influencer {
 }
 
 model InfluencerPlatform {
-  id              String   @id @default(cuid())
-  influencerId    String
-  platform        Platform
-  handle          String
-  profileUrl      String?
-  followers       Int      @default(0)
-  verified        Boolean  @default(false)
-  engagementRate  Decimal  @default(0) @db.Decimal(5, 2)
-  avgLikes        Int      @default(0)
-  avgComments     Int      @default(0)
-  avgViews        Int      @default(0)
-  accessToken     String?
-  refreshToken    String?
-  tokenExpiresAt  DateTime?
-  lastSyncedAt    DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(cuid())
+  influencerId   String
+  platform       Platform
+  handle         String
+  profileUrl     String?
+  followers      Int       @default(0)
+  verified       Boolean   @default(false)
+  engagementRate Decimal   @default(0) @db.Decimal(5, 2)
+  avgLikes       Int       @default(0)
+  avgComments    Int       @default(0)
+  avgViews       Int       @default(0)
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+  lastSyncedAt   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  influencer      Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 
   @@unique([influencerId, platform])
   @@index([influencerId])
@@ -389,23 +441,23 @@ model InfluencerPlatform {
 }
 
 model InfluencerPricing {
-  id               String   @id @default(cuid())
-  influencerId     String   @unique
-  instagramPost    Decimal? @db.Decimal(10, 2)
-  instagramStory   Decimal? @db.Decimal(10, 2)
-  instagramReel    Decimal? @db.Decimal(10, 2)
-  tiktokVideo      Decimal? @db.Decimal(10, 2)
-  youtubeVideo     Decimal? @db.Decimal(10, 2)
-  youtubeShort     Decimal? @db.Decimal(10, 2)
-  twitterPost      Decimal? @db.Decimal(10, 2)
-  facebookPost     Decimal? @db.Decimal(10, 2)
-  customPricing    Json?
-  currency         String   @default("USD")
-  negotiable       Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id             String   @id @default(cuid())
+  influencerId   String   @unique
+  instagramPost  Decimal? @db.Decimal(10, 2)
+  instagramStory Decimal? @db.Decimal(10, 2)
+  instagramReel  Decimal? @db.Decimal(10, 2)
+  tiktokVideo    Decimal? @db.Decimal(10, 2)
+  youtubeVideo   Decimal? @db.Decimal(10, 2)
+  youtubeShort   Decimal? @db.Decimal(10, 2)
+  twitterPost    Decimal? @db.Decimal(10, 2)
+  facebookPost   Decimal? @db.Decimal(10, 2)
+  customPricing  Json?
+  currency       String   @default("USD")
+  negotiable     Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  influencer       Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 }
 
 model InfluencerMetrics {
@@ -421,7 +473,7 @@ model InfluencerMetrics {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  influencer        Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 }
 
 model AudienceDemographics {
@@ -436,7 +488,7 @@ model AudienceDemographics {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  influencer    Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 }
 
 model InfluencerSettings {
@@ -454,7 +506,7 @@ model InfluencerSettings {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  influencer           Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 }
 
 model GrowthTrendEntry {
@@ -465,7 +517,7 @@ model GrowthTrendEntry {
   engagementRate Decimal  @db.Decimal(5, 2)
   createdAt      DateTime @default(now())
 
-  influencer     Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 
   @@unique([influencerId, month])
   @@index([influencerId])
@@ -485,7 +537,7 @@ model RecentPost {
   postedAt       DateTime
   createdAt      DateTime    @default(now())
 
-  influencer     Influencer  @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 
   @@index([influencerId])
   @@index([postedAt])
@@ -500,7 +552,7 @@ model PastBrandCollab {
   completedAt  DateTime
   createdAt    DateTime @default(now())
 
-  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 
   @@index([influencerId])
 }
@@ -508,21 +560,21 @@ model PastBrandCollab {
 // ==================== CAMPAIGN MODELS ====================
 
 model Campaign {
-  id                  String             @id @default(cuid())
-  brandId             String
-  title               String
-  description         String
-  longDescription     String?
-  category            String
-  status              CampaignStatus     @default(DRAFT)
-  visibility          CampaignVisibility @default(PUBLIC)
-  compensationType    CompensationType   @default(FIXED)
+  id               String             @id @default(cuid())
+  brandId          String
+  title            String
+  description      String
+  longDescription  String?
+  category         String
+  status           CampaignStatus     @default(DRAFT)
+  visibility       CampaignVisibility @default(PUBLIC)
+  compensationType CompensationType   @default(FIXED)
 
   // Budget
-  budgetMin           Decimal            @db.Decimal(10, 2)
-  budgetMax           Decimal            @db.Decimal(10, 2)
-  currency            String             @default("USD")
-  totalSpent          Decimal            @default(0) @db.Decimal(10, 2)
+  budgetMin  Decimal @db.Decimal(10, 2)
+  budgetMax  Decimal @db.Decimal(10, 2)
+  currency   String  @default("USD")
+  totalSpent Decimal @default(0) @db.Decimal(10, 2)
 
   // Timeline
   applicationDeadline DateTime?
@@ -531,27 +583,39 @@ model Campaign {
   contentDueDate      DateTime?
 
   // Limits
-  maxInfluencers      Int                @default(10)
+  maxInfluencers Int @default(10)
 
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  publishedAt         DateTime?
-  completedAt         DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+  completedAt DateTime?
 
   // Relations
-  brand               Brand              @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  platforms           CampaignPlatform[]
-  goals               CampaignGoal[]
-  requirements        CampaignRequirements?
-  targetAudience      CampaignTargetAudience?
-  deliverables        CampaignDeliverable[]
-  guidelines          CampaignGuidelines?
-  applications        CampaignApplication[]
-  invitations         CampaignInvitation[]
-  contents            Content[]
-  payments            Payment[]
-  performance         CampaignPerformance?
-  hashtags            CampaignHashtag[]
+  brand          Brand                   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  platforms      CampaignPlatform[]
+  goals          CampaignGoal[]
+  requirements   CampaignRequirements?
+  targetAudience CampaignTargetAudience?
+  deliverables   CampaignDeliverable[]
+  guidelines     CampaignGuidelines?
+  applications   CampaignApplication[]
+  invitations    CampaignInvitation[]
+  contents       Content[]
+  payments       Payment[]
+  performance    CampaignPerformance?
+  hashtags       CampaignHashtag[]
+
+  // Phase 1: Collaboration Workflow
+  collaborations Collaboration[]
+
+  // Phase 2: Feed, Marketplace & Analytics
+  feedPosts           FeedPost[]
+  marketplaceListings MarketplaceListing[]
+  campaignAnalytics   CampaignAnalytics?
+
+  // Phase 3: AI
+  aiMatchScores        AIMatchScore[]
+  aiContentSuggestions AIContentSuggestion[]
 
   @@index([brandId])
   @@index([status])
@@ -568,7 +632,7 @@ model CampaignPlatform {
   platform   Platform
   createdAt  DateTime @default(now())
 
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@unique([campaignId, platform])
   @@index([campaignId])
@@ -580,7 +644,7 @@ model CampaignGoal {
   goal       String
   createdAt  DateTime @default(now())
 
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@index([campaignId])
 }
@@ -596,7 +660,7 @@ model CampaignRequirements {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
-  campaign               Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
 model CampaignTargetAudience {
@@ -610,22 +674,22 @@ model CampaignTargetAudience {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
 model CampaignDeliverable {
-  id           String                  @id @default(cuid())
+  id           String    @id @default(cuid())
   campaignId   String
   type         String
-  quantity     Int                     @default(1)
+  quantity     Int       @default(1)
   description  String?
-  compensation Decimal?                @db.Decimal(10, 2)
+  compensation Decimal?  @db.Decimal(10, 2)
   deadline     DateTime?
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  campaign     Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  submissions  DeliverableSubmission[]
+  campaign    Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  submissions DeliverableSubmission[]
 
   @@index([campaignId])
 }
@@ -640,7 +704,7 @@ model CampaignGuidelines {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
 model CampaignHashtag {
@@ -650,7 +714,7 @@ model CampaignHashtag {
   required   Boolean  @default(true)
   createdAt  DateTime @default(now())
 
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@unique([campaignId, hashtag])
   @@index([campaignId])
@@ -669,7 +733,7 @@ model CampaignPerformance {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  campaign         Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
 // ==================== APPLICATION & INVITATION MODELS ====================
@@ -690,9 +754,9 @@ model CampaignApplication {
   rejectedAt      DateTime?
   updatedAt       DateTime          @updatedAt
 
-  campaign        Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  influencer      Influencer        @relation(fields: [influencerId], references: [id], onDelete: Cascade)
-  contract        Contract?
+  campaign   Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  contract   Contract?
 
   @@unique([campaignId, influencerId])
   @@index([campaignId])
@@ -701,18 +765,18 @@ model CampaignApplication {
 }
 
 model CampaignInvitation {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   campaignId   String
   influencerId String
   message      String?
-  status       String   @default("pending")
+  status       String    @default("pending")
   expiresAt    DateTime
-  invitedAt    DateTime @default(now())
+  invitedAt    DateTime  @default(now())
   respondedAt  DateTime?
-  updatedAt    DateTime @updatedAt
+  updatedAt    DateTime  @updatedAt
 
-  campaign     Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  campaign   Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 
   @@unique([campaignId, influencerId])
   @@index([campaignId])
@@ -722,18 +786,18 @@ model CampaignInvitation {
 }
 
 model Contract {
-  id                 String              @id @default(cuid())
-  applicationId      String              @unique
+  id                 String    @id @default(cuid())
+  applicationId      String    @unique
   terms              String
-  agreedAmount       Decimal             @db.Decimal(10, 2)
-  signedByBrand      Boolean             @default(false)
-  signedByInfluencer Boolean             @default(false)
+  agreedAmount       Decimal   @db.Decimal(10, 2)
+  signedByBrand      Boolean   @default(false)
+  signedByInfluencer Boolean   @default(false)
   brandSignedAt      DateTime?
   influencerSignedAt DateTime?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  application        CampaignApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application CampaignApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
 }
@@ -741,32 +805,32 @@ model Contract {
 // ==================== CONTENT MODELS ====================
 
 model Content {
-  id             String        @id @default(cuid())
-  influencerId   String
-  campaignId     String?
-  title          String
-  description    String?
-  type           ContentType
-  platform       Platform
-  url            String?
-  thumbnail      String?
-  status         ContentStatus @default(DRAFT)
-  tags           String[]
+  id           String        @id @default(cuid())
+  influencerId String
+  campaignId   String?
+  title        String
+  description  String?
+  type         ContentType
+  platform     Platform
+  url          String?
+  thumbnail    String?
+  status       ContentStatus @default(DRAFT)
+  tags         String[]
 
   // Metrics
-  views          Int           @default(0)
-  likes          Int           @default(0)
-  comments       Int           @default(0)
-  shares         Int           @default(0)
-  engagementRate Decimal?      @db.Decimal(5, 2)
+  views          Int      @default(0)
+  likes          Int      @default(0)
+  comments       Int      @default(0)
+  shares         Int      @default(0)
+  engagementRate Decimal? @db.Decimal(5, 2)
 
-  publishedAt    DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  influencer     Influencer    @relation(fields: [influencerId], references: [id], onDelete: Cascade)
-  campaign       Campaign?     @relation(fields: [campaignId], references: [id])
-  submissions    DeliverableSubmission[]
+  influencer      Influencer              @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  campaign        Campaign?               @relation(fields: [campaignId], references: [id])
+  submissions     DeliverableSubmission[]
   revisionHistory ContentRevision[]
 
   @@index([influencerId])
@@ -777,18 +841,18 @@ model Content {
 }
 
 model DeliverableSubmission {
-  id            String              @id @default(cuid())
+  id            String            @id @default(cuid())
   deliverableId String
   contentId     String
-  status        DeliverableStatus   @default(SUBMITTED)
+  status        DeliverableStatus @default(SUBMITTED)
   feedback      String?
-  submittedAt   DateTime            @default(now())
+  submittedAt   DateTime          @default(now())
   reviewedAt    DateTime?
   approvedAt    DateTime?
-  updatedAt     DateTime            @updatedAt
+  updatedAt     DateTime          @updatedAt
 
-  deliverable   CampaignDeliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
-  content       Content             @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  deliverable CampaignDeliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  content     Content             @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
   @@unique([deliverableId, contentId])
   @@index([deliverableId])
@@ -804,7 +868,7 @@ model ContentRevision {
   reviewerNotes String?
   createdAt     DateTime @default(now())
 
-  content       Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
   @@index([contentId])
 }
@@ -819,8 +883,8 @@ model Conversation {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  participants  ConversationParticipant[]
-  messages      Message[]
+  participants ConversationParticipant[]
+  messages     Message[]
 
   @@index([lastMessageAt])
 }
@@ -834,8 +898,8 @@ model ConversationParticipant {
   joinedAt       DateTime  @default(now())
   leftAt         DateTime?
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([conversationId, userId])
   @@index([conversationId])
@@ -853,10 +917,10 @@ model Message {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User          @relation("SentMessages", fields: [senderId], references: [id])
-  recipient      User?         @relation("ReceivedMessages", fields: [recipientId], references: [id])
-  attachments    MessageAttachment[]
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                @relation("SentMessages", fields: [senderId], references: [id])
+  recipient    User?               @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  attachments  MessageAttachment[]
 
   @@index([conversationId])
   @@index([senderId])
@@ -873,7 +937,7 @@ model MessageAttachment {
   size      Int
   createdAt DateTime @default(now())
 
-  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
 }
@@ -892,7 +956,7 @@ model Notification {
   metadata  Json?
   createdAt DateTime         @default(now())
 
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([read])
@@ -903,28 +967,29 @@ model Notification {
 // ==================== PAYMENT MODELS ====================
 
 model Payment {
-  id               String        @id @default(cuid())
-  brandId          String
-  influencerId     String
-  campaignId       String?
-  amount           Decimal       @db.Decimal(10, 2)
-  currency         String        @default("USD")
-  status           PaymentStatus @default(PENDING)
-  description      String?
+  id           String        @id @default(cuid())
+  brandId      String
+  influencerId String
+  campaignId   String?
+  amount       Decimal       @db.Decimal(10, 2)
+  currency     String        @default("USD")
+  status       PaymentStatus @default(PENDING)
+  description  String?
 
   // Payment processor
   stripePaymentId  String?
   stripeTransferId String?
 
-  processedAt      DateTime?
-  failedAt         DateTime?
-  failureReason    String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  processedAt   DateTime?
+  failedAt      DateTime?
+  failureReason String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  brand            Brand         @relation(fields: [brandId], references: [id])
-  influencer       Influencer    @relation(fields: [influencerId], references: [id])
-  campaign         Campaign?     @relation(fields: [campaignId], references: [id])
+  brand              Brand               @relation(fields: [brandId], references: [id])
+  influencer         Influencer          @relation(fields: [influencerId], references: [id])
+  campaign           Campaign?           @relation(fields: [campaignId], references: [id])
+  walletTransactions WalletTransaction[]
 
   @@index([brandId])
   @@index([influencerId])
@@ -953,70 +1018,110 @@ model PaymentMethod {
 // ==================== REVIEW MODELS ====================
 
 model InfluencerReview {
-  id           String   @id @default(cuid())
+  id           String  @id @default(cuid())
   influencerId String
   brandId      String
   campaignId   String?
   rating       Int
   comment      String?
-  verified     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  verified     Boolean @default(true)
 
-  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
-  brand        Brand      @relation(fields: [brandId], references: [id])
+  // Phase 1: Detailed ratings
+  communicationRating   Int?
+  contentQualityRating  Int?
+  professionalismRating Int?
+  valueForMoneyRating   Int?
+
+  // Delivery metrics (auto-calculated)
+  wasOnTime        Boolean?
+  deliveryDaysLate Int?
+
+  // Response
+  influencerResponse    String?
+  influencerRespondedAt DateTime?
+
+  // Visibility & Moderation
+  isPublic           Boolean @default(true)
+  isVerifiedPurchase Boolean @default(true)
+  isReported         Boolean @default(false)
+  moderationStatus   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  brand      Brand      @relation(fields: [brandId], references: [id])
 
   @@unique([influencerId, brandId, campaignId])
   @@index([influencerId])
   @@index([brandId])
   @@index([rating])
+  @@index([isPublic])
 }
 
 model BrandReview {
-  id           String     @id @default(cuid())
+  id           String  @id @default(cuid())
   brandId      String
   influencerId String
   campaignId   String?
   rating       Int
   comment      String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
 
-  brand        Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  influencer   Influencer @relation(fields: [influencerId], references: [id])
+  // Phase 1: Detailed ratings
+  communicationRating   Int?
+  paymentSpeedRating    Int?
+  professionalismRating Int?
+  briefClarityRating    Int?
+
+  // Response
+  brandResponse    String?
+  brandRespondedAt DateTime?
+
+  // Visibility & Moderation
+  isPublic           Boolean @default(true)
+  isVerifiedPurchase Boolean @default(true)
+  isReported         Boolean @default(false)
+  moderationStatus   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brand      Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id])
 
   @@unique([brandId, influencerId, campaignId])
   @@index([brandId])
   @@index([rating])
+  @@index([isPublic])
 }
 
 // ==================== INSTAGRAM GRAPH API MODELS ====================
 
 model InstagramProfile {
-  id                  String   @id @default(cuid())
-  influencerId        String   @unique
-  instagramUserId     String   @unique
-  username            String
-  name                String?
-  biography           String?
-  profilePictureUrl   String?
-  website             String?
-  followersCount      Int      @default(0)
-  followsCount        Int      @default(0)
-  mediaCount          Int      @default(0)
-  accountType         String?
+  id                String  @id @default(cuid())
+  influencerId      String  @unique
+  instagramUserId   String  @unique
+  username          String
+  name              String?
+  biography         String?
+  profilePictureUrl String?
+  website           String?
+  followersCount    Int     @default(0)
+  followsCount      Int     @default(0)
+  mediaCount        Int     @default(0)
+  accountType       String?
 
-  accessToken         String
-  tokenExpiresAt      DateTime
+  accessToken    String
+  tokenExpiresAt DateTime
 
-  lastSyncedAt        DateTime @default(now())
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  lastSyncedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  influencer          Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
-  media               InstagramMedia[]
-  insights            InstagramInsights[]
-  audienceInsights    InstagramAudienceInsights?
+  influencer       Influencer                 @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  media            InstagramMedia[]
+  insights         InstagramInsights[]
+  audienceInsights InstagramAudienceInsights?
 
   @@index([instagramUserId])
   @@index([username])
@@ -1033,23 +1138,23 @@ model InstagramMedia {
   caption            String?
   timestamp          DateTime
 
-  likeCount          Int      @default(0)
-  commentsCount      Int      @default(0)
+  likeCount     Int @default(0)
+  commentsCount Int @default(0)
 
-  videoViews         Int?
-  plays              Int?
+  videoViews Int?
+  plays      Int?
 
-  reach              Int?
-  impressions        Int?
-  engagement         Int?
-  saved              Int?
-  shares             Int?
+  reach       Int?
+  impressions Int?
+  engagement  Int?
+  saved       Int?
+  shares      Int?
 
-  lastSyncedAt       DateTime @default(now())
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  lastSyncedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  profile            InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
+  profile InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
 
   @@index([instagramProfileId])
   @@index([timestamp])
@@ -1057,10 +1162,10 @@ model InstagramMedia {
 }
 
 model InstagramInsights {
-  id                  String   @id @default(cuid())
-  instagramProfileId  String
-  period              String
-  date                DateTime @db.Date
+  id                 String   @id @default(cuid())
+  instagramProfileId String
+  period             String
+  date               DateTime @db.Date
 
   impressions         Int?
   reach               Int?
@@ -1072,10 +1177,10 @@ model InstagramInsights {
   textMessageClicks   Int?
   followerCount       Int?
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  profile             InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
+  profile InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
 
   @@unique([instagramProfileId, period, date])
   @@index([instagramProfileId])
@@ -1083,18 +1188,1351 @@ model InstagramInsights {
 }
 
 model InstagramAudienceInsights {
-  id                 String   @id @default(cuid())
-  instagramProfileId String   @unique
+  id                 String @id @default(cuid())
+  instagramProfileId String @unique
 
-  audienceGenderAge  Json?
-  audienceLocale     Json?
-  audienceCountry    Json?
-  audienceCity       Json?
-  onlineFollowers    Json?
+  audienceGenderAge Json?
+  audienceLocale    Json?
+  audienceCountry   Json?
+  audienceCity      Json?
+  onlineFollowers   Json?
 
-  lastSyncedAt       DateTime @default(now())
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  lastSyncedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  profile            InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
+  profile InstagramProfile @relation(fields: [instagramProfileId], references: [id], onDelete: Cascade)
+}
+
+// ==================== PHASE 1: COLLABORATION WORKFLOW ====================
+
+enum CollaborationStatus {
+  PROPOSAL_SENT
+  PROPOSAL_ACCEPTED
+  NEGOTIATING
+  CONTRACT_PENDING
+  CONTRACT_SIGNED
+  IN_PRODUCTION
+  CONTENT_SUBMITTED
+  REVISION_REQUESTED
+  CONTENT_APPROVED
+  PUBLISHED
+  PAYMENT_PENDING
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  PAID
+}
+
+model Collaboration {
+  id           String              @id @default(cuid())
+  campaignId   String
+  influencerId String
+  brandId      String
+  status       CollaborationStatus @default(PROPOSAL_SENT)
+
+  // Financial
+  agreedAmount     Decimal @db.Decimal(10, 2)
+  platformFee      Decimal @db.Decimal(10, 2)
+  influencerPayout Decimal @db.Decimal(10, 2)
+  currency         String  @default("USD")
+
+  // Timeline
+  startDate      DateTime?
+  endDate        DateTime?
+  contentDueDate DateTime?
+
+  // Tracking
+  currentMilestoneId String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+  cancelledAt DateTime?
+
+  // Relations
+  campaign           Campaign                     @relation(fields: [campaignId], references: [id])
+  influencer         Influencer                   @relation(fields: [influencerId], references: [id])
+  brand              Brand                        @relation(fields: [brandId], references: [id])
+  contract           CollaborationContract?
+  milestones         Milestone[]
+  statusHistory      CollaborationStatusHistory[]
+  deliverables       CollaborationDeliverable[]
+  communications     CollaborationMessage[]
+  escrowAccount      EscrowAccount?
+  disputes           Dispute[]
+  walletTransactions WalletTransaction[]
+
+  @@index([campaignId])
+  @@index([influencerId])
+  @@index([brandId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CollaborationContract {
+  id                String  @id @default(cuid())
+  collaborationId   String  @unique
+  templateId        String?
+  terms             String  @db.Text
+  deliverableTerms  Json
+  paymentTerms      Json
+  cancellationTerms String? @db.Text
+
+  brandSignature String?
+  brandSignedAt  DateTime?
+  brandSignedIp  String?
+
+  influencerSignature String?
+  influencerSignedAt  DateTime?
+  influencerSignedIp  String?
+
+  isFullySigned Boolean @default(false)
+  pdfUrl        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collaboration Collaboration     @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  template      ContractTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([isFullySigned])
+}
+
+model ContractTemplate {
+  id        String   @id @default(cuid())
+  brandId   String?
+  name      String
+  content   String   @db.Text
+  variables String[]
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brand     Brand?                  @relation(fields: [brandId], references: [id])
+  contracts CollaborationContract[]
+
+  @@index([brandId])
+  @@index([isDefault])
+}
+
+model Milestone {
+  id              String          @id @default(cuid())
+  collaborationId String
+  title           String
+  description     String?
+  order           Int
+  amount          Decimal         @db.Decimal(10, 2)
+  dueDate         DateTime?
+  status          MilestoneStatus @default(PENDING)
+  completedAt     DateTime?
+  approvedAt      DateTime?
+  paidAt          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collaboration      Collaboration              @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  deliverables       CollaborationDeliverable[]
+  payment            MilestonePayment?
+  escrowRelease      EscrowRelease?
+  walletTransactions WalletTransaction[]
+
+  @@index([collaborationId])
+  @@index([status])
+  @@index([order])
+}
+
+model CollaborationDeliverable {
+  id              String            @id @default(cuid())
+  collaborationId String
+  milestoneId     String?
+  type            String
+  platform        Platform
+  description     String?
+  quantity        Int               @default(1)
+  status          DeliverableStatus @default(PENDING)
+
+  // Submission tracking
+  currentVersion Int @default(0)
+
+  dueDate      DateTime?
+  submittedAt  DateTime?
+  approvedAt   DateTime?
+  publishedAt  DateTime?
+  publishedUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collaboration Collaboration        @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  milestone     Milestone?           @relation(fields: [milestoneId], references: [id])
+  versions      DeliverableVersion[]
+
+  @@index([collaborationId])
+  @@index([milestoneId])
+  @@index([status])
+}
+
+model DeliverableVersion {
+  id            String @id @default(cuid())
+  deliverableId String
+  version       Int
+
+  // Content
+  mediaUrls String[]
+  caption   String?  @db.Text
+  notes     String?  @db.Text
+
+  // Review
+  reviewedAt   DateTime?
+  reviewedBy   String?
+  reviewStatus String?
+  feedback     String?   @db.Text
+
+  submittedAt DateTime @default(now())
+
+  deliverable CollaborationDeliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+
+  @@unique([deliverableId, version])
+  @@index([deliverableId])
+}
+
+model CollaborationStatusHistory {
+  id              String               @id @default(cuid())
+  collaborationId String
+  fromStatus      CollaborationStatus?
+  toStatus        CollaborationStatus
+  changedBy       String
+  reason          String?
+  metadata        Json?
+  createdAt       DateTime             @default(now())
+
+  collaboration Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+
+  @@index([collaborationId])
+  @@index([createdAt])
+}
+
+model CollaborationMessage {
+  id              String   @id @default(cuid())
+  collaborationId String
+  senderId        String
+  content         String   @db.Text
+  attachments     String[]
+  isSystemMessage Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  collaboration Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  sender        User          @relation(fields: [senderId], references: [id])
+
+  @@index([collaborationId])
+  @@index([createdAt])
+}
+
+// ==================== PHASE 1: PAYMENTS, ESCROW & INVOICING ====================
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  ESCROW_HOLD
+  ESCROW_RELEASE
+  PLATFORM_FEE
+  REFUND
+  PAYOUT
+  ADJUSTMENT
+}
+
+enum WalletType {
+  BRAND_WALLET
+  INFLUENCER_WALLET
+  PLATFORM_ESCROW
+  PLATFORM_REVENUE
+}
+
+enum EscrowStatus {
+  PENDING
+  FUNDED
+  PARTIALLY_RELEASED
+  FULLY_RELEASED
+  REFUNDED
+  DISPUTED
+}
+
+enum InvoiceType {
+  BRAND_DEPOSIT
+  INFLUENCER_PAYOUT
+  PLATFORM_FEE
+  REFUND
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Wallet {
+  id             String     @id @default(cuid())
+  userId         String     @unique
+  type           WalletType
+  balance        Decimal    @default(0) @db.Decimal(12, 2)
+  pendingBalance Decimal    @default(0) @db.Decimal(12, 2)
+  currency       String     @default("USD")
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id])
+  transactions WalletTransaction[]
+
+  @@index([userId])
+  @@index([type])
+}
+
+model WalletTransaction {
+  id          String          @id @default(cuid())
+  walletId    String
+  type        TransactionType
+  amount      Decimal         @db.Decimal(12, 2)
+  balance     Decimal         @db.Decimal(12, 2)
+  currency    String          @default("USD")
+  description String?
+
+  // References
+  relatedTransactionId String?
+  collaborationId      String?
+  milestoneId          String?
+  paymentId            String?
+  invoiceId            String?
+
+  // Metadata
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  wallet        Wallet         @relation(fields: [walletId], references: [id])
+  collaboration Collaboration? @relation(fields: [collaborationId], references: [id])
+  milestone     Milestone?     @relation(fields: [milestoneId], references: [id])
+  payment       Payment?       @relation(fields: [paymentId], references: [id])
+  invoice       Invoice?       @relation(fields: [invoiceId], references: [id])
+
+  @@index([walletId])
+  @@index([type])
+  @@index([collaborationId])
+  @@index([createdAt])
+}
+
+model EscrowAccount {
+  id              String       @id @default(cuid())
+  collaborationId String       @unique
+  brandId         String
+  influencerId    String
+  totalAmount     Decimal      @db.Decimal(12, 2)
+  heldAmount      Decimal      @default(0) @db.Decimal(12, 2)
+  releasedAmount  Decimal      @default(0) @db.Decimal(12, 2)
+  platformFee     Decimal      @db.Decimal(12, 2)
+  currency        String       @default("USD")
+  status          EscrowStatus @default(PENDING)
+
+  fundedAt   DateTime?
+  releasedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collaboration Collaboration   @relation(fields: [collaborationId], references: [id])
+  brand         Brand           @relation(fields: [brandId], references: [id])
+  influencer    Influencer      @relation(fields: [influencerId], references: [id])
+  releases      EscrowRelease[]
+
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([status])
+}
+
+model EscrowRelease {
+  id              String   @id @default(cuid())
+  escrowAccountId String
+  milestoneId     String?  @unique
+  amount          Decimal  @db.Decimal(12, 2)
+  platformFee     Decimal  @db.Decimal(12, 2)
+  netAmount       Decimal  @db.Decimal(12, 2)
+  reason          String?
+  approvedBy      String
+  releasedAt      DateTime @default(now())
+
+  escrowAccount EscrowAccount @relation(fields: [escrowAccountId], references: [id])
+  milestone     Milestone?    @relation(fields: [milestoneId], references: [id])
+
+  @@index([escrowAccountId])
+}
+
+model MilestonePayment {
+  id          String        @id @default(cuid())
+  milestoneId String        @unique
+  amount      Decimal       @db.Decimal(12, 2)
+  platformFee Decimal       @db.Decimal(12, 2)
+  netAmount   Decimal       @db.Decimal(12, 2)
+  status      PaymentStatus @default(PENDING)
+
+  paidAt           DateTime?
+  stripeTransferId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  milestone Milestone @relation(fields: [milestoneId], references: [id])
+
+  @@index([status])
+}
+
+model Invoice {
+  id              String  @id @default(cuid())
+  invoiceNumber   String  @unique
+  brandId         String?
+  influencerId    String?
+  collaborationId String?
+
+  type   InvoiceType
+  status InvoiceStatus @default(DRAFT)
+
+  // Line items
+  lineItems Json
+
+  // Totals
+  subtotal    Decimal  @db.Decimal(12, 2)
+  taxRate     Decimal? @db.Decimal(5, 2)
+  taxAmount   Decimal? @db.Decimal(12, 2)
+  platformFee Decimal? @db.Decimal(12, 2)
+  total       Decimal  @db.Decimal(12, 2)
+  currency    String   @default("USD")
+
+  // Tax details
+  gstNumber String?
+  taxType   String?
+
+  // Dates
+  issueDate DateTime  @default(now())
+  dueDate   DateTime?
+  paidAt    DateTime?
+
+  // Files
+  pdfUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brand        Brand?              @relation(fields: [brandId], references: [id])
+  influencer   Influencer?         @relation(fields: [influencerId], references: [id])
+  transactions WalletTransaction[]
+
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([status])
+  @@index([issueDate])
+  @@index([invoiceNumber])
+}
+
+model PayoutMethod {
+  id         String  @id @default(cuid())
+  userId     String
+  type       String
+  isDefault  Boolean @default(false)
+  isVerified Boolean @default(false)
+
+  // Bank details (last 4 digits only for display)
+  bankName           String?
+  accountNumberLast4 String?
+  routingNumber      String?
+  accountHolderName  String?
+
+  // External accounts
+  stripeConnectId String?
+  paypalEmail     String?
+
+  // For international
+  swiftCode String?
+  iban      String?
+  country   String?
+  currency  String  @default("USD")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isDefault])
+}
+
+model PlatformCommission {
+  id         String   @id @default(cuid())
+  name       String
+  percentage Decimal  @db.Decimal(5, 2)
+  minAmount  Decimal? @db.Decimal(12, 2)
+  maxAmount  Decimal? @db.Decimal(12, 2)
+  tierMin    Decimal? @db.Decimal(12, 2)
+  tierMax    Decimal? @db.Decimal(12, 2)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// ==================== PHASE 1: REPUTATION & TRUST SYSTEM ====================
+
+enum VerificationBadge {
+  IDENTITY_VERIFIED
+  BUSINESS_VERIFIED
+  TOP_CREATOR
+  RISING_STAR
+  RELIABLE_PAYER
+  FAST_RESPONDER
+  QUALITY_CONTENT
+}
+
+model ReputationScore {
+  id       String   @id @default(cuid())
+  userId   String   @unique
+  userType UserRole
+
+  // Overall scores
+  overallScore Decimal @db.Decimal(3, 2)
+  totalReviews Int     @default(0)
+
+  // Component scores (for influencers)
+  onTimeDeliveryScore  Decimal? @db.Decimal(5, 2)
+  contentQualityScore  Decimal? @db.Decimal(3, 2)
+  communicationScore   Decimal? @db.Decimal(3, 2)
+  professionalismScore Decimal? @db.Decimal(3, 2)
+
+  // Component scores (for brands)
+  paymentReliabilityScore Decimal? @db.Decimal(5, 2)
+  briefClarityScore       Decimal? @db.Decimal(3, 2)
+
+  // Badges
+  badges VerificationBadge[]
+
+  // History
+  scoreHistory Json?
+
+  lastCalculatedAt DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([overallScore])
+  @@index([userType])
+}
+
+model VerificationRequest {
+  id               String @id @default(cuid())
+  userId           String
+  verificationType String
+  status           String @default("PENDING")
+
+  // Documents
+  documents String[]
+
+  // Review
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([verificationType])
+}
+
+model Dispute {
+  id              String @id @default(cuid())
+  collaborationId String
+  raisedBy        String
+  againstUserId   String
+
+  type        String
+  description String   @db.Text
+  evidence    String[]
+
+  status     String    @default("OPEN")
+  resolution String?
+  resolvedAt DateTime?
+  resolvedBy String?
+
+  // Impact on reputation
+  impactsReputation Boolean @default(false)
+  reputationAction  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collaboration Collaboration @relation(fields: [collaborationId], references: [id])
+  raiser        User          @relation("DisputeRaiser", fields: [raisedBy], references: [id])
+  against       User          @relation("DisputeAgainst", fields: [againstUserId], references: [id])
+
+  @@index([collaborationId])
+  @@index([status])
+  @@index([raisedBy])
+  @@index([againstUserId])
+}
+
+// ==================== PHASE 2: SOCIAL FEED LAYER ====================
+
+enum FeedPostType {
+  TEXT
+  IMAGE
+  VIDEO
+  CAROUSEL
+  POLL
+  CAMPAIGN_SHARE
+  MILESTONE_ACHIEVEMENT
+  PORTFOLIO_PIECE
+}
+
+enum FeedPostVisibility {
+  PUBLIC
+  FOLLOWERS_ONLY
+  CONNECTIONS_ONLY
+  PRIVATE
+}
+
+model FeedPost {
+  id         String             @id @default(cuid())
+  authorId   String
+  type       FeedPostType
+  visibility FeedPostVisibility @default(PUBLIC)
+
+  // Content
+  content    String   @db.Text
+  mediaUrls  String[]
+  thumbnails String[]
+
+  // Campaign reference (for campaign shares)
+  campaignId String?
+
+  // Engagement metrics (denormalized for performance)
+  likesCount    Int @default(0)
+  commentsCount Int @default(0)
+  sharesCount   Int @default(0)
+  viewsCount    Int @default(0)
+
+  // Metadata
+  hashtags  String[]
+  mentions  String[]
+  isPinned  Boolean  @default(false)
+  isDeleted Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  campaign Campaign?     @relation(fields: [campaignId], references: [id])
+  likes    FeedLike[]
+  comments FeedComment[]
+  shares   FeedShare[]
+  poll     FeedPoll?
+
+  @@index([authorId])
+  @@index([type])
+  @@index([visibility])
+  @@index([createdAt])
+  @@index([campaignId])
+}
+
+model FeedLike {
+  id     String @id @default(cuid())
+  postId String
+  userId String
+
+  createdAt DateTime @default(now())
+
+  post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model FeedComment {
+  id         String  @id @default(cuid())
+  postId     String
+  authorId   String
+  parentId   String?
+  content    String  @db.Text
+  likesCount Int     @default(0)
+
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post    FeedPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author  User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent  FeedComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies FeedComment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentId])
+}
+
+model FeedShare {
+  id     String  @id @default(cuid())
+  postId String
+  userId String
+  note   String?
+
+  createdAt DateTime @default(now())
+
+  post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model FeedPoll {
+  id     String @id @default(cuid())
+  postId String @unique
+
+  question String
+  options  Json
+  endsAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  post  FeedPost       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  votes FeedPollVote[]
+}
+
+model FeedPollVote {
+  id          String @id @default(cuid())
+  pollId      String
+  userId      String
+  optionIndex Int
+
+  createdAt DateTime @default(now())
+
+  poll FeedPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+  @@index([pollId])
+}
+
+model UserFollow {
+  id          String @id @default(cuid())
+  followerId  String
+  followingId String
+
+  createdAt DateTime @default(now())
+
+  follower  User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// ==================== PHASE 2: INFLUENCER CRM ====================
+
+enum CRMContactStatus {
+  LEAD
+  CONTACTED
+  IN_DISCUSSION
+  ACTIVE_PARTNER
+  PAST_PARTNER
+  BLACKLISTED
+}
+
+model CRMContact {
+  id           String @id @default(cuid())
+  brandId      String
+  influencerId String
+
+  status       CRMContactStatus @default(LEAD)
+  customLabels String[]
+
+  // Engagement tracking
+  lastContactedAt     DateTime?
+  nextFollowUpAt      DateTime?
+  totalCollaborations Int       @default(0)
+  totalSpend          Decimal   @default(0) @db.Decimal(12, 2)
+
+  // Notes & metadata
+  internalNotes String? @db.Text
+  customFields  Json?
+
+  // Source tracking
+  source     String?
+  acquiredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brand      Brand         @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencer Influencer    @relation(fields: [influencerId], references: [id])
+  notes      CRMNote[]
+  activities CRMActivity[]
+
+  @@unique([brandId, influencerId])
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([status])
+}
+
+model CRMNote {
+  id        String  @id @default(cuid())
+  contactId String
+  authorId  String
+  content   String  @db.Text
+  isPinned  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contact CRMContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+}
+
+model CRMActivity {
+  id        String  @id @default(cuid())
+  contactId String
+  type      String
+  title     String
+  details   String? @db.Text
+
+  // Reference to related entity
+  referenceId   String?
+  referenceType String?
+
+  createdAt DateTime @default(now())
+
+  contact CRMContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model CRMList {
+  id          String  @id @default(cuid())
+  brandId     String
+  name        String
+  description String?
+
+  // Smart list criteria
+  isSmartList Boolean @default(false)
+  criteria    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brand   Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  members CRMListMember[]
+
+  @@index([brandId])
+}
+
+model CRMListMember {
+  id        String   @id @default(cuid())
+  listId    String
+  contactId String
+  addedAt   DateTime @default(now())
+
+  list CRMList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, contactId])
+  @@index([listId])
+}
+
+// ==================== PHASE 2: OPEN CAMPAIGN MARKETPLACE ====================
+
+enum MarketplaceListingStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+  FILLED
+}
+
+model MarketplaceListing {
+  id         String @id @default(cuid())
+  campaignId String
+  brandId    String
+
+  status       MarketplaceListingStatus @default(DRAFT)
+  title        String
+  description  String                   @db.Text
+  requirements String?                  @db.Text
+
+  // Budget
+  budgetMin        Decimal?         @db.Decimal(12, 2)
+  budgetMax        Decimal?         @db.Decimal(12, 2)
+  compensationType CompensationType
+
+  // Targeting
+  targetNiches    String[]
+  targetPlatforms String[]
+  minFollowers    Int?
+  maxFollowers    Int?
+  targetLocations String[]
+  targetAgeRange  String?
+  targetGender    String?
+
+  // Slots
+  totalSlots     Int @default(1)
+  filledSlots    Int @default(0)
+  applicantCount Int @default(0)
+
+  // Dates
+  applicationDeadline DateTime?
+  campaignStartDate   DateTime?
+  campaignEndDate     DateTime?
+
+  // Visibility
+  isFeatured Boolean @default(false)
+  isPremium  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaign     Campaign                 @relation(fields: [campaignId], references: [id])
+  brand        Brand                    @relation(fields: [brandId], references: [id])
+  applications MarketplaceApplication[]
+
+  @@index([status])
+  @@index([brandId])
+  @@index([campaignId])
+  @@index([createdAt])
+  @@index([isFeatured])
+  @@index([compensationType])
+}
+
+model MarketplaceApplication {
+  id           String            @id @default(cuid())
+  listingId    String
+  influencerId String
+  status       ApplicationStatus @default(PENDING)
+
+  // Proposal
+  coverLetter  String?  @db.Text
+  proposedRate Decimal? @db.Decimal(12, 2)
+  portfolio    String[]
+  availability String?
+
+  // Review
+  reviewedAt  DateTime?
+  reviewNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing    MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  influencer Influencer         @relation(fields: [influencerId], references: [id])
+
+  @@unique([listingId, influencerId])
+  @@index([listingId])
+  @@index([influencerId])
+  @@index([status])
+}
+
+// ==================== PHASE 2: ANALYTICS & INTELLIGENCE ====================
+
+model AnalyticsSnapshot {
+  id         String   @id @default(cuid())
+  entityId   String
+  entityType String
+  period     String
+  periodDate DateTime
+
+  // Core metrics
+  metrics Json
+
+  // Computed scores
+  engagementRate Decimal? @db.Decimal(8, 4)
+  growthRate     Decimal? @db.Decimal(8, 4)
+  sentimentScore Decimal? @db.Decimal(3, 2)
+
+  createdAt DateTime @default(now())
+
+  @@unique([entityId, entityType, period, periodDate])
+  @@index([entityId, entityType])
+  @@index([periodDate])
+  @@index([period])
+}
+
+model CampaignAnalytics {
+  id         String @id @default(cuid())
+  campaignId String @unique
+
+  // Performance
+  totalReach       Int @default(0)
+  totalImpressions Int @default(0)
+  totalEngagement  Int @default(0)
+  totalClicks      Int @default(0)
+  totalConversions Int @default(0)
+
+  // Financial
+  totalSpend        Decimal  @default(0) @db.Decimal(12, 2)
+  costPerClick      Decimal? @db.Decimal(8, 4)
+  costPerEngagement Decimal? @db.Decimal(8, 4)
+  costPerConversion Decimal? @db.Decimal(8, 4)
+  roi               Decimal? @db.Decimal(8, 4)
+
+  // Content
+  totalPosts        Int      @default(0)
+  avgEngagementRate Decimal? @db.Decimal(8, 4)
+
+  // Audience
+  audienceReached    Int @default(0)
+  newFollowersGained Int @default(0)
+
+  // Timeline data
+  dailyMetrics Json?
+
+  lastUpdatedAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId])
+}
+
+model InfluencerAnalytics {
+  id           String @id @default(cuid())
+  influencerId String @unique
+
+  // Platform aggregated metrics
+  totalFollowers    Int      @default(0)
+  totalEngagement   Int      @default(0)
+  avgEngagementRate Decimal? @db.Decimal(8, 4)
+
+  // Performance
+  completedCampaigns Int      @default(0)
+  averageRating      Decimal? @db.Decimal(3, 2)
+  onTimeDeliveryRate Decimal? @db.Decimal(5, 2)
+
+  // Content metrics
+  totalPostsCreated Int @default(0)
+  avgPostReach      Int @default(0)
+
+  // Growth
+  followerGrowthRate Decimal? @db.Decimal(8, 4)
+  engagementTrend    String?
+
+  // Audience demographics
+  audienceGender    Json?
+  audienceAge       Json?
+  audienceLocations Json?
+  audienceInterests Json?
+
+  lastUpdatedAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  influencer Influencer @relation(fields: [influencerId], references: [id])
+
+  @@index([influencerId])
+}
+
+model PlatformAnalytics {
+  id     String   @id @default(cuid())
+  date   DateTime @unique
+  period String   @default("DAILY")
+
+  // User metrics
+  totalUsers       Int @default(0)
+  newUsers         Int @default(0)
+  activeUsers      Int @default(0)
+  totalBrands      Int @default(0)
+  totalInfluencers Int @default(0)
+
+  // Campaign metrics
+  activeCampaigns    Int     @default(0)
+  completedCampaigns Int     @default(0)
+  totalCampaignSpend Decimal @default(0) @db.Decimal(14, 2)
+
+  // Transaction metrics
+  totalTransactions  Int     @default(0)
+  totalRevenue       Decimal @default(0) @db.Decimal(14, 2)
+  platformFeeRevenue Decimal @default(0) @db.Decimal(14, 2)
+
+  // Engagement metrics
+  totalCollaborations    Int      @default(0)
+  avgCollaborationRating Decimal? @db.Decimal(3, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([period])
+}
+
+// ==================== PHASE 3: AI INTELLIGENCE LAYER ====================
+
+model AIMatchScore {
+  id           String  @id @default(cuid())
+  brandId      String
+  influencerId String
+  campaignId   String?
+
+  // Match scores (0-100)
+  overallScore     Decimal @db.Decimal(5, 2)
+  audienceScore    Decimal @db.Decimal(5, 2)
+  contentScore     Decimal @db.Decimal(5, 2)
+  engagementScore  Decimal @db.Decimal(5, 2)
+  budgetFitScore   Decimal @db.Decimal(5, 2)
+  brandSafetyScore Decimal @db.Decimal(5, 2)
+
+  // Reasoning
+  matchReasons   String[]
+  warnings       String[]
+  recommendation String?
+
+  // Metadata
+  modelVersion String
+  computedAt   DateTime @default(now())
+
+  brand      Brand      @relation(fields: [brandId], references: [id])
+  influencer Influencer @relation(fields: [influencerId], references: [id])
+  campaign   Campaign?  @relation(fields: [campaignId], references: [id])
+
+  @@unique([brandId, influencerId, campaignId])
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([overallScore])
+}
+
+model AIContentSuggestion {
+  id           String  @id @default(cuid())
+  campaignId   String
+  influencerId String?
+
+  // Content
+  type              String
+  title             String
+  description       String   @db.Text
+  suggestedHooks    String[]
+  suggestedHashtags String[]
+  toneGuidance      String?
+  formatTips        String?
+
+  // Performance prediction
+  predictedEngagementRate Decimal? @db.Decimal(5, 2)
+  predictedReach          Int?
+  confidenceScore         Decimal? @db.Decimal(3, 2)
+
+  // Status
+  status   String  @default("PENDING")
+  feedback String?
+
+  modelVersion String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId])
+  @@index([status])
+}
+
+model AIPricingRecommendation {
+  id           String @id @default(cuid())
+  influencerId String
+  platform     String
+  contentType  String
+
+  recommendedPrice Decimal @db.Decimal(12, 2)
+  priceRangeMin    Decimal @db.Decimal(12, 2)
+  priceRangeMax    Decimal @db.Decimal(12, 2)
+
+  // Factors
+  factors Json
+
+  modelVersion String
+  createdAt    DateTime @default(now())
+
+  influencer Influencer @relation(fields: [influencerId], references: [id])
+
+  @@index([influencerId])
+  @@index([platform, contentType])
+}
+
+model AIFraudFlag {
+  id           String    @id @default(cuid())
+  influencerId String
+  type         String
+  severity     String
+  description  String    @db.Text
+  evidence     Json
+  status       String    @default("PENDING")
+  resolvedBy   String?
+  resolvedAt   DateTime?
+
+  modelVersion String
+  createdAt    DateTime @default(now())
+
+  influencer Influencer @relation(fields: [influencerId], references: [id])
+
+  @@index([influencerId])
+  @@index([type])
+  @@index([status])
+}
+
+// ==================== PHASE 3: MONETIZATION & SUBSCRIPTION ENGINE ====================
+
+enum SubscriptionTier {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  PAUSED
+  TRIALING
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+model SubscriptionPlan {
+  id          String           @id @default(cuid())
+  name        String
+  tier        SubscriptionTier @unique
+  description String?
+
+  // Pricing
+  monthlyPrice Decimal @db.Decimal(10, 2)
+  yearlyPrice  Decimal @db.Decimal(10, 2)
+  currency     String  @default("USD")
+
+  // Limits
+  maxCampaigns   Int?
+  maxInfluencers Int?
+  maxTeamMembers Int?
+  maxListings    Int?
+  maxAIQueries   Int?
+  storageLimit   Int?
+
+  // Features
+  features String[]
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([tier])
+  @@index([isActive])
+}
+
+model Subscription {
+  id     String             @id @default(cuid())
+  userId String
+  planId String
+  status SubscriptionStatus @default(ACTIVE)
+
+  // Billing
+  billingInterval    BillingInterval
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAt           DateTime?
+  cancelledAt        DateTime?
+
+  // Payment
+  stripeSubscriptionId String? @unique
+  stripeCustomerId     String?
+
+  // Trial
+  trialStart DateTime?
+  trialEnd   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User                  @relation(fields: [userId], references: [id])
+  plan     SubscriptionPlan      @relation(fields: [planId], references: [id])
+  invoices SubscriptionInvoice[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([stripeSubscriptionId])
+}
+
+model SubscriptionInvoice {
+  id              String    @id @default(cuid())
+  subscriptionId  String
+  amount          Decimal   @db.Decimal(10, 2)
+  currency        String    @default("USD")
+  status          String    @default("PENDING")
+  stripeInvoiceId String?
+  paidAt          DateTime?
+  dueDate         DateTime
+
+  createdAt DateTime @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([status])
+}
+
+model UsageRecord {
+  id     String   @id @default(cuid())
+  userId String
+  type   String
+  count  Int      @default(1)
+  period DateTime @db.Date
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type, period])
+  @@index([userId])
+  @@index([type])
+  @@index([period])
+}
+
+model FeatureGate {
+  id          String  @id @default(cuid())
+  feature     String  @unique
+  description String?
+
+  // Tier requirements
+  minTier    SubscriptionTier
+  isAddon    Boolean          @default(false)
+  addonPrice Decimal?         @db.Decimal(10, 2)
+
+  isActive Boolean @default(true)
+
+  @@index([feature])
+  @@index([minTier])
 }

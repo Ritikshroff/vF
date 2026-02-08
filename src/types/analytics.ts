@@ -121,3 +121,59 @@ export interface RevenueData {
     percentage: number
   }[]
 }
+
+// ==================== Phase 2: Advanced Analytics ====================
+
+export type AnalyticsPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
+
+export interface AnalyticsTimeRange {
+  startDate: string
+  endDate: string
+  period?: AnalyticsPeriod
+}
+
+export interface CampaignPerformanceMetrics {
+  totalReach: number
+  totalImpressions: number
+  totalEngagement: number
+  totalClicks: number
+  totalConversions: number
+  totalSpend: number
+  costPerClick: number | null
+  costPerEngagement: number | null
+  costPerConversion: number | null
+  roi: number | null
+  totalPosts: number
+  avgEngagementRate: number | null
+}
+
+export interface InfluencerPerformanceMetrics {
+  totalFollowers: number
+  totalEngagement: number
+  avgEngagementRate: number | null
+  completedCampaigns: number
+  averageRating: number | null
+  onTimeDeliveryRate: number | null
+  totalPostsCreated: number
+  followerGrowthRate: number | null
+}
+
+export interface PlatformOverviewMetrics {
+  totalUsers: number
+  newUsers: number
+  activeUsers: number
+  totalBrands: number
+  totalInfluencers: number
+  activeCampaigns: number
+  totalRevenue: number
+  platformFeeRevenue: number
+  totalCollaborations: number
+}
+
+export interface DashboardWidget {
+  id: string
+  type: 'metric' | 'chart' | 'table' | 'list'
+  title: string
+  data: unknown
+  config?: Record<string, unknown>
+}
