@@ -10,8 +10,11 @@ const reviewSchema = z.object({
   feedback: z.string().optional(),
 })
 
-export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser, context: { params: Promise<any> }) => {
+export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser, context?: { params: Promise<any> }) => {
   try {
+    if (!context) {
+      return errorHandler(new Error('Route context is required'))
+    }
     const { id } = await context.params
     const body = await validateBody(request, reviewSchema)
     const result = await reviewContent(id, user.id, body)
