@@ -1,5 +1,8 @@
 import { prisma } from '@/lib/db/prisma'
 
+const signatureAudit = () => (prisma as any).contractSignatureAudit
+const ftcCheck = () => (prisma as any).fTCComplianceCheck
+
 export async function listTemplates(brandId: string) {
   return prisma.contractTemplate.findMany({
     where: { brandId },
@@ -14,7 +17,7 @@ export async function getTemplate(templateId: string) {
 }
 
 export async function signContract(contractId: string, userId: string, role: string, ipAddress: string, userAgent: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     // Record the audit entry
     const audit = await tx.contractSignatureAudit.create({
       data: { contractId, signerId: userId, signerRole: role, ipAddress, userAgent },
@@ -44,7 +47,7 @@ export async function signContract(contractId: string, userId: string, role: str
 }
 
 export async function getContractAuditTrail(contractId: string) {
-  return prisma.contractSignatureAudit.findMany({
+  return signatureAudit().findMany({
     where: { contractId },
     orderBy: { signedAt: 'desc' },
   })
@@ -61,7 +64,7 @@ export async function checkFTCCompliance(contentId: string) {
   const issues: string[] = []
   if (!hasDisclosure) issues.push('No FTC disclosure found (e.g., #ad, #sponsored)')
 
-  return prisma.fTCComplianceCheck.create({
+  return ftcCheck().create({
     data: { contentId, hasDisclosure, disclosureType, isCompliant: hasDisclosure, issues },
   })
 }
@@ -69,12 +72,12 @@ export async function checkFTCCompliance(contentId: string) {
 export async function listFTCChecks(brandId: string, page = 1, pageSize = 20) {
   const skip = (page - 1) * pageSize
   const [data, total] = await Promise.all([
-    prisma.fTCComplianceCheck.findMany({
+    ftcCheck().findMany({
       where: { content: { influencer: { collaborations: { some: { brandId } } } } },
       include: { content: { select: { id: true, title: true, type: true, platform: true } } },
       skip, take: pageSize, orderBy: { checkedAt: 'desc' },
     }),
-    prisma.fTCComplianceCheck.count({ where: { content: { influencer: { collaborations: { some: { brandId } } } } } }),
+    ftcCheck().count({ where: { content: { influencer: { collaborations: { some: { brandId } } } } } }),
   ])
   return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
 }

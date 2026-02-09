@@ -50,7 +50,7 @@ export async function recordConversion(linkId: string, data: { promoCodeId?: str
       promoCodeId: data.promoCodeId,
       orderValue: data.orderValue ? new Prisma.Decimal(data.orderValue) : null,
       commission: data.commission ? new Prisma.Decimal(data.commission) : null,
-      metadata: data.metadata || undefined,
+      metadata: (data.metadata as any) || undefined,
     },
   })
 }

@@ -3,8 +3,11 @@ import { errorHandler } from '@/middleware/error.middleware'
 import { recordClick } from '@/services/tracking.service'
 import crypto from 'crypto'
 
-export async function GET(request: NextRequest, context: { params: Promise<any> }) {
+export async function GET(request: NextRequest, context?: { params: Promise<any> }) {
   try {
+    if (!context) {
+      return errorHandler(new Error('Route context is required'))
+    }
     const { shortCode } = await context.params
     const ipHash = crypto.createHash('sha256').update(request.headers.get('x-forwarded-for') || 'unknown').digest('hex')
     const result = await recordClick(shortCode, {

@@ -1,6 +1,11 @@
-import { ApprovalStatus } from '@prisma/client'
-
-export { ApprovalStatus }
+export type ApprovalStatus =
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'IN_REVIEW'
+  | 'CHANGES_REQUESTED'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'PUBLISHED'
 
 export interface SubmitContentInput {
   contentId: string

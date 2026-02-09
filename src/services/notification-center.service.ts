@@ -33,7 +33,7 @@ export async function getUnreadCount(userId: string) {
 
 export async function createAlertRule(userId: string, input: CreateAlertRuleInput) {
   return prisma.alertRule.create({
-    data: { userId, name: input.name, eventType: input.eventType, conditions: input.conditions, channels: input.channels },
+    data: { userId, name: input.name, eventType: input.eventType, conditions: input.conditions as any, channels: input.channels },
   })
 }
 
@@ -44,7 +44,7 @@ export async function listAlertRules(userId: string) {
 export async function updateAlertRule(ruleId: string, userId: string, input: Partial<CreateAlertRuleInput>) {
   const rule = await prisma.alertRule.findFirst({ where: { id: ruleId, userId } })
   if (!rule) throw new Error('Alert rule not found')
-  return prisma.alertRule.update({ where: { id: ruleId }, data: input })
+  return prisma.alertRule.update({ where: { id: ruleId }, data: input as any })
 }
 
 export async function deleteAlertRule(ruleId: string, userId: string) {

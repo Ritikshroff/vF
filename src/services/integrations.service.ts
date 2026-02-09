@@ -4,7 +4,7 @@ import crypto from 'crypto'
 
 export async function connectApp(userId: string, input: ConnectAppInput) {
   return prisma.connectedApp.create({
-    data: { userId, appName: input.appName, accessToken: input.accessToken, refreshToken: input.refreshToken, config: input.config },
+    data: { userId, appName: input.appName, accessToken: input.accessToken, refreshToken: input.refreshToken, config: input.config as any },
   })
 }
 

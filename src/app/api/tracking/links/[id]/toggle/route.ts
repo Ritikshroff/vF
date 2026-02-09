@@ -4,9 +4,12 @@ import { errorHandler } from '@/middleware/error.middleware'
 import { AuthenticatedUser } from '@/middleware/auth.middleware'
 import { toggleLinkStatus } from '@/services/tracking.service'
 
-export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser, context: { params: Promise<any> }) => {
+export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser, context?: { params: Promise<any> }) => {
   try {
     if (!user.influencerId) return NextResponse.json({ error: 'Influencer only' }, { status: 403 })
+    if (!context) {
+      return errorHandler(new Error('Route context is required'))
+    }
     const { id } = await context.params
     const result = await toggleLinkStatus(id, user.influencerId)
     return successResponse(result)

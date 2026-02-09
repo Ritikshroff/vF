@@ -22,7 +22,7 @@ export async function getMediaKitBySlug(slug: string) {
       influencer: {
         select: {
           fullName: true, username: true, avatar: true, verified: true, categories: true,
-          platforms: { select: { platform: true, handle: true, followerCount: true, engagementRate: true } },
+          platforms: { select: { platform: true, handle: true, followers: true, engagementRate: true } },
           metrics: true,
         },
       },
@@ -50,7 +50,7 @@ export async function updateSections(mediaKitId: string, sections: MediaKitSecti
     await tx.mediaKitSection.deleteMany({ where: { mediaKitId } })
     const created = await Promise.all(
       sections.map((s) => tx.mediaKitSection.create({
-        data: { mediaKitId, type: s.type, title: s.title, content: s.content, order: s.order, isVisible: s.isVisible ?? true },
+        data: { mediaKitId, type: s.type, title: s.title, content: s.content as any, order: s.order, isVisible: s.isVisible ?? true },
       }))
     )
     return created

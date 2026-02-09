@@ -25,7 +25,7 @@ export async function generateReport(brandId: string, input: GenerateReportInput
   return prisma.generatedReport.create({
     data: {
       brandId, templateId: input.templateId, campaignId: input.campaignId,
-      reportType: input.reportType, dateRange: input.dateRange, data: reportData,
+      reportType: input.reportType, dateRange: input.dateRange as any, data: reportData as any,
     },
   })
 }

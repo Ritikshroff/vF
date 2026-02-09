@@ -4,12 +4,16 @@ import { errorHandler } from '@/middleware/error.middleware'
 import { AuthenticatedUser } from '@/middleware/auth.middleware'
 import { getContractAuditTrail } from '@/services/contract-legal.service'
 
-export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser, context: { params: Promise<any> }) => {
+export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser, context?: { params: Promise<any> }) => {
   try {
+    if (!context) {
+      return errorHandler(new Error('Route context is required'))
+    }
     const { id } = await context.params
     const result = await getContractAuditTrail(id)
     return successResponse(result)
   } catch (error) {
+    
     return errorHandler(error)
   }
 })

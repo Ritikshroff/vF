@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db/prisma'
-import { Prisma, ApprovalStatus } from '@prisma/client'
+import { ApprovalStatus } from '@/types/content-approval'
 import { ReviewContentInput, ApprovalFilters } from '@/types/content-approval'
+
+const approvalStep = () => (prisma as any).contentApprovalStep
 
 export async function submitForApproval(contentId: string, userId: string, reviewerIds: string[]) {
   // Verify content belongs to user (through influencer)
@@ -12,12 +14,12 @@ export async function submitForApproval(contentId: string, userId: string, revie
     throw new Error('Content not found or unauthorized')
   }
   // Create approval steps in transaction
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     // Delete any existing steps
     await tx.contentApprovalStep.deleteMany({ where: { contentId } })
     // Create new steps for each reviewer
     const steps = await Promise.all(
-      reviewerIds.map((reviewerId, index) =>
+      reviewerIds.map((reviewerId: string, index: number) =>
         tx.contentApprovalStep.create({
           data: {
             contentId,
@@ -34,9 +36,9 @@ export async function submitForApproval(contentId: string, userId: string, revie
 }
 
 export async function reviewContent(stepId: string, reviewerId: string, input: ReviewContentInput) {
-  const step = await prisma.contentApprovalStep.findUnique({ where: { id: stepId } })
+  const step = await approvalStep().findUnique({ where: { id: stepId } })
   if (!step || step.reviewerId !== reviewerId) throw new Error('Unauthorized')
-  return prisma.contentApprovalStep.update({
+  return approvalStep().update({
     where: { id: stepId },
     data: {
       status: input.status as ApprovalStatus,
@@ -53,13 +55,13 @@ export async function reviewContent(stepId: string, reviewerId: string, input: R
 export async function listPendingApprovals(userId: string, role: string, filters: ApprovalFilters) {
   const { status, page = 1, pageSize = 20 } = filters
   const skip = (page - 1) * pageSize
-  const where: Prisma.ContentApprovalStepWhereInput = {}
+  const where: any = {}
   if (role === 'BRAND' || role === 'ADMIN') {
     if (role !== 'ADMIN') where.reviewerId = userId
   }
   if (status) where.status = status
   const [data, total] = await Promise.all([
-    prisma.contentApprovalStep.findMany({
+    approvalStep().findMany({
       where,
       include: {
         content: {
@@ -72,13 +74,13 @@ export async function listPendingApprovals(userId: string, role: string, filters
       },
       skip, take: pageSize, orderBy: { createdAt: 'desc' },
     }),
-    prisma.contentApprovalStep.count({ where }),
+    approvalStep().count({ where }),
   ])
   return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
 }
 
 export async function getApprovalTimeline(contentId: string) {
-  return prisma.contentApprovalStep.findMany({
+  return approvalStep().findMany({
     where: { contentId },
     include: { reviewer: { select: { id: true, name: true } } },
     orderBy: { stepOrder: 'asc' },

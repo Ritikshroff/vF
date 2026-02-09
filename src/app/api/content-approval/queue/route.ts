@@ -3,7 +3,7 @@ import { withAuth, getPagination, successResponse } from '@/lib/api/with-middlew
 import { errorHandler } from '@/middleware/error.middleware'
 import { AuthenticatedUser } from '@/middleware/auth.middleware'
 import { listPendingApprovals } from '@/services/content-approval.service'
-import { ApprovalStatus } from '@prisma/client'
+import { ApprovalStatus } from '@/types/content-approval'
 
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {

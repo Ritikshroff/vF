@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db/prisma'
-import { Prisma, TeamRole } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { CreateOrganizationInput, InviteMemberInput, UpdateMemberRoleInput } from '@/types/team'
 import crypto from 'crypto'
 
@@ -91,6 +91,6 @@ export async function getActivityLog(orgId: string, page = 1, pageSize = 50) {
 
 export async function logActivity(orgId: string, userId: string, action: string, entityType?: string, entityId?: string, metadata?: Record<string, unknown>) {
   return prisma.teamActivityLog.create({
-    data: { organizationId: orgId, userId, action, entityType, entityId, metadata },
+    data: { organizationId: orgId, userId, action, entityType, entityId, metadata: metadata as any },
   })
 }

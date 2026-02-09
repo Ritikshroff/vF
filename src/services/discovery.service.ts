@@ -2,6 +2,9 @@ import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@prisma/client'
 import { DiscoveryFilters } from '@/types/discovery'
 
+const comparison = () => (prisma as any).influencerComparison
+const history = () => (prisma as any).searchHistory
+
 export async function searchInfluencers(filters: DiscoveryFilters) {
   const { query, niches, platforms, minFollowers, maxFollowers, location, verified, page = 1, pageSize = 20 } = filters
   const skip = (page - 1) * pageSize
@@ -21,23 +24,23 @@ export async function searchInfluencers(filters: DiscoveryFilters) {
     prisma.influencer.findMany({
       where,
       include: {
-        platforms: { select: { platform: true, handle: true, followerCount: true, engagementRate: true } },
-        pricing: { select: { minRate: true, maxRate: true } },
+        platforms: { select: { platform: true, handle: true, followers: true, engagementRate: true } },
+        pricing: true,
       },
       skip, take: pageSize, orderBy: { rating: 'desc' },
     }),
     prisma.influencer.count({ where }),
   ])
 
-  const results = data.map((i) => ({
+  const results = data.map((i: any) => ({
     id: i.id, username: i.username, fullName: i.fullName, avatar: i.avatar, bio: i.bio,
     location: i.location, verified: i.verified, categories: i.categories,
     rating: Number(i.rating), totalReviews: i.totalReviews,
-    platforms: i.platforms.map((p) => ({
+    platforms: i.platforms.map((p: any) => ({
       platform: p.platform, handle: p.handle,
-      followerCount: p.followerCount, engagementRate: Number(p.engagementRate),
+      followers: p.followers, engagementRate: Number(p.engagementRate),
     })),
-    pricing: i.pricing ? { minRate: Number(i.pricing.minRate), maxRate: Number(i.pricing.maxRate) } : null,
+    pricing: i.pricing ? { currency: i.pricing.currency, negotiable: i.pricing.negotiable } : null,
   }))
 
   return { data: results, total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
@@ -58,19 +61,19 @@ export async function compareInfluencers(influencerIds: string[]) {
   const influencers = await prisma.influencer.findMany({
     where: { id: { in: influencerIds } },
     include: {
-      platforms: { select: { platform: true, handle: true, followerCount: true, engagementRate: true } },
-      pricing: { select: { minRate: true, maxRate: true } },
+      platforms: { select: { platform: true, handle: true, followers: true, engagementRate: true } },
+      pricing: true,
       metrics: true,
     },
   })
-  return influencers.map((i) => ({
+  return influencers.map((i: any) => ({
     id: i.id, username: i.username, fullName: i.fullName, avatar: i.avatar, bio: i.bio,
     location: i.location, verified: i.verified, categories: i.categories,
     rating: Number(i.rating), totalReviews: i.totalReviews,
-    platforms: i.platforms.map((p) => ({
-      platform: p.platform, handle: p.handle, followerCount: p.followerCount, engagementRate: Number(p.engagementRate),
+    platforms: i.platforms.map((p: any) => ({
+      platform: p.platform, handle: p.handle, followers: p.followers, engagementRate: Number(p.engagementRate),
     })),
-    pricing: i.pricing ? { minRate: Number(i.pricing.minRate), maxRate: Number(i.pricing.maxRate) } : null,
+    pricing: i.pricing ? { currency: i.pricing.currency, negotiable: i.pricing.negotiable } : null,
   }))
 }
 
@@ -80,32 +83,32 @@ export async function getSimilarInfluencers(influencerId: string, limit = 5) {
   const similar = await prisma.influencer.findMany({
     where: { id: { not: influencerId }, categories: { hasSome: influencer.categories } },
     include: {
-      platforms: { select: { platform: true, handle: true, followerCount: true, engagementRate: true } },
-      pricing: { select: { minRate: true, maxRate: true } },
+      platforms: { select: { platform: true, handle: true, followers: true, engagementRate: true } },
+      pricing: true,
     },
     take: limit, orderBy: { rating: 'desc' },
   })
-  return similar.map((i) => ({
+  return similar.map((i: any) => ({
     id: i.id, username: i.username, fullName: i.fullName, avatar: i.avatar, bio: i.bio,
     location: i.location, verified: i.verified, categories: i.categories,
     rating: Number(i.rating), totalReviews: i.totalReviews,
-    platforms: i.platforms.map((p) => ({
-      platform: p.platform, handle: p.handle, followerCount: p.followerCount, engagementRate: Number(p.engagementRate),
+    platforms: i.platforms.map((p: any) => ({
+      platform: p.platform, handle: p.handle, followers: p.followers, engagementRate: Number(p.engagementRate),
     })),
-    pricing: i.pricing ? { minRate: Number(i.pricing.minRate), maxRate: Number(i.pricing.maxRate) } : null,
+    pricing: i.pricing ? { currency: i.pricing.currency, negotiable: i.pricing.negotiable } : null,
   }))
 }
 
 export async function saveComparison(brandId: string, influencerIds: string[], name?: string) {
-  return prisma.influencerComparison.create({ data: { brandId, influencerIds, name } })
+  return comparison().create({ data: { brandId, influencerIds, name } })
 }
 
 export async function saveSearch(userId: string, query: string, filters: Record<string, unknown>, resultCount: number) {
-  return prisma.searchHistory.create({ data: { userId, query, filters, resultCount } })
+  return history().create({ data: { userId, query, filters, resultCount } })
 }
 
 export async function getSearchHistory(userId: string, limit = 10) {
-  return prisma.searchHistory.findMany({
+  return history().findMany({
     where: { userId }, orderBy: { createdAt: 'desc' }, take: limit,
   })
 }

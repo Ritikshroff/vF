@@ -12,8 +12,11 @@ const sendMessageSchema = z.object({
   })).optional(),
 })
 
-export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser, context: { params: Promise<any> }) => {
+export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser, context?: { params: Promise<any> }) => {
   try {
+    if (!context) {
+      return errorHandler(new Error('Route context is required'))
+    }
     const { id } = await context.params
     const body = await validateBody(request, sendMessageSchema)
     const result = await sendMessage(id, user.id, body)

@@ -7,8 +7,11 @@ import { signContract } from '@/services/contract-legal.service'
 
 const signSchema = z.object({ signature: z.string().min(1) })
 
-export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser, context: { params: Promise<any> }) => {
+export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser, context?: { params: Promise<any> }) => {
   try {
+    if (!context) {
+      return errorHandler(new Error('Route context is required'))
+    }
     const { id } = await context.params
     await validateBody(request, signSchema)
     const ipAddress = request.headers.get('x-forwarded-for') || 'unknown'

@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 import { CreateBudgetPlanInput, CalculateROIInput, IndustryBenchmark } from '@/types/budget'
 
 export async function createBudgetPlan(brandId: string, input: CreateBudgetPlanInput) {
-  return prisma.budgetPlan.create({
+  return (prisma as any).budgetPlan.create({
     data: {
       brandId, campaignId: input.campaignId, name: input.name,
       totalBudget: new Prisma.Decimal(input.totalBudget), allocations: input.allocations,
@@ -12,22 +12,22 @@ export async function createBudgetPlan(brandId: string, input: CreateBudgetPlanI
 }
 
 export async function listBudgetPlans(brandId: string) {
-  const plans = await prisma.budgetPlan.findMany({ where: { brandId }, orderBy: { createdAt: 'desc' } })
-  return plans.map((p) => ({
+  const plans = await (prisma as any).budgetPlan.findMany({ where: { brandId }, orderBy: { createdAt: 'desc' } })
+  return plans.map((p: any) => ({
     id: p.id, name: p.name, campaignId: p.campaignId,
     totalBudget: Number(p.totalBudget), allocations: p.allocations, createdAt: p.createdAt,
   }))
 }
 
 export async function getBudgetPlan(planId: string, brandId: string) {
-  const plan = await prisma.budgetPlan.findFirst({ where: { id: planId, brandId } })
+  const plan = await (prisma as any).budgetPlan.findFirst({ where: { id: planId, brandId } })
   if (!plan) throw new Error('Budget plan not found')
   return { ...plan, totalBudget: Number(plan.totalBudget) }
 }
 
 export async function calculateROI(brandId: string, input: CalculateROIInput) {
   const estimatedROI = input.estimatedConversions > 0 ? ((input.estimatedConversions * 50 - input.budget) / input.budget) * 100 : 0
-  return prisma.rOIProjection.create({
+  return (prisma as any).rOIProjection.create({
     data: {
       brandId, campaignId: input.campaignId,
       budget: new Prisma.Decimal(input.budget),
@@ -39,8 +39,8 @@ export async function calculateROI(brandId: string, input: CalculateROIInput) {
 }
 
 export async function listROIProjections(brandId: string) {
-  const projections = await prisma.rOIProjection.findMany({ where: { brandId }, orderBy: { createdAt: 'desc' } })
-  return projections.map((p) => ({
+  const projections = await (prisma as any).rOIProjection.findMany({ where: { brandId }, orderBy: { createdAt: 'desc' } })
+  return projections.map((p: any) => ({
     id: p.id, budget: Number(p.budget), estimatedReach: p.estimatedReach,
     estimatedEngagement: p.estimatedEngagement, estimatedConversions: p.estimatedConversions,
     estimatedROI: Number(p.estimatedROI), assumptions: p.assumptions, createdAt: p.createdAt,
