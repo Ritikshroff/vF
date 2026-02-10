@@ -135,10 +135,10 @@ export default function BrandOnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center py-6 sm:py-10 lg:py-12 px-4 sm:px-6">
       <div className="w-full max-w-2xl">
         {/* Progress bar */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Step {step} of {totalSteps}</span>
             <span className="text-sm text-[rgb(var(--muted))]">{Math.round((step / totalSteps) * 100)}%</span>
@@ -162,16 +162,16 @@ export default function BrandOnboardingPage() {
             variants={slideInRight}
           >
             <Card>
-              <CardContent className="p-8">
+              <CardContent className="p-4 sm:p-6 lg:p-8">
                 {/* Step 1: Company Details */}
                 {step === 1 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Building2 className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Tell us about your company</h2>
-                      <p className="text-[rgb(var(--muted))]">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Tell us about your company</h2>
+                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                         Help us understand your business better
                       </p>
                     </div>
@@ -216,13 +216,13 @@ export default function BrandOnboardingPage() {
 
                 {/* Step 2: Company Size */}
                 {step === 2 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Users className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Company size</h2>
-                      <p className="text-[rgb(var(--muted))]">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Company size</h2>
+                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                         How many people work at your company?
                       </p>
                     </div>
@@ -232,14 +232,14 @@ export default function BrandOnboardingPage() {
                         <button
                           key={size}
                           onClick={() => setFormData(prev => ({ ...prev, companySize: size }))}
-                          className={`p-4 rounded-lg border-2 transition-all text-left ${
+                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
                             formData.companySize === size
                               ? 'border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5'
                               : 'border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium">{size}</span>
+                            <span className="text-sm sm:text-base font-medium">{size}</span>
                             {formData.companySize === size && (
                               <Check className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                             )}
@@ -252,23 +252,23 @@ export default function BrandOnboardingPage() {
 
                 {/* Step 3: Goals */}
                 {step === 3 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Target className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Target className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">What are your goals?</h2>
-                      <p className="text-[rgb(var(--muted))]">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">What are your goals?</h2>
+                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                         Select all that apply (at least one)
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {GOALS.map((goal) => (
                         <button
                           key={goal}
                           onClick={() => handleGoalToggle(goal)}
-                          className={`p-4 rounded-lg border-2 transition-all text-left ${
+                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
                             formData.goals.includes(goal)
                               ? 'border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5'
                               : 'border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50'
@@ -277,7 +277,7 @@ export default function BrandOnboardingPage() {
                           <div className="flex items-start justify-between gap-2">
                             <span className="text-sm font-medium">{goal}</span>
                             {formData.goals.includes(goal) && (
-                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] flex-shrink-0" />
+                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] shrink-0" />
                             )}
                           </div>
                         </button>
@@ -298,13 +298,13 @@ export default function BrandOnboardingPage() {
 
                 {/* Step 4: Budget */}
                 {step === 4 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <DollarSign className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Campaign budget</h2>
-                      <p className="text-[rgb(var(--muted))]">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Campaign budget</h2>
+                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                         What's your typical campaign budget?
                       </p>
                     </div>
@@ -314,14 +314,14 @@ export default function BrandOnboardingPage() {
                         <button
                           key={budget}
                           onClick={() => setFormData(prev => ({ ...prev, budget }))}
-                          className={`p-4 rounded-lg border-2 transition-all text-left ${
+                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
                             formData.budget === budget
                               ? 'border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5'
                               : 'border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium">{budget}</span>
+                            <span className="text-sm sm:text-base font-medium">{budget}</span>
                             {formData.budget === budget && (
                               <Check className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                             )}
@@ -333,7 +333,7 @@ export default function BrandOnboardingPage() {
                 )}
 
                 {/* Navigation buttons */}
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-[rgb(var(--border))]">
+                <div className="flex items-center justify-between mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[rgb(var(--border))]">
                   <Button
                     variant="ghost"
                     onClick={handleBack}

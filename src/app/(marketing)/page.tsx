@@ -301,7 +301,7 @@ export default function HomePage() {
 
               <motion.h1
                 variants={staggerItem}
-                className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight mb-10 leading-[0.95]"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight mb-6 sm:mb-8 lg:mb-10 leading-[0.95]"
               >
                 Where Brands Meet
                 <br />
@@ -312,7 +312,7 @@ export default function HomePage() {
 
               <motion.p
                 variants={staggerItem}
-                className="text-xl md:text-3xl text-[rgb(var(--muted))] mb-14 max-w-4xl mx-auto leading-relaxed font-light"
+                className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[rgb(var(--muted))] mb-8 sm:mb-10 lg:mb-14 max-w-4xl mx-auto leading-relaxed font-light"
               >
                 The most powerful platform for influencer marketing.
                 <br className="hidden md:block" />
@@ -321,25 +321,25 @@ export default function HomePage() {
 
               <motion.div
                 variants={staggerItem}
-                className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
+                className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-10 sm:mb-12 lg:mb-16"
               >
                 <Link href="/sign-up">
                   <Button
                     size="lg"
                     variant="gradient"
-                    className="text-xl px-12 py-8 h-auto group rounded-full shadow-2xl shadow-[rgb(var(--brand-primary))]/30"
+                    className="text-base sm:text-lg lg:text-xl px-8 sm:px-10 lg:px-12 py-6 sm:py-7 lg:py-8 h-auto group rounded-full shadow-2xl shadow-[rgb(var(--brand-primary))]/30"
                   >
                     Start Free Trial
-                    <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-2 transition-transform" />
+                    <ArrowRight className="ml-2 sm:ml-3 h-5 w-5 sm:h-6 sm:w-6 group-hover:translate-x-2 transition-transform" />
                   </Button>
                 </Link>
                 <Link href="#demo">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-xl px-12 py-8 h-auto group rounded-full backdrop-blur-sm border-2"
+                    className="text-base sm:text-lg lg:text-xl px-8 sm:px-10 lg:px-12 py-6 sm:py-7 lg:py-8 h-auto group rounded-full backdrop-blur-sm border-2"
                   >
-                    <Play className="mr-3 h-6 w-6 group-hover:scale-125 transition-transform" />
+                    <Play className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-125 transition-transform" />
                     Watch Demo
                   </Button>
                 </Link>
@@ -347,18 +347,18 @@ export default function HomePage() {
 
               <motion.div
                 variants={staggerItem}
-                className="flex items-center justify-center gap-10 text-sm text-[rgb(var(--muted))]"
+                className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-10 text-xs sm:text-sm text-[rgb(var(--muted))]"
               >
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                   No credit card required
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                   14-day free trial
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                   Cancel anytime
                 </div>
               </motion.div>
@@ -383,8 +383,8 @@ export default function HomePage() {
       </section>
 
       {/* Infinite Logo Marquee */}
-      <section className="py-16 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]/50 backdrop-blur-sm overflow-hidden">
-        <div className="mb-8">
+      <section className="py-8 sm:py-12 lg:py-16 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]/50 backdrop-blur-sm overflow-hidden">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
           <p className="text-center text-sm text-[rgb(var(--muted))] uppercase tracking-widest font-semibold">
             Trusted by Industry Leaders
           </p>
@@ -392,7 +392,7 @@ export default function HomePage() {
         <div className="relative">
           <div className="flex animate-marquee whitespace-nowrap">
             {[...brands, ...brands].map((brand, i) => (
-              <div key={i} className="mx-12 text-3xl font-bold text-[rgb(var(--muted))]/40 hover:text-[rgb(var(--foreground))] transition-colors">
+              <div key={i} className="mx-6 sm:mx-8 lg:mx-12 text-xl sm:text-2xl lg:text-3xl font-bold text-[rgb(var(--muted))]/40 hover:text-[rgb(var(--foreground))] transition-colors">
                 {brand}
               </div>
             ))}
@@ -401,9 +401,9 @@ export default function HomePage() {
       </section>
 
       {/* Animated Stats Section with Hover Effects */}
-      <section className="py-32 bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
+      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -415,13 +415,13 @@ export default function HomePage() {
                 className="text-center group cursor-pointer"
               >
                 <motion.div
-                  className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 mb-6 group-hover:from-[rgb(var(--brand-primary))]/30 group-hover:to-[rgb(var(--brand-secondary))]/30 transition-all"
+                  className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 mb-4 sm:mb-5 lg:mb-6 group-hover:from-[rgb(var(--brand-primary))]/30 group-hover:to-[rgb(var(--brand-secondary))]/30 transition-all"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <stat.icon className="h-10 w-10 text-[rgb(var(--brand-primary))]" />
+                  <stat.icon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-[rgb(var(--brand-primary))]" />
                 </motion.div>
-                <div className="text-5xl md:text-6xl font-bold mb-3 gradient-text">
+                <div className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-2 sm:mb-3 gradient-text">
                   <AnimatedCounter end={stat.value} suffix={stat.suffix} />
                 </div>
                 <div className="text-base text-[rgb(var(--muted))] group-hover:text-[rgb(var(--foreground))] transition-colors">
@@ -434,29 +434,29 @@ export default function HomePage() {
       </section>
 
       {/* Tab-Based Platform Features */}
-      <section className="py-32 bg-[rgb(var(--background))]">
+      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 bg-[rgb(var(--background))]">
         <div className="container">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-12 lg:mb-16"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-6">For Everyone</Badge>
+              <Badge variant="primary" className="mb-4 sm:mb-6">For Everyone</Badge>
             </motion.div>
-            <motion.h2 variants={staggerItem} className="text-5xl md:text-7xl font-bold mb-8">
+            <motion.h2 variants={staggerItem} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8">
               Built for <span className="gradient-text">Brands</span> &{' '}
               <span className="gradient-text">Creators</span>
             </motion.h2>
           </motion.div>
 
           {/* Tab Buttons */}
-          <div className="flex justify-center gap-4 mb-16">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-8 sm:mb-12 lg:mb-16">
             <button
               onClick={() => setActiveTab('brands')}
-              className={`px-10 py-5 rounded-full text-lg font-semibold transition-all ${
+              className={`px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-full text-base sm:text-lg font-semibold transition-all ${
                 activeTab === 'brands'
                   ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-xl shadow-[rgb(var(--brand-primary))]/30'
                   : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
@@ -466,7 +466,7 @@ export default function HomePage() {
             </button>
             <button
               onClick={() => setActiveTab('creators')}
-              className={`px-10 py-5 rounded-full text-lg font-semibold transition-all ${
+              className={`px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-full text-base sm:text-lg font-semibold transition-all ${
                 activeTab === 'creators'
                   ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-xl shadow-[rgb(var(--brand-primary))]/30'
                   : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
@@ -484,17 +484,17 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto"
             >
               {platformFeatures[activeTab].map((feature) => (
                 <TiltCard key={feature.title} className="h-full">
                   <Card className="h-full border-2 border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/40 transition-all">
-                    <CardContent className="p-10 text-center">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 flex items-center justify-center mb-6 mx-auto">
-                        <feature.icon className="h-10 w-10 text-[rgb(var(--brand-primary))]" />
+                    <CardContent className="p-6 sm:p-8 lg:p-10 text-center">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 mx-auto">
+                        <feature.icon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-[rgb(var(--brand-primary))]" />
                       </div>
-                      <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-                      <p className="text-[rgb(var(--muted))] text-lg leading-relaxed">
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4">{feature.title}</h3>
+                      <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))] leading-relaxed">
                         {feature.description}
                       </p>
                     </CardContent>
@@ -507,29 +507,29 @@ export default function HomePage() {
       </section>
 
       {/* Enhanced Features Grid with 3D Cards */}
-      <section className="py-32 bg-gradient-to-b from-[rgb(var(--surface))] to-[rgb(var(--background))]">
+      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 bg-gradient-to-b from-[rgb(var(--surface))] to-[rgb(var(--background))]">
         <div className="container">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-20"
+            className="text-center mb-10 sm:mb-12 lg:mb-16 xl:mb-20"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-6">Platform Features</Badge>
+              <Badge variant="primary" className="mb-4 sm:mb-6">Platform Features</Badge>
             </motion.div>
-            <motion.h2 variants={staggerItem} className="text-5xl md:text-7xl font-bold mb-8">
+            <motion.h2 variants={staggerItem} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8">
               Everything You Need to
               <br />
               <span className="gradient-text">Scale Your Influence</span>
             </motion.h2>
-            <motion.p variants={staggerItem} className="text-xl md:text-2xl text-[rgb(var(--muted))] max-w-4xl mx-auto">
+            <motion.p variants={staggerItem} className="text-base sm:text-lg lg:text-xl xl:text-2xl text-[rgb(var(--muted))] max-w-4xl mx-auto">
               From discovery to deployment, our platform handles every aspect of influencer marketing with precision and ease.
             </motion.p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -543,16 +543,16 @@ export default function HomePage() {
                     {/* Gradient Background on Hover */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
 
-                    <CardContent className="p-10 relative z-10">
+                    <CardContent className="p-6 sm:p-8 lg:p-10 relative z-10">
                       <motion.div
-                        className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[rgb(var(--brand-primary))]/10 to-[rgb(var(--brand-secondary))]/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300"
+                        className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[rgb(var(--brand-primary))]/10 to-[rgb(var(--brand-secondary))]/10 flex items-center justify-center mb-4 sm:mb-6 lg:mb-8 group-hover:scale-110 transition-transform duration-300"
                         whileHover={{ rotate: 360 }}
                         transition={{ duration: 0.6 }}
                       >
-                        <feature.icon className="h-10 w-10 text-[rgb(var(--brand-primary))]" />
+                        <feature.icon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-[rgb(var(--brand-primary))]" />
                       </motion.div>
-                      <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-                      <p className="text-[rgb(var(--muted))] text-lg leading-relaxed">
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4">{feature.title}</h3>
+                      <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))] leading-relaxed">
                         {feature.description}
                       </p>
                     </CardContent>

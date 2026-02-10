@@ -201,11 +201,11 @@ export default function CRMDashboardPage() {
       <div className="container py-4 md:py-8">
         <motion.div initial="initial" animate="animate" variants={staggerContainer}>
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold gradient-text">Influencer CRM</h1>
-                <p className="text-sm text-[rgb(var(--muted))]">Manage your influencer relationships and pipeline</p>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold gradient-text">Influencer CRM</h1>
+                <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">Manage your influencer relationships and pipeline</p>
               </div>
               <Button variant="gradient">
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -215,7 +215,7 @@ export default function CRMDashboardPage() {
           </motion.div>
 
           {/* Stats Cards */}
-          <motion.div variants={staggerItem} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <motion.div variants={staggerItem} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {[
               { label: 'Total Contacts', value: stats.total, icon: Users, color: 'text-[rgb(var(--brand-primary))]' },
               { label: 'Active Partners', value: stats.active, icon: CheckCircle2, color: 'text-[rgb(var(--success))]' },
@@ -224,14 +224,14 @@ export default function CRMDashboardPage() {
             ].map((stat, i) => (
               <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-[rgb(var(--surface))]">
-                        <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-[rgb(var(--surface))]">
+                        <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
                       </div>
                       <div>
-                        <div className="text-xl font-bold">{stat.value}</div>
-                        <div className="text-xs text-[rgb(var(--muted))]">{stat.label}</div>
+                        <div className="text-lg sm:text-xl font-bold">{stat.value}</div>
+                        <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">{stat.label}</div>
                       </div>
                     </div>
                   </CardContent>
@@ -240,7 +240,7 @@ export default function CRMDashboardPage() {
             ))}
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-4">
               {/* Search & Filters */}
@@ -290,7 +290,7 @@ export default function CRMDashboardPage() {
 
               {/* Contacts List */}
               {viewMode === 'list' ? (
-                <motion.div variants={staggerItem} className="space-y-3">
+                <motion.div variants={staggerItem} className="space-y-2 sm:space-y-3">
                   {filteredContacts.map((contact, index) => (
                     <motion.div
                       key={contact.id}
@@ -299,7 +299,7 @@ export default function CRMDashboardPage() {
                       transition={{ delay: index * 0.05 }}
                     >
                       <Card className="hover:border-[rgb(var(--brand-primary))]/30 transition-all cursor-pointer">
-                        <CardContent className="p-4">
+                        <CardContent className="p-3 sm:p-4">
                           <div className="flex items-center gap-4">
                             <Avatar size="lg" fallback={getInitials(contact.name)} />
                             <div className="flex-1 min-w-0">
@@ -353,7 +353,7 @@ export default function CRMDashboardPage() {
                   ))}
                 </motion.div>
               ) : (
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {filteredContacts.map((contact, index) => (
                     <motion.div
                       key={contact.id}
@@ -362,7 +362,7 @@ export default function CRMDashboardPage() {
                       transition={{ delay: index * 0.05 }}
                     >
                       <Card className="hover:border-[rgb(var(--brand-primary))]/30 transition-all cursor-pointer">
-                        <CardContent className="p-4">
+                        <CardContent className="p-3 sm:p-4">
                           <div className="flex items-center gap-3 mb-3">
                             <Avatar size="lg" fallback={getInitials(contact.name)} />
                             <div>
@@ -405,7 +405,7 @@ export default function CRMDashboardPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Recent Activity */}
               <motion.div variants={staggerItem}>
                 <Card>

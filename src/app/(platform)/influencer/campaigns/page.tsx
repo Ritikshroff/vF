@@ -150,13 +150,13 @@ export default function InfluencerCampaignsPage() {
           variants={staggerContainer}
         >
           {/* Header - Mobile Optimized */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-2 gradient-text">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2 gradient-text">
                   Browse Campaigns
                 </h1>
-                <p className="text-sm md:text-lg text-muted">
+                <p className="text-sm sm:text-base lg:text-lg text-muted">
                   Find exciting collaboration opportunities
                 </p>
               </div>
@@ -166,7 +166,7 @@ export default function InfluencerCampaignsPage() {
           {/* Stats Cards - Mobile Responsive Grid */}
           <motion.div
             variants={staggerItem}
-            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8"
           >
             {[
               {
@@ -191,11 +191,11 @@ export default function InfluencerCampaignsPage() {
               },
             ].map((stat) => (
               <Card key={stat.label} className="border-2">
-                <CardContent className="p-4 md:p-6">
-                  <div className="text-2xl md:text-3xl font-bold gradient-text mb-1">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-1">
                     {stat.value}
                   </div>
-                  <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
+                  <div className="text-xs sm:text-sm text-[rgb(var(--muted))]">
                     {stat.label}
                   </div>
                 </CardContent>
@@ -204,21 +204,21 @@ export default function InfluencerCampaignsPage() {
           </motion.div>
 
           {/* Search & Filters - Mobile Optimized */}
-          <motion.div variants={staggerItem} className="mb-6 space-y-4">
-            <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-[rgb(var(--muted))]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-[rgb(var(--muted))]" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search campaigns..."
-                  className="pl-10 md:pl-12 h-12 md:h-14"
+                  className="pl-10 sm:pl-12 h-12 min-h-[44px]"
                 />
               </div>
             </div>
 
             {/* Filter Tabs - Mobile Scrollable */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
               {[
                 { value: "available" as const, label: "Available" },
                 { value: "invited" as const, label: "Invited" },
@@ -229,7 +229,7 @@ export default function InfluencerCampaignsPage() {
                 <button
                   key={tab.value}
                   onClick={() => setFilter(tab.value)}
-                  className={`px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base font-medium whitespace-nowrap transition-all ${
+                  className={`px-4 sm:px-6 py-2 sm:py-3 min-h-[44px] rounded-full text-sm sm:text-base font-medium whitespace-nowrap transition-all ${
                     filter === tab.value
                       ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg"
                       : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
@@ -243,10 +243,10 @@ export default function InfluencerCampaignsPage() {
 
           {/* Campaigns Grid - Mobile Optimized */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
-                  <CardContent className="p-4 md:p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="h-6 bg-[rgb(var(--surface))] rounded mb-3" />
                     <div className="h-4 bg-[rgb(var(--surface))] rounded w-2/3" />
                   </CardContent>
@@ -254,15 +254,15 @@ export default function InfluencerCampaignsPage() {
               ))}
             </div>
           ) : filteredCampaigns.length === 0 ? (
-            <Card className="text-center py-12 md:py-16">
+            <Card className="text-center py-8 sm:py-12 lg:py-16">
               <CardContent>
-                <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
-                  <Search className="h-8 w-8 md:h-10 md:w-10 text-[rgb(var(--muted))]" />
+                <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
+                  <Search className="h-8 w-8 sm:h-10 sm:w-10 text-[rgb(var(--muted))]" />
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2">
+                <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2">
                   No campaigns found
                 </h3>
-                <p className="text-sm md:text-base text-[rgb(var(--muted))]">
+                <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                   {searchQuery
                     ? "Try adjusting your search"
                     : `No ${filter} campaigns at the moment`}
@@ -270,7 +270,7 @@ export default function InfluencerCampaignsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {filteredCampaigns.map((campaign) => (
                 <motion.div
                   key={campaign.id}
@@ -280,24 +280,24 @@ export default function InfluencerCampaignsPage() {
                   transition={{ duration: 0.2 }}
                 >
                   <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full flex flex-col">
-                    <CardContent className="p-4 md:p-6 flex flex-col h-full">
+                    <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col h-full">
                       {/* Header */}
-                      <div className="mb-4">
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          <h3 className="text-lg md:text-xl font-bold line-clamp-2 flex-1">
+                      <div className="mb-3 sm:mb-4">
+                        <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
                             {campaign.title}
                           </h3>
                           <Badge variant="outline" className="shrink-0">
                             {campaign.category}
                           </Badge>
                         </div>
-                        <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-3">
+                        <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-2 sm:mb-3">
                           {campaign.description}
                         </p>
                       </div>
 
                       {/* Stats Grid - Mobile 2 cols */}
-                      <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
                         <div className="flex items-center gap-2 text-sm">
                           <DollarSign className="h-4 w-4 text-[rgb(var(--muted))]" />
                           <span className="text-[rgb(var(--muted))] truncate">

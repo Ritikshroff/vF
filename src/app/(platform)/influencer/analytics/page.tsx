@@ -80,10 +80,10 @@ export default function InfluencerAnalyticsPage() {
 
   if (loading || !analytics || !influencer) {
     return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-6">
+      <div className="container py-4 sm:py-6 lg:py-8">
+        <div className="animate-pulse space-y-4 sm:space-y-6">
           <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-32 bg-[rgb(var(--surface))] rounded" />
             ))}
@@ -146,17 +146,17 @@ export default function InfluencerAnalyticsPage() {
           variants={staggerContainer}
         >
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 gradient-text">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2 sm:mb-3 gradient-text">
               Analytics Dashboard
             </h1>
-            <p className="text-lg text-[rgb(var(--muted))]">
+            <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))]">
               Track your performance and audience insights
             </p>
           </motion.div>
 
           {/* Time Range Selector */}
-          <motion.div variants={staggerItem} className="flex gap-2 mb-8">
+          <motion.div variants={staggerItem} className="flex gap-2 mb-4 sm:mb-6 lg:mb-8 overflow-x-auto pb-2">
             {[
               { value: '7d', label: 'Last 7 Days' },
               { value: '30d', label: 'Last 30 Days' },
@@ -166,7 +166,7 @@ export default function InfluencerAnalyticsPage() {
               <button
                 key={range.value}
                 onClick={() => setTimeRange(range.value as any)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                   timeRange === range.value
                     ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white'
                     : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:bg-[rgb(var(--surface-hover))]'
@@ -180,23 +180,23 @@ export default function InfluencerAnalyticsPage() {
           {/* Stats Grid */}
           <motion.div
             variants={staggerContainer}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8"
           >
             {stats.map((stat, index) => (
               <motion.div key={stat.title} variants={staggerItem}>
                 <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
+                    <div className="flex items-start justify-between mb-3 sm:mb-4">
                       <div
-                        className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10`}
+                        className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10`}
                       >
-                        <stat.icon className="h-6 w-6 text-white" />
+                        <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                       </div>
                     </div>
-                    <div className="text-3xl font-bold mb-2 gradient-text">
+                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 gradient-text">
                       {stat.value}
                     </div>
-                    <div className="text-sm text-[rgb(var(--muted))]">
+                    <div className="text-xs sm:text-sm text-[rgb(var(--muted))]">
                       {stat.title}
                     </div>
                   </CardContent>
@@ -206,16 +206,16 @@ export default function InfluencerAnalyticsPage() {
           </motion.div>
 
           {/* Growth Trend Chart */}
-          <motion.div variants={staggerItem} className="mb-8">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="p-3 sm:p-4 lg:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <TrendingUp className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                   Growth Trend
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-80">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
+                <div className="h-64 sm:h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={influencer.growth_trend}>
                       <defs>
@@ -249,18 +249,18 @@ export default function InfluencerAnalyticsPage() {
             </Card>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-8 mb-8">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 lg:mb-8">
             {/* Platform Breakdown */}
             <motion.div variants={staggerItem}>
               <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="p-3 sm:p-4 lg:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <PieChart className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                     Platform Breakdown
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="space-y-3 sm:space-y-4">
                     {analytics.platform_breakdown.map((platform: any, index: number) => (
                       <div key={platform.platform} className="space-y-2">
                         <div className="flex items-center justify-between">
@@ -300,14 +300,14 @@ export default function InfluencerAnalyticsPage() {
             {/* Audience Gender Distribution */}
             <motion.div variants={staggerItem}>
               <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="p-3 sm:p-4 lg:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <Users className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                     Gender Distribution
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-64">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="h-48 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <RechartsPie>
                         <Pie
@@ -333,18 +333,18 @@ export default function InfluencerAnalyticsPage() {
             </motion.div>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Age Demographics */}
             <motion.div variants={staggerItem}>
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="p-3 sm:p-4 lg:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <Calendar className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                     Age Demographics
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-64">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="h-48 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={ageData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
@@ -368,14 +368,14 @@ export default function InfluencerAnalyticsPage() {
             {/* Top Locations */}
             <motion.div variants={staggerItem}>
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="p-3 sm:p-4 lg:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <Globe className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                     Top Locations
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="space-y-3 sm:space-y-4">
                     {locationData.map((location: any, index: number) => (
                       <div key={location.country} className="space-y-2">
                         <div className="flex items-center justify-between">

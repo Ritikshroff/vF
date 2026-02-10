@@ -73,8 +73,8 @@ export default function InfluencerProfilePage() {
 
   if (loading) {
     return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-6">
+      <div className="container py-4 sm:py-6 lg:py-8">
+        <div className="animate-pulse space-y-4 sm:space-y-6">
           <div className="h-64 bg-[rgb(var(--surface))] rounded-xl" />
           <div className="h-96 bg-[rgb(var(--surface))] rounded-xl" />
         </div>
@@ -84,7 +84,7 @@ export default function InfluencerProfilePage() {
 
   if (!influencer) {
     return (
-      <div className="container py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <Card className="text-center py-16">
           <CardContent>
             <h2 className="text-2xl font-bold mb-4">Influencer Not Found</h2>
@@ -111,12 +111,12 @@ export default function InfluencerProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
-      <div className="container py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         {/* Back Button */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="mb-6"
+          className="mb-4 sm:mb-6"
         >
           <Button variant="ghost" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -131,7 +131,7 @@ export default function InfluencerProfilePage() {
         >
           {/* Header Section */}
           <motion.div variants={staggerItem}>
-            <Card className="overflow-hidden border-2 mb-8">
+            <Card className="overflow-hidden border-2 mb-4 sm:mb-6 lg:mb-8">
               <div className="relative h-48 bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20">
                 <div
                   className="absolute inset-0 bg-cover bg-center"
@@ -142,11 +142,11 @@ export default function InfluencerProfilePage() {
                 />
               </div>
 
-              <CardContent className="p-8">
-                <div className="flex flex-col md:flex-row gap-6 -mt-20 relative">
+              <CardContent className="p-3 sm:p-4 lg:p-6 xl:p-8">
+                <div className="flex flex-col md:flex-row gap-4 sm:gap-6 -mt-16 sm:-mt-20 relative">
                   {/* Avatar */}
                   <div className="relative">
-                    <div className="w-32 h-32 rounded-full border-4 border-[rgb(var(--background))] bg-[rgb(var(--surface))] overflow-hidden">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-[rgb(var(--background))] bg-[rgb(var(--surface))] overflow-hidden">
                       <img
                         src={influencer.avatar}
                         alt={influencer.fullName}
@@ -162,12 +162,12 @@ export default function InfluencerProfilePage() {
 
                   {/* Info */}
                   <div className="flex-1">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3 sm:mb-4">
                       <div>
-                        <h1 className="text-3xl font-bold mb-2">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
                           {influencer.fullName}
                         </h1>
-                        <p className="text-lg text-[rgb(var(--brand-primary))] font-medium mb-2">
+                        <p className="text-base sm:text-lg text-[rgb(var(--brand-primary))] font-medium mb-2">
                           {influencer.username}
                         </p>
                         <div className="flex items-center gap-2 text-[rgb(var(--muted))] mb-3">
@@ -176,11 +176,12 @@ export default function InfluencerProfilePage() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => setIsSaved(!isSaved)}
+                          className="min-h-[44px] min-w-[44px]"
                         >
                           <Heart
                             className={`h-5 w-5 ${
@@ -188,22 +189,22 @@ export default function InfluencerProfilePage() {
                             }`}
                           />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
                           <Share2 className="h-5 w-5" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
                           <Flag className="h-5 w-5" />
                         </Button>
-                        <Button variant="gradient" className="px-8">
+                        <Button variant="gradient" className="px-6 sm:px-8 min-h-[44px]">
                           Invite to Campaign
                         </Button>
                       </div>
                     </div>
 
-                    <p className="text-[rgb(var(--muted))] mb-4">{influencer.bio}</p>
+                    <p className="text-[rgb(var(--muted))] mb-3 sm:mb-4">{influencer.bio}</p>
 
                     {/* Categories */}
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
                       {influencer.categories.map((cat) => (
                         <Badge key={cat} variant="outline">
                           {cat}
@@ -212,33 +213,33 @@ export default function InfluencerProfilePage() {
                     </div>
 
                     {/* Stats Row */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div className="text-2xl font-bold gradient-text">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div className="text-lg sm:text-xl lg:text-2xl font-bold gradient-text">
                           {formatCompactNumber(primaryPlatform.followers)}
                         </div>
                         <div className="text-xs text-[rgb(var(--muted))]">
                           Followers
                         </div>
                       </div>
-                      <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div className="text-2xl font-bold gradient-text">
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div className="text-lg sm:text-xl lg:text-2xl font-bold gradient-text">
                           {influencer.metrics.avg_engagement_rate.toFixed(1)}%
                         </div>
                         <div className="text-xs text-[rgb(var(--muted))]">
                           Engagement
                         </div>
                       </div>
-                      <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div className="text-2xl font-bold gradient-text">
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div className="text-lg sm:text-xl lg:text-2xl font-bold gradient-text">
                           {formatCompactNumber(influencer.metrics.total_reach)}
                         </div>
                         <div className="text-xs text-[rgb(var(--muted))]">
                           Total Reach
                         </div>
                       </div>
-                      <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div className="flex items-center justify-center gap-1 text-2xl font-bold">
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div className="flex items-center justify-center gap-1 text-lg sm:text-xl lg:text-2xl font-bold">
                           {influencer.rating}
                           <Star className="h-5 w-5 fill-[rgb(var(--warning))] text-[rgb(var(--warning))]" />
                         </div>

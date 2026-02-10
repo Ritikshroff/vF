@@ -141,11 +141,11 @@ export default function BrandWalletPage() {
       <div className="container py-4 md:py-8">
         <motion.div initial="initial" animate="animate" variants={staggerContainer}>
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold gradient-text">Wallet & Payments</h1>
-                <p className="text-sm text-[rgb(var(--muted))]">Manage your funds, escrow, and invoices</p>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold gradient-text">Wallet & Payments</h1>
+                <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">Manage your funds, escrow, and invoices</p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline">
@@ -161,7 +161,7 @@ export default function BrandWalletPage() {
           </motion.div>
 
           {/* Balance Cards */}
-          <motion.div variants={staggerItem} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <motion.div variants={staggerItem} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {[
               { label: 'Available Balance', value: formatCurrency(walletBalance), icon: Wallet, color: 'text-[rgb(var(--brand-primary))]', bg: 'bg-[rgb(var(--brand-primary))]/10' },
               { label: 'Held in Escrow', value: formatCurrency(escrowHeld), icon: Lock, color: 'text-[rgb(var(--info))]', bg: 'bg-[rgb(var(--info))]/10' },
@@ -170,12 +170,12 @@ export default function BrandWalletPage() {
             ].map((stat, i) => (
               <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
                 <Card>
-                  <CardContent className="p-4">
-                    <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3`}>
-                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  <CardContent className="p-3 sm:p-4">
+                    <div className={`p-1.5 sm:p-2 rounded-lg ${stat.bg} w-fit mb-2 sm:mb-3`}>
+                      <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
                     </div>
-                    <div className="text-xl md:text-2xl font-bold">{stat.value}</div>
-                    <div className="text-xs text-[rgb(var(--muted))]">{stat.label}</div>
+                    <div className="text-lg sm:text-xl lg:text-2xl font-bold">{stat.value}</div>
+                    <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">{stat.label}</div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -183,7 +183,7 @@ export default function BrandWalletPage() {
           </motion.div>
 
           {/* Tab Navigation */}
-          <motion.div variants={staggerItem} className="flex gap-2 mb-6">
+          <motion.div variants={staggerItem} className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
             {[
               { value: 'overview' as const, label: 'Transactions' },
               { value: 'escrow' as const, label: 'Escrow Accounts' },
@@ -266,10 +266,10 @@ export default function BrandWalletPage() {
 
           {/* Escrow View */}
           {activeTab === 'escrow' && (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <motion.div variants={staggerItem}>
                 <Card className="border-[rgb(var(--info))]/20 bg-[rgb(var(--info))]/5">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center gap-3">
                       <Shield className="h-5 w-5 text-[rgb(var(--info))]" />
                       <p className="text-sm text-[rgb(var(--muted))]">
@@ -288,7 +288,7 @@ export default function BrandWalletPage() {
                   transition={{ delay: index * 0.1 }}
                 >
                   <Card>
-                    <CardContent className="p-5">
+                    <CardContent className="p-3 sm:p-4 lg:p-5">
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="font-bold">{escrow.campaignName}</h3>

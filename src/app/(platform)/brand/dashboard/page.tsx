@@ -48,20 +48,20 @@ export default function BrandDashboardPage() {
   ]
 
   return (
-    <div className="container py-8">
+    <div className="container py-4 sm:py-6 lg:py-8">
       <motion.div
         initial="initial"
         animate="animate"
         variants={fadeInUp}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 lg:mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Brand Dashboard</h1>
-            <p className="text-[rgb(var(--muted))]">Welcome back! Here's your campaign overview.</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">Brand Dashboard</h1>
+            <p className="text-sm sm:text-base text-[rgb(var(--muted))]">Welcome back! Here's your campaign overview.</p>
           </div>
-          <Link href="/brand/campaigns/new">
-            <Button variant="gradient">
+          <Link href="/brand/campaigns/new" className="w-full sm:w-auto">
+            <Button variant="gradient" className="w-full sm:w-auto min-h-[44px]">
               <Plus className="h-4 w-4 mr-2" />
               New Campaign
             </Button>
@@ -69,7 +69,7 @@ export default function BrandDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -78,13 +78,13 @@ export default function BrandDashboardPage() {
               transition={{ delay: index * 0.1 }}
             >
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
                     <div className={`p-2 rounded-lg bg-[rgb(var(--surface))]`}>
                       <stat.icon className={`h-5 w-5 ${stat.color}`} />
                     </div>
                   </div>
-                  <div className="text-2xl font-bold mb-1">{stat.value}</div>
+                  <div className="text-lg sm:text-2xl font-bold mb-1">{stat.value}</div>
                   <div className="text-sm text-[rgb(var(--muted))] mb-2">{stat.title}</div>
                   <div className="text-xs text-[rgb(var(--success))]">{stat.change}</div>
                 </CardContent>
@@ -108,11 +108,11 @@ export default function BrandDashboardPage() {
               {recentCampaigns.map((campaign, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
+                  className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
                 >
                   <div>
                     <h4 className="font-semibold mb-1">{campaign.name}</h4>
-                    <div className="flex items-center gap-4 text-sm text-[rgb(var(--muted))]">
+                    <div className="flex items-center gap-2 sm:gap-4 text-sm text-[rgb(var(--muted))]">
                       <span>{campaign.influencers} influencers</span>
                       <span>{campaign.reach} reach</span>
                     </div>
@@ -129,9 +129,9 @@ export default function BrandDashboardPage() {
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-4 sm:mt-6 lg:mt-8">
           <Card hoverable>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <h3 className="font-semibold mb-2">Discover Influencers</h3>
               <p className="text-sm text-[rgb(var(--muted))] mb-4">
                 Find the perfect creators for your next campaign
@@ -143,7 +143,7 @@ export default function BrandDashboardPage() {
           </Card>
 
           <Card hoverable>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <h3 className="font-semibold mb-2">Campaign Analytics</h3>
               <p className="text-sm text-[rgb(var(--muted))] mb-4">
                 View detailed performance metrics and insights
@@ -155,7 +155,7 @@ export default function BrandDashboardPage() {
           </Card>
 
           <Card hoverable>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <h3 className="font-semibold mb-2">Messages</h3>
               <p className="text-sm text-[rgb(var(--muted))] mb-4">
                 Chat with influencers and manage collaborations

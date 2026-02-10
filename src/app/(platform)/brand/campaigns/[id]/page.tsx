@@ -119,7 +119,7 @@ export default function BrandCampaignDetailPage() {
           variants={staggerContainer}
         >
           {/* Back Button */}
-          <motion.div variants={staggerItem} className="mb-6">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
             <Link href="/brand/campaigns">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
@@ -229,7 +229,7 @@ export default function BrandCampaignDetailPage() {
           </motion.div>
 
           {/* Tabs - Mobile Scrollable */}
-          <motion.div variants={staggerItem} className="mb-6">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
               {[
                 { value: "overview" as const, label: "Overview" },
@@ -259,19 +259,19 @@ export default function BrandCampaignDetailPage() {
           </motion.div>
 
           {/* Tab Content */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Overview Tab */}
             {activeTab === "overview" && (
               <motion.div
                 variants={staggerItem}
-                className="grid lg:grid-cols-2 gap-6"
+                className="grid lg:grid-cols-2 gap-4 sm:gap-6"
               >
                 {/* Campaign Details */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Campaign Details</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">Campaign Details</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 sm:space-y-4">
                     <div>
                       <div className="text-sm font-medium mb-2">Goals</div>
                       <div className="flex flex-wrap gap-2">
@@ -328,10 +328,10 @@ export default function BrandCampaignDetailPage() {
                 {/* Deliverables */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Deliverables</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">Deliverables</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {campaign.requirements.deliverables.map(
                         (deliverable, index) => (
                           <div
@@ -359,9 +359,9 @@ export default function BrandCampaignDetailPage() {
                 {/* Timeline */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Timeline</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">Timeline</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 sm:space-y-4">
                     <div className="flex items-center gap-3">
                       <Calendar className="h-5 w-5 text-[rgb(var(--muted))]" />
                       <div>
@@ -411,16 +411,16 @@ export default function BrandCampaignDetailPage() {
                 {/* Spots Remaining */}
                 <Card className="border-2 border-[rgb(var(--brand-primary))]/20">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                       <Users className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                       Availability
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-4xl font-bold gradient-text mb-2">
+                    <div className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-2">
                       {spotsRemaining} spots
                     </div>
-                    <div className="text-sm text-[rgb(var(--muted))] mb-4">
+                    <div className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4">
                       remaining out of {campaign.max_influencers}
                     </div>
                     <div className="h-2 bg-[rgb(var(--surface))] rounded-full overflow-hidden">
@@ -452,7 +452,7 @@ export default function BrandCampaignDetailPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
                     {appliedInfluencers.map((influencer) => (
                       <Card
                         key={influencer.id}
@@ -550,7 +550,7 @@ export default function BrandCampaignDetailPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                     {acceptedInfluencers.map((influencer) => (
                       <Card
                         key={influencer.id}
@@ -627,11 +627,11 @@ export default function BrandCampaignDetailPage() {
             {activeTab === "performance" && (
               <motion.div variants={staggerItem}>
                 {campaign.performance ? (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                     <Card className="border-2">
-                      <CardContent className="p-6">
-                        <TrendingUp className="h-8 w-8 text-blue-500 mb-4" />
-                        <div className="text-3xl font-bold gradient-text mb-2">
+                      <CardContent className="p-4 sm:p-6">
+                        <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 mb-3 sm:mb-4" />
+                        <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
                           {formatCompactNumber(
                             campaign.performance.total_reach,
                           )}
@@ -643,9 +643,9 @@ export default function BrandCampaignDetailPage() {
                     </Card>
 
                     <Card className="border-2">
-                      <CardContent className="p-6">
-                        <Eye className="h-8 w-8 text-purple-500 mb-4" />
-                        <div className="text-3xl font-bold gradient-text mb-2">
+                      <CardContent className="p-4 sm:p-6">
+                        <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 mb-3 sm:mb-4" />
+                        <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
                           {formatCompactNumber(
                             campaign.performance.total_engagement,
                           )}
@@ -657,9 +657,9 @@ export default function BrandCampaignDetailPage() {
                     </Card>
 
                     <Card className="border-2">
-                      <CardContent className="p-6">
-                        <CheckCircle2 className="h-8 w-8 text-green-500 mb-4" />
-                        <div className="text-3xl font-bold gradient-text mb-2">
+                      <CardContent className="p-4 sm:p-6">
+                        <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 mb-3 sm:mb-4" />
+                        <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
                           {formatCompactNumber(
                             campaign.performance.total_conversions,
                           )}
@@ -671,9 +671,9 @@ export default function BrandCampaignDetailPage() {
                     </Card>
 
                     <Card className="border-2 border-green-500/20 bg-green-500/5">
-                      <CardContent className="p-6">
-                        <DollarSign className="h-8 w-8 text-green-500 mb-4" />
-                        <div className="text-3xl font-bold text-green-500 mb-2">
+                      <CardContent className="p-4 sm:p-6">
+                        <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 mb-3 sm:mb-4" />
+                        <div className="text-2xl sm:text-3xl font-bold text-green-500 mb-2">
                           {campaign.performance.roi}%
                         </div>
                         <div className="text-sm text-[rgb(var(--muted))]">

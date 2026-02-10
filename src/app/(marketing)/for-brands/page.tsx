@@ -45,7 +45,7 @@ export default function ForBrandsPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-20 md:py-32">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20">
         <div className="container">
           <motion.div
             initial="initial"
@@ -54,15 +54,15 @@ export default function ForBrandsPage() {
             className="text-center max-w-4xl mx-auto"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-4">For Brands</Badge>
+              <Badge variant="primary" className="mb-3 sm:mb-4">For Brands</Badge>
             </motion.div>
-            <motion.h1 variants={staggerItem} className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6">
+            <motion.h1 variants={staggerItem} className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-4 sm:mb-6">
               Grow Your Brand with <span className="gradient-text">Authentic Influencers</span>
             </motion.h1>
-            <motion.p variants={staggerItem} className="text-lg md:text-xl text-[rgb(var(--muted))] mb-8">
+            <motion.p variants={staggerItem} className="text-base sm:text-lg lg:text-xl text-[rgb(var(--muted))] mb-6 sm:mb-8">
               Connect with the perfect creators to amplify your message, reach new audiences, and drive real results.
             </motion.p>
-            <motion.div variants={staggerItem} className="flex flex-col sm:flex-row gap-4 justify-center">
+            <motion.div variants={staggerItem} className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link href="/role-selector">
                 <Button size="lg" variant="gradient">
                   Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
@@ -77,21 +77,21 @@ export default function ForBrandsPage() {
       </section>
 
       {/* Features */}
-      <section className="py-20 md:py-32 bg-[rgb(var(--surface))]">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20 bg-[rgb(var(--surface))]">
         <div className="container">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-12 lg:mb-16"
           >
-            <motion.h2 variants={staggerItem} className="text-3xl md:text-5xl font-bold mb-4">
+            <motion.h2 variants={staggerItem} className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4">
               Everything You Need to Succeed
             </motion.h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -101,10 +101,10 @@ export default function ForBrandsPage() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card hoverable className="h-full">
-                  <CardContent className="p-8">
-                    <feature.icon className="h-12 w-12 text-[rgb(var(--brand-primary))] mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-[rgb(var(--muted))]">{feature.description}</p>
+                  <CardContent className="p-4 sm:p-6 lg:p-8">
+                    <feature.icon className="h-10 w-10 sm:h-12 sm:w-12 text-[rgb(var(--brand-primary))] mb-3 sm:mb-4" />
+                    <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-1.5 sm:mb-2">{feature.title}</h3>
+                    <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">{feature.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -114,9 +114,9 @@ export default function ForBrandsPage() {
       </section>
 
       {/* Stats */}
-      <section className="py-20 md:py-32">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20">
         <div className="container">
-          <div className="grid md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 text-center">
             {[
               { value: '2,500+', label: 'Active Brands' },
               { value: '15,000+', label: 'Campaigns Launched' },
@@ -130,10 +130,10 @@ export default function ForBrandsPage() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <div className="text-4xl md:text-5xl font-bold gradient-text mb-2">
+                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-text mb-1 sm:mb-2">
                   {stat.value}
                 </div>
-                <div className="text-[rgb(var(--muted))]">{stat.label}</div>
+                <div className="text-xs sm:text-sm text-[rgb(var(--muted))]">{stat.label}</div>
               </motion.div>
             ))}
           </div>
@@ -141,7 +141,7 @@ export default function ForBrandsPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 md:py-32 bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20 bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white">
         <div className="container">
           <motion.div
             initial="initial"
@@ -150,10 +150,10 @@ export default function ForBrandsPage() {
             variants={staggerContainer}
             className="text-center max-w-3xl mx-auto"
           >
-            <motion.h2 variants={staggerItem} className="text-3xl md:text-5xl font-bold mb-6">
+            <motion.h2 variants={staggerItem} className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
               Ready to Scale Your Marketing?
             </motion.h2>
-            <motion.p variants={staggerItem} className="text-lg md:text-xl mb-8 opacity-90">
+            <motion.p variants={staggerItem} className="text-sm sm:text-base lg:text-lg xl:text-xl mb-6 sm:mb-8 opacity-90">
               Join leading brands already seeing incredible results with ViralFluencer.
             </motion.p>
             <motion.div variants={staggerItem}>

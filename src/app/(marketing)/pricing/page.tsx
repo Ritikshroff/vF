@@ -13,27 +13,27 @@ export default function PricingPage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="py-20 md:py-32">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20">
         <div className="container">
           <motion.div
             initial="initial"
             animate="animate"
             variants={staggerContainer}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 lg:mb-16"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-4">Pricing</Badge>
+              <Badge variant="primary" className="mb-3 sm:mb-4">Pricing</Badge>
             </motion.div>
-            <motion.h1 variants={staggerItem} className="text-4xl md:text-6xl font-bold mb-6">
+            <motion.h1 variants={staggerItem} className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
               Simple, <span className="gradient-text">Transparent Pricing</span>
             </motion.h1>
-            <motion.p variants={staggerItem} className="text-lg md:text-xl text-[rgb(var(--muted))]">
+            <motion.p variants={staggerItem} className="text-base sm:text-lg lg:text-xl text-[rgb(var(--muted))]">
               Choose the perfect plan for your business. No hidden fees, no surprises.
             </motion.p>
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto">
             {PRICING_TIERS.map((tier, index) => (
               <motion.div
                 key={tier.id}
@@ -54,31 +54,31 @@ export default function PricingPage() {
                     </div>
                   )}
 
-                  <CardHeader className="text-center pb-8">
-                    <CardTitle className="text-2xl mb-2">{tier.name}</CardTitle>
-                    <p className="text-sm text-[rgb(var(--muted))] mb-4">
+                  <CardHeader className="text-center pb-6 sm:pb-8">
+                    <CardTitle className="text-lg sm:text-xl lg:text-2xl mb-1 sm:mb-2">{tier.name}</CardTitle>
+                    <p className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4">
                       {tier.description}
                     </p>
-                    <div className="mt-4">
+                    <div className="mt-3 sm:mt-4">
                       {tier.price === null ? (
                         <div>
-                          <div className="text-4xl font-bold">Custom</div>
-                          <div className="text-sm text-[rgb(var(--muted))] mt-1">
+                          <div className="text-3xl sm:text-4xl font-bold">Custom</div>
+                          <div className="text-xs sm:text-sm text-[rgb(var(--muted))] mt-1">
                             Contact us for pricing
                           </div>
                         </div>
                       ) : (
                         <div>
                           <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-4xl font-bold">${tier.price}</span>
-                            <span className="text-[rgb(var(--muted))]">/{tier.period}</span>
+                            <span className="text-3xl sm:text-4xl font-bold">${tier.price}</span>
+                            <span className="text-xs sm:text-sm text-[rgb(var(--muted))]">/{tier.period}</span>
                           </div>
                         </div>
                       )}
                     </div>
                   </CardHeader>
 
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-4 sm:space-y-6">
                     <ul className="space-y-3">
                       {tier.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-3">
@@ -106,21 +106,21 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 md:py-32 bg-[rgb(var(--surface))]">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20 bg-[rgb(var(--surface))]">
         <div className="container max-w-3xl">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <motion.h2 variants={staggerItem} className="text-3xl md:text-4xl font-bold mb-4">
+            <motion.h2 variants={staggerItem} className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">
               Frequently Asked Questions
             </motion.h2>
           </motion.div>
 
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
             {[
               {
                 q: 'Can I change plans later?',
@@ -147,9 +147,9 @@ export default function PricingPage() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card>
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold mb-2">{faq.q}</h3>
-                    <p className="text-[rgb(var(--muted))]">{faq.a}</p>
+                  <CardContent className="p-4 sm:p-6">
+                    <h3 className="font-semibold text-sm sm:text-base mb-1 sm:mb-2">{faq.q}</h3>
+                    <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">{faq.a}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -159,7 +159,7 @@ export default function PricingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-32">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20">
         <div className="container">
           <motion.div
             initial="initial"
@@ -168,10 +168,10 @@ export default function PricingPage() {
             variants={staggerContainer}
             className="text-center max-w-3xl mx-auto"
           >
-            <motion.h2 variants={staggerItem} className="text-3xl md:text-5xl font-bold mb-6">
+            <motion.h2 variants={staggerItem} className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
               Still Have Questions?
             </motion.h2>
-            <motion.p variants={staggerItem} className="text-lg text-[rgb(var(--muted))] mb-8">
+            <motion.p variants={staggerItem} className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))] mb-6 sm:mb-8">
               Our team is here to help you choose the right plan for your business.
             </motion.p>
             <motion.div variants={staggerItem}>

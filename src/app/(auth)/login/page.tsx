@@ -60,18 +60,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center py-6 sm:py-10 lg:py-12 px-4 sm:px-6">
       <motion.div
         initial="initial"
         animate="animate"
         variants={fadeInUp}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
             Welcome back
           </h1>
-          <p className="text-[rgb(var(--muted))]">
+          <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
             Log in to your ViralFluencer account
           </p>
         </div>
@@ -83,12 +83,12 @@ export default function LoginPage() {
               Enter your credentials to continue
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="p-4 sm:p-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-4">
               {error && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                  <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
+                  <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                  <p className="text-sm text-red-600">{error}</p>
                 </div>
               )}
 

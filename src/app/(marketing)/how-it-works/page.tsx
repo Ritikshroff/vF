@@ -62,7 +62,7 @@ export default function HowItWorksPage() {
       label: 'For Brands',
       icon: <Building2 className="h-4 w-4" />,
       content: (
-        <div className="grid md:grid-cols-2 gap-8 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mt-6 sm:mt-8">
           {brandSteps.map((step, index) => (
             <motion.div
               key={index}
@@ -71,15 +71,15 @@ export default function HowItWorksPage() {
               transition={{ delay: index * 0.1 }}
             >
               <Card hoverable className="h-full">
-                <CardContent className="p-8">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center mb-4">
-                    <step.icon className="h-6 w-6 text-white" />
+                <CardContent className="p-4 sm:p-6 lg:p-8">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center mb-3 sm:mb-4">
+                    <step.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="primary">{index + 1}</Badge>
-                    <h3 className="text-xl font-semibold">{step.title}</h3>
+                  <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+                    <Badge variant="primary" className="text-xs">{index + 1}</Badge>
+                    <h3 className="text-base sm:text-lg lg:text-xl font-semibold">{step.title}</h3>
                   </div>
-                  <p className="text-[rgb(var(--muted))]">{step.description}</p>
+                  <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">{step.description}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
       label: 'For Influencers',
       icon: <UserCircle className="h-4 w-4" />,
       content: (
-        <div className="grid md:grid-cols-2 gap-8 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mt-6 sm:mt-8">
           {influencerSteps.map((step, index) => (
             <motion.div
               key={index}
@@ -101,15 +101,15 @@ export default function HowItWorksPage() {
               transition={{ delay: index * 0.1 }}
             >
               <Card hoverable className="h-full">
-                <CardContent className="p-8">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center mb-4">
-                    <step.icon className="h-6 w-6 text-white" />
+                <CardContent className="p-4 sm:p-6 lg:p-8">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center mb-3 sm:mb-4">
+                    <step.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="primary">{index + 1}</Badge>
-                    <h3 className="text-xl font-semibold">{step.title}</h3>
+                  <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+                    <Badge variant="primary" className="text-xs">{index + 1}</Badge>
+                    <h3 className="text-base sm:text-lg lg:text-xl font-semibold">{step.title}</h3>
                   </div>
-                  <p className="text-[rgb(var(--muted))]">{step.description}</p>
+                  <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">{step.description}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -122,21 +122,21 @@ export default function HowItWorksPage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="py-20 md:py-32">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20">
         <div className="container">
           <motion.div
             initial="initial"
             animate="animate"
             variants={staggerContainer}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 lg:mb-16"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-4">How It Works</Badge>
+              <Badge variant="primary" className="mb-3 sm:mb-4">How It Works</Badge>
             </motion.div>
-            <motion.h1 variants={staggerItem} className="text-4xl md:text-6xl font-bold mb-6">
+            <motion.h1 variants={staggerItem} className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
               Get Started in <span className="gradient-text">4 Easy Steps</span>
             </motion.h1>
-            <motion.p variants={staggerItem} className="text-lg md:text-xl text-[rgb(var(--muted))]">
+            <motion.p variants={staggerItem} className="text-base sm:text-lg lg:text-xl text-[rgb(var(--muted))]">
               Whether you're a brand or an influencer, our platform makes collaboration simple and effective.
             </motion.p>
           </motion.div>
@@ -149,21 +149,21 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 md:py-32 bg-[rgb(var(--surface))]">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20 bg-[rgb(var(--surface))]">
         <div className="container">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-12 lg:mb-16"
           >
-            <motion.h2 variants={staggerItem} className="text-3xl md:text-5xl font-bold mb-4">
+            <motion.h2 variants={staggerItem} className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4">
               Why Choose <span className="gradient-text">ViralFluencer</span>
             </motion.h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {[
               {
                 title: 'AI-Powered Matching',
@@ -186,9 +186,9 @@ export default function HowItWorksPage() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className="h-full">
-                  <CardContent className="p-8">
-                    <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
-                    <p className="text-[rgb(var(--muted))]">{benefit.description}</p>
+                  <CardContent className="p-4 sm:p-6 lg:p-8">
+                    <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2 sm:mb-3">{benefit.title}</h3>
+                    <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">{benefit.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -198,7 +198,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-32">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20">
         <div className="container">
           <motion.div
             initial="initial"
@@ -207,13 +207,13 @@ export default function HowItWorksPage() {
             variants={staggerContainer}
             className="text-center max-w-3xl mx-auto"
           >
-            <motion.h2 variants={staggerItem} className="text-3xl md:text-5xl font-bold mb-6">
+            <motion.h2 variants={staggerItem} className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
               Ready to Get Started?
             </motion.h2>
-            <motion.p variants={staggerItem} className="text-lg text-[rgb(var(--muted))] mb-8">
+            <motion.p variants={staggerItem} className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))] mb-6 sm:mb-8">
               Join thousands of brands and creators already seeing amazing results.
             </motion.p>
-            <motion.div variants={staggerItem} className="flex flex-col sm:flex-row gap-4 justify-center">
+            <motion.div variants={staggerItem} className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link href="/role-selector">
                 <Button size="lg" variant="gradient">
                   Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />

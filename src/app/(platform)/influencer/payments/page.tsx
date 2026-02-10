@@ -138,25 +138,25 @@ export default function PaymentsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
-      <div className="container py-4 md:py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <motion.div
           initial="initial"
           animate="animate"
           variants={staggerContainer}
         >
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-2 gradient-text">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-1 sm:mb-2 gradient-text">
                   Payments
                 </h1>
-                <p className="text-sm md:text-lg text-[rgb(var(--muted))]">
+                <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))]">
                   Track your earnings and payment history
                 </p>
               </div>
-              <Button variant="outline" size="lg" className="w-full md:w-auto">
-                <Download className="h-5 w-5 mr-2" />
+              <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Export Statement
               </Button>
             </div>
@@ -165,10 +165,10 @@ export default function PaymentsPage() {
           {/* Stats Cards - Mobile 1 col, Desktop 3 cols */}
           <motion.div
             variants={staggerItem}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8"
           >
             <Card className="border-2 border-green-500/20 bg-green-500/5">
-              <CardContent className="p-4 md:p-6">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
                     <DollarSign className="h-6 w-6 text-white" />
@@ -178,30 +178,30 @@ export default function PaymentsPage() {
                     +12.5%
                   </div>
                 </div>
-                <div className="text-2xl md:text-3xl font-bold gradient-text mb-2">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-1 sm:mb-2">
                   {formatCurrency(totalEarnings)}
                 </div>
-                <div className="text-sm text-[rgb(var(--muted))]">Total Earnings</div>
+                <div className="text-xs sm:text-sm text-[rgb(var(--muted))]">Total Earnings</div>
               </CardContent>
             </Card>
 
             <Card className="border-2">
-              <CardContent className="p-4 md:p-6">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-500">
                     <Clock className="h-6 w-6 text-white" />
                   </div>
                   <Badge variant="warning">Pending</Badge>
                 </div>
-                <div className="text-2xl md:text-3xl font-bold gradient-text mb-2">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-1 sm:mb-2">
                   {formatCurrency(pendingAmount)}
                 </div>
-                <div className="text-sm text-[rgb(var(--muted))]">Pending Payments</div>
+                <div className="text-xs sm:text-sm text-[rgb(var(--muted))]">Pending Payments</div>
               </CardContent>
             </Card>
 
             <Card className="border-2">
-              <CardContent className="p-4 md:p-6">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
                     <Calendar className="h-6 w-6 text-white" />
@@ -211,22 +211,22 @@ export default function PaymentsPage() {
                     +28%
                   </div>
                 </div>
-                <div className="text-2xl md:text-3xl font-bold gradient-text mb-2">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-1 sm:mb-2">
                   {formatCurrency(thisMonthEarnings)}
                 </div>
-                <div className="text-sm text-[rgb(var(--muted))]">This Month</div>
+                <div className="text-xs sm:text-sm text-[rgb(var(--muted))]">This Month</div>
               </CardContent>
             </Card>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Payment History */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Filters */}
               <motion.div variants={staggerItem}>
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex flex-wrap gap-2">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {[
                         { value: 'all' as const, label: 'All Payments' },
                         { value: 'completed' as const, label: 'Completed' },
@@ -236,7 +236,7 @@ export default function PaymentsPage() {
                         <button
                           key={tab.value}
                           onClick={() => setFilter(tab.value)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                          className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                             filter === tab.value
                               ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
                               : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
@@ -257,24 +257,24 @@ export default function PaymentsPage() {
                     <CardTitle>Payment History</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {filteredPayments.map((payment) => {
                         const StatusIcon = getStatusIcon(payment.status)
                         return (
                           <div
                             key={payment.id}
-                            className="flex flex-col md:flex-row md:items-center gap-4 p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
+                            className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
                           >
-                            <div className="flex items-center gap-3 flex-1">
-                              <div className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center">
-                                <DollarSign className="h-5 w-5 text-white" />
+                            <div className="flex items-center gap-2 sm:gap-3 flex-1">
+                              <div className="shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center">
+                                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                               </div>
 
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-sm md:text-base mb-1 truncate">
+                                <h4 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1 truncate">
                                   {payment.campaign}
                                 </h4>
-                                <div className="flex flex-wrap gap-2 text-xs text-[rgb(var(--muted))]">
+                                <div className="flex flex-wrap gap-1.5 sm:gap-2 text-xs text-[rgb(var(--muted))]">
                                   <span>{payment.brand}</span>
                                   <span>•</span>
                                   <span>{payment.invoice}</span>
@@ -290,22 +290,22 @@ export default function PaymentsPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between md:justify-end gap-4">
+                            <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                               <div className="text-right">
-                                <div className="text-lg md:text-xl font-bold gradient-text">
+                                <div className="text-base sm:text-lg lg:text-xl font-bold gradient-text">
                                   {formatCurrency(payment.amount)}
                                 </div>
                                 <Badge
                                   variant={getStatusColor(payment.status) as any}
-                                  className="mt-1"
+                                  className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs"
                                 >
-                                  <StatusIcon className="h-3 w-3 mr-1" />
+                                  <StatusIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                                   {payment.status}
                                 </Badge>
                               </div>
 
                               {payment.status === 'completed' && (
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="sm" className="hidden sm:flex">
                                   <Download className="h-4 w-4" />
                                 </Button>
                               )}
@@ -320,34 +320,34 @@ export default function PaymentsPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Payment Methods */}
               <motion.div variants={staggerItem}>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Payment Methods</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">Payment Methods</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-2 sm:space-y-3">
                     {mockPaymentMethods.map((method) => (
                       <div
                         key={method.id}
-                        className={`p-4 rounded-lg border-2 transition-all ${
+                        className={`p-3 sm:p-4 rounded-lg border-2 transition-all ${
                           method.primary
                             ? 'border-[rgb(var(--brand-primary))]/40 bg-[rgb(var(--brand-primary))]/5'
                             : 'border-[rgb(var(--border))]'
                         }`}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-[rgb(var(--surface))]">
-                            <CreditCard className="h-5 w-5" />
+                        <div className="flex items-start gap-2 sm:gap-3">
+                          <div className="p-1.5 sm:p-2 rounded-lg bg-[rgb(var(--surface))]">
+                            <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm mb-1">{method.type}</div>
-                            <div className="text-xs text-[rgb(var(--muted))]">
+                            <div className="font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">{method.type}</div>
+                            <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                               {method.details}
                             </div>
                             {method.primary && (
-                              <Badge variant="primary" className="mt-2 text-xs">
+                              <Badge variant="primary" className="mt-1 sm:mt-2 text-[10px]">
                                 Primary
                               </Badge>
                             )}
@@ -368,24 +368,24 @@ export default function PaymentsPage() {
               <motion.div variants={staggerItem}>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Payout Settings</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">Payout Settings</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 sm:space-y-4">
                     <div>
-                      <div className="text-sm font-medium mb-2">Payout Schedule</div>
-                      <div className="p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div className="font-semibold text-sm">Weekly</div>
-                        <div className="text-xs text-[rgb(var(--muted))]">
+                      <div className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">Payout Schedule</div>
+                      <div className="p-2.5 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div className="font-semibold text-xs sm:text-sm">Weekly</div>
+                        <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                           Every Friday
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-sm font-medium mb-2">Minimum Payout</div>
-                      <div className="p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div className="font-semibold text-sm">{formatCurrency(100)}</div>
-                        <div className="text-xs text-[rgb(var(--muted))]">
+                      <div className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">Minimum Payout</div>
+                      <div className="p-2.5 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div className="font-semibold text-xs sm:text-sm">{formatCurrency(100)}</div>
+                        <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                           Threshold amount
                         </div>
                       </div>
@@ -402,17 +402,17 @@ export default function PaymentsPage() {
               <motion.div variants={staggerItem}>
                 <Card className="border-2 border-[rgb(var(--brand-primary))]/20 bg-[rgb(var(--brand-primary))]/5">
                   <CardHeader>
-                    <CardTitle className="text-lg">Next Payout</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">Next Payout</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-center">
-                      <div className="text-3xl font-bold gradient-text mb-2">
+                      <div className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">
                         {formatCurrency(2150)}
                       </div>
-                      <div className="text-sm text-[rgb(var(--muted))] mb-4">
+                      <div className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4">
                         Scheduled for Feb 7, 2026
                       </div>
-                      <div className="text-xs text-[rgb(var(--muted))]">
+                      <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                         Funds will be deposited to your primary payment method
                       </div>
                     </div>

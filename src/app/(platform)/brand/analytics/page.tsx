@@ -165,17 +165,17 @@ export default function BrandAnalyticsPage() {
           variants={staggerContainer}
         >
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
-            <h1 className="text-3xl md:text-5xl font-bold mb-2 md:mb-3 gradient-text">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-5xl font-bold mb-2 gradient-text">
               Analytics Dashboard
             </h1>
-            <p className="text-sm md:text-lg text-[rgb(var(--muted))]">
+            <p className="text-sm lg:text-base xl:text-lg text-[rgb(var(--muted))]">
               Track campaign performance and ROI
             </p>
           </motion.div>
 
           {/* Time Range Selector - Mobile Scrollable */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
               {[
                 { value: '7d', label: 'Last 7 Days' },
@@ -201,17 +201,17 @@ export default function BrandAnalyticsPage() {
           {/* Stats Grid - Mobile 2 cols */}
           <motion.div
             variants={staggerContainer}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8"
           >
             {stats.map((stat, index) => (
               <motion.div key={stat.title} variants={staggerItem}>
                 <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all">
-                  <CardContent className="p-4 md:p-6">
-                    <div className="flex items-start justify-between mb-3 md:mb-4">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
+                    <div className="flex items-start justify-between mb-2 sm:mb-3 lg:mb-4">
                       <div
-                        className={`p-2 md:p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10`}
+                        className={`p-1.5 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10`}
                       >
-                        <stat.icon className="h-4 w-4 md:h-6 md:w-6 text-white" />
+                        <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
                       </div>
                       <div
                         className={`flex items-center gap-1 text-xs ${
@@ -226,10 +226,10 @@ export default function BrandAnalyticsPage() {
                         {stat.change}
                       </div>
                     </div>
-                    <div className="text-xl md:text-3xl font-bold mb-1 md:mb-2 gradient-text">
+                    <div className="text-base sm:text-lg lg:text-2xl xl:text-3xl font-bold mb-1 gradient-text">
                       {stat.value}
                     </div>
-                    <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
+                    <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
                       {stat.title}
                     </div>
                   </CardContent>
@@ -239,16 +239,16 @@ export default function BrandAnalyticsPage() {
           </motion.div>
 
           {/* Spending Trend Chart - Full Width */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
                   <TrendingUp className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                   Spending & ROI Trend
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 md:h-80">
+                <div className="h-48 sm:h-64 lg:h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={spendingTrend}>
                       <defs>
@@ -297,18 +297,18 @@ export default function BrandAnalyticsPage() {
             </Card>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 lg:mb-8">
             {/* Campaign Performance Chart */}
             <motion.div variants={staggerItem}>
               <Card className="h-full">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
                     <BarChart3 className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                     Campaign Performance
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 md:h-80">
+                  <div className="h-48 sm:h-64 lg:h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={campaignPerformance}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
@@ -352,13 +352,13 @@ export default function BrandAnalyticsPage() {
             <motion.div variants={staggerItem}>
               <Card className="h-full">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
                     <PieChart className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                     Spend by Category
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 md:h-80">
+                  <div className="h-48 sm:h-64 lg:h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <RechartsPie>
                         <Pie
@@ -388,17 +388,17 @@ export default function BrandAnalyticsPage() {
           <motion.div variants={staggerItem}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
                   <Users className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                   Top Performing Influencers
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {analytics.top_influencers.map((influencer: any, index: number) => (
                     <div
                       key={index}
-                      className="flex flex-col md:flex-row md:items-center gap-4 p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
+                      className="flex flex-col md:flex-row md:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1">
                         <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white font-bold">

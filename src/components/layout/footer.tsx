@@ -15,10 +15,10 @@ export function Footer() {
 
   return (
     <footer className="border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
-      <div className="container py-12 lg:py-16">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
+      <div className="container py-8 sm:py-12 lg:py-16">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:gap-12">
           {/* Brand Column */}
-          <div className="col-span-2 md:col-span-1">
+          <div className="col-span-1 sm:col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]" />
               <span className="text-lg font-bold gradient-text">{APP_NAME}</span>

@@ -131,19 +131,19 @@ export default function InfluencerDiscoveryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
-      <div className="container py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         {/* Header */}
         <motion.div
           initial="initial"
           animate="animate"
           variants={staggerContainer}
-          className="mb-8"
+          className="mb-4 sm:mb-6 lg:mb-8"
         >
-          <motion.div variants={staggerItem} className="mb-6">
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 gradient-text">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-3 gradient-text">
               Discover Influencers
             </h1>
-            <p className="text-lg text-[rgb(var(--muted))] max-w-2xl">
+            <p className="text-base sm:text-lg text-[rgb(var(--muted))] max-w-2xl">
               Find the perfect creators for your campaigns. Browse our curated
               network of verified influencers across all major platforms.
             </p>
@@ -152,7 +152,7 @@ export default function InfluencerDiscoveryPage() {
           {/* Search & Filter Bar */}
           <motion.div
             variants={staggerItem}
-            className="flex flex-col md:flex-row gap-4"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4"
           >
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[rgb(var(--muted))]" />
@@ -160,7 +160,7 @@ export default function InfluencerDiscoveryPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, category, or location..."
-                className="pl-12 h-14 text-lg border-2"
+                className="pl-12 h-12 sm:h-14 text-base sm:text-lg border-2 min-h-[44px]"
               />
             </div>
 
@@ -168,7 +168,7 @@ export default function InfluencerDiscoveryPage() {
               variant={showFilters ? "gradient" : "outline"}
               size="lg"
               onClick={() => setShowFilters(!showFilters)}
-              className="h-14 px-8"
+              className="h-12 sm:h-14 px-6 sm:px-8 min-h-[44px]"
             >
               <Filter className="h-5 w-5 mr-2" />
               Filters
@@ -188,7 +188,7 @@ export default function InfluencerDiscoveryPage() {
                   sort_by: e.target.value as any,
                 }))
               }
-              className="h-14 px-4 rounded-lg border-2 border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] text-base min-w-[180px]"
+              className="h-12 sm:h-14 px-4 rounded-lg border-2 border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] text-base min-w-[180px] min-h-[44px]"
             >
               <option value="relevance">Most Relevant</option>
               <option value="followers">Most Followers</option>
@@ -206,10 +206,10 @@ export default function InfluencerDiscoveryPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-8 overflow-hidden"
+              className="mb-4 sm:mb-6 lg:mb-8 overflow-hidden"
             >
               <Card className="border-2">
-                <CardContent className="p-6 space-y-6">
+                <CardContent className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
                   {/* Categories */}
                   <div>
                     <div className="flex items-center justify-between mb-4">
@@ -406,7 +406,7 @@ export default function InfluencerDiscoveryPage() {
         </AnimatePresence>
 
         {/* Results Count */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <p className="text-[rgb(var(--muted))]">
             Showing{" "}
             <span className="font-semibold text-[rgb(var(--foreground))]">
@@ -422,11 +422,11 @@ export default function InfluencerDiscoveryPage() {
 
         {/* Influencer Grid */}
         {loading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             {[...Array(6)].map((_, i) => (
               <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                  <div className="aspect-square bg-[rgb(var(--surface))] rounded-xl mb-4" />
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="aspect-square bg-[rgb(var(--surface))] rounded-xl mb-3 sm:mb-4" />
                   <div className="h-6 bg-[rgb(var(--surface))] rounded mb-2" />
                   <div className="h-4 bg-[rgb(var(--surface))] rounded w-2/3" />
                 </CardContent>
@@ -453,7 +453,7 @@ export default function InfluencerDiscoveryPage() {
             initial="initial"
             animate="animate"
             variants={staggerContainer}
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6"
           >
             {influencers.map((influencer, index) => (
               <motion.div
@@ -513,9 +513,9 @@ export default function InfluencerDiscoveryPage() {
                     )}
                   </div>
 
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     {/* Profile Info */}
-                    <div className="mb-4">
+                    <div className="mb-3 sm:mb-4">
                       <h3 className="text-xl font-bold mb-1 line-clamp-1">
                         {influencer.fullName}
                       </h3>
@@ -547,7 +547,7 @@ export default function InfluencerDiscoveryPage() {
                     </div>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-2 gap-3 mb-4 p-3 rounded-lg bg-[rgb(var(--surface))]">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
                       <div>
                         <div className="flex items-center text-xs text-[rgb(var(--muted))] mb-1">
                           <Users className="h-3 w-3 mr-1" />
@@ -573,7 +573,7 @@ export default function InfluencerDiscoveryPage() {
                     </div>
 
                     {/* Platform Icons */}
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
                       {influencer.platforms.map((platform) => (
                         <div
                           key={platform.platform}

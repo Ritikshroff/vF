@@ -174,10 +174,10 @@ export default function InfluencerOnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center py-6 sm:py-10 lg:py-12 px-4 sm:px-6">
       <div className="w-full max-w-2xl">
         {/* Progress bar */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">
               Step {step} of {totalSteps}
@@ -205,18 +205,18 @@ export default function InfluencerOnboardingPage() {
             variants={slideInRight}
           >
             <Card>
-              <CardContent className="p-8">
+              <CardContent className="p-4 sm:p-6 lg:p-8">
                 {/* Step 1: Profile */}
                 {step === 1 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <UserCircle className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <UserCircle className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">
                         Create your profile
                       </h2>
-                      <p className="text-[rgb(var(--muted))]">
+                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                         Tell brands about yourself
                       </p>
                     </div>
@@ -279,23 +279,23 @@ export default function InfluencerOnboardingPage() {
 
                 {/* Step 2: Categories */}
                 {step === 2 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Sparkles className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Your niche</h2>
-                      <p className="text-[rgb(var(--muted))]">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Your niche</h2>
+                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                         Select categories that match your content (at least one)
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {INFLUENCER_CATEGORIES.map((category) => (
                         <button
                           key={category}
                           onClick={() => handleCategoryToggle(category)}
-                          className={`p-4 rounded-lg border-2 transition-all text-left ${
+                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
                             formData.categories.includes(category)
                               ? "border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5"
                               : "border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50"
@@ -306,7 +306,7 @@ export default function InfluencerOnboardingPage() {
                               {category}
                             </span>
                             {formData.categories.includes(category) && (
-                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] flex-shrink-0" />
+                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] shrink-0" />
                             )}
                           </div>
                         </button>
@@ -327,15 +327,15 @@ export default function InfluencerOnboardingPage() {
 
                 {/* Step 3: Social Platforms */}
                 {step === 3 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Share2 className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Share2 className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">
                         Your social platforms
                       </h2>
-                      <p className="text-[rgb(var(--muted))]">
+                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                         Add your social media accounts
                       </p>
                     </div>
@@ -344,7 +344,7 @@ export default function InfluencerOnboardingPage() {
                       {formData.platforms.map((platform, index) => (
                         <div
                           key={index}
-                          className="p-4 border border-[rgb(var(--border))] rounded-lg space-y-3"
+                          className="p-3 sm:p-4 border border-[rgb(var(--border))] rounded-lg space-y-3"
                         >
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium">
@@ -406,26 +406,26 @@ export default function InfluencerOnboardingPage() {
 
                 {/* Step 4: Content Types */}
                 {step === 4 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Sparkles className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">
                         Content you create
                       </h2>
-                      <p className="text-[rgb(var(--muted))]">
+                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
                         What types of content do you produce? (Select at least
                         one)
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {CONTENT_TYPES.map((type) => (
                         <button
                           key={type}
                           onClick={() => handleContentTypeToggle(type)}
-                          className={`p-4 rounded-lg border-2 transition-all text-left ${
+                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
                             formData.contentTypes.includes(type)
                               ? "border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5"
                               : "border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50"
@@ -434,7 +434,7 @@ export default function InfluencerOnboardingPage() {
                           <div className="flex items-start justify-between gap-2">
                             <span className="text-sm font-medium">{type}</span>
                             {formData.contentTypes.includes(type) && (
-                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] flex-shrink-0" />
+                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] shrink-0" />
                             )}
                           </div>
                         </button>
@@ -454,7 +454,7 @@ export default function InfluencerOnboardingPage() {
                 )}
 
                 {/* Navigation buttons */}
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-[rgb(var(--border))]">
+                <div className="flex items-center justify-between mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[rgb(var(--border))]">
                   <Button
                     variant="ghost"
                     onClick={handleBack}

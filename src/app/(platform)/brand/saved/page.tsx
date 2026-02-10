@@ -114,13 +114,13 @@ export default function SavedInfluencersPage() {
           variants={staggerContainer}
         >
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-2 gradient-text">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-5xl font-bold mb-2 gradient-text">
                   Saved Influencers
                 </h1>
-                <p className="text-sm md:text-lg text-[rgb(var(--muted))]">
+                <p className="text-sm lg:text-base xl:text-lg text-[rgb(var(--muted))]">
                   {influencers.length} influencer{influencers.length !== 1 ? 's' : ''} saved
                 </p>
               </div>
@@ -132,8 +132,8 @@ export default function SavedInfluencersPage() {
           </motion.div>
 
           {/* Search & Filters */}
-          <motion.div variants={staggerItem} className="mb-6 space-y-4">
-            <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
+            <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-[rgb(var(--muted))]" />
                 <Input
@@ -194,7 +194,7 @@ export default function SavedInfluencersPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {filteredInfluencers.map((influencer) => (
                 <motion.div
                   key={influencer.id}
@@ -203,7 +203,7 @@ export default function SavedInfluencersPage() {
                   exit={{ opacity: 0, scale: 0.9 }}
                 >
                   <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full">
-                    <CardContent className="p-4 md:p-6">
+                    <CardContent className="p-3 sm:p-4 lg:p-6">
                       {/* Header with Unsave Button */}
                       <div className="flex items-start justify-between mb-4">
                         <Avatar className="h-16 w-16 md:h-20 md:w-20">

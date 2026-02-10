@@ -196,13 +196,13 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-surface">
-      <div className="container max-w-3xl py-4 md:py-8">
+      <div className="container max-w-3xl py-4 sm:py-6 lg:py-8 px-4 sm:px-6">
         <motion.div initial="initial" animate="animate" variants={staggerContainer}>
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6">
-            <div className="flex items-center justify-between">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold gradient-text">Feed</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text">Feed</h1>
                 <p className="text-sm text-[rgb(var(--muted))]">Stay connected with your network</p>
               </div>
               <Button variant="gradient" onClick={() => setShowComposer(!showComposer)}>
@@ -213,7 +213,7 @@ export default function FeedPage() {
           </motion.div>
 
           {/* Feed Tabs */}
-          <motion.div variants={staggerItem} className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <motion.div variants={staggerItem} className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2">
             {[
               { value: 'foryou' as const, label: 'For You', icon: Flame },
               { value: 'following' as const, label: 'Following', icon: Users },
@@ -241,10 +241,10 @@ export default function FeedPage() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mb-6"
+                className="mb-4 sm:mb-6"
               >
                 <Card>
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-start gap-3">
                       <Avatar size="md" fallback={user ? getInitials(user.name) : 'U'} />
                       <div className="flex-1">
@@ -291,7 +291,7 @@ export default function FeedPage() {
           </AnimatePresence>
 
           {/* Trending Tags */}
-          <motion.div variants={staggerItem} className="mb-6">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
             <div className="flex gap-2 overflow-x-auto pb-2">
               {TRENDING_TAGS.map(tag => (
                 <Badge key={tag} variant="outline" className="cursor-pointer hover:bg-[rgb(var(--surface-hover))] whitespace-nowrap">
@@ -302,7 +302,7 @@ export default function FeedPage() {
           </motion.div>
 
           {/* Feed Posts */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {posts.map((post, index) => (
               <motion.div
                 key={post.id}
@@ -311,7 +311,7 @@ export default function FeedPage() {
                 transition={{ delay: index * 0.05 }}
               >
                 <Card className="hover:border-[rgb(var(--brand-primary))]/20 transition-all">
-                  <CardContent className="p-4 md:p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     {/* Post Header */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -436,7 +436,7 @@ export default function FeedPage() {
           </div>
 
           {/* Load More */}
-          <motion.div variants={staggerItem} className="text-center mt-8">
+          <motion.div variants={staggerItem} className="text-center mt-6 sm:mt-8">
             <Button variant="outline" size="lg">
               Load More Posts
             </Button>

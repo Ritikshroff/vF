@@ -193,14 +193,14 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-surface">
-      <div className="container py-4 md:py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <motion.div initial="initial" animate="animate" variants={staggerContainer}>
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl md:text-5xl font-bold gradient-text">Campaign Marketplace</h1>
-                <p className="text-sm md:text-lg text-[rgb(var(--muted))]">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold gradient-text">Campaign Marketplace</h1>
+                <p className="text-sm lg:text-base text-[rgb(var(--muted))]">
                   {isInfluencer ? 'Discover brand collaboration opportunities' : 'Post campaigns and find creators'}
                 </p>
               </div>
@@ -216,7 +216,7 @@ export default function MarketplacePage() {
           </motion.div>
 
           {/* Stats Bar */}
-          <motion.div variants={staggerItem} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6">
+          <motion.div variants={staggerItem} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
             {[
               { label: 'Open Campaigns', value: MOCK_LISTINGS.filter(l => l.status === 'open').length, icon: Briefcase, color: 'text-[rgb(var(--brand-primary))]' },
               { label: 'Total Budget', value: formatCurrency(MOCK_LISTINGS.reduce((sum, l) => sum + l.budget.max, 0)), icon: DollarSign, color: 'text-[rgb(var(--success))]' },
@@ -224,13 +224,13 @@ export default function MarketplacePage() {
               { label: 'Featured', value: featuredListings.length, icon: Star, color: 'text-[rgb(var(--warning))]' },
             ].map(stat => (
               <Card key={stat.label}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-[rgb(var(--surface))]">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-[rgb(var(--surface))]">
                       <stat.icon className={`h-4 w-4 ${stat.color}`} />
                     </div>
                     <div>
-                      <div className="text-lg font-bold">{stat.value}</div>
+                      <div className="text-base sm:text-lg font-bold">{stat.value}</div>
                       <div className="text-xs text-[rgb(var(--muted))]">{stat.label}</div>
                     </div>
                   </div>
@@ -240,8 +240,8 @@ export default function MarketplacePage() {
           </motion.div>
 
           {/* Search & Filters */}
-          <motion.div variants={staggerItem} className="mb-6 space-y-4">
-            <div className="flex flex-col md:flex-row gap-3">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[rgb(var(--muted))]" />
                 <Input
@@ -273,7 +273,7 @@ export default function MarketplacePage() {
             </div>
 
             {/* Category Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
               {CATEGORIES.map(cat => (
                 <button
                   key={cat}
@@ -292,12 +292,12 @@ export default function MarketplacePage() {
 
           {/* Featured Listings */}
           {featuredListings.length > 0 && (
-            <motion.div variants={staggerItem} className="mb-8">
-              <div className="flex items-center gap-2 mb-4">
+            <motion.div variants={staggerItem} className="mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
                 <Zap className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
-                <h2 className="text-xl font-bold">Featured Campaigns</h2>
+                <h2 className="text-lg sm:text-xl font-bold">Featured Campaigns</h2>
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {featuredListings.map(listing => (
                   <ListingCard key={listing.id} listing={listing} isInfluencer={isInfluencer} getDaysLeft={getDaysLeft} />
                 ))}
@@ -307,23 +307,23 @@ export default function MarketplacePage() {
 
           {/* All Listings */}
           <motion.div variants={staggerItem}>
-            <h2 className="text-xl font-bold mb-4">
+            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">
               {selectedCategory === 'All' ? 'All Campaigns' : `${selectedCategory} Campaigns`}
               <span className="text-sm font-normal text-[rgb(var(--muted))] ml-2">({filteredListings.length})</span>
             </h2>
 
             {filteredListings.length === 0 ? (
-              <Card className="text-center py-16">
+              <Card className="text-center py-12 sm:py-16">
                 <CardContent>
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
-                    <Search className="h-10 w-10 text-[rgb(var(--muted))]" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
+                    <Search className="h-8 w-8 sm:h-10 sm:w-10 text-[rgb(var(--muted))]" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">No campaigns found</h3>
-                  <p className="text-[rgb(var(--muted))]">Try adjusting your search or filters</p>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2">No campaigns found</h3>
+                  <p className="text-sm sm:text-base text-[rgb(var(--muted))]">Try adjusting your search or filters</p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {regularListings.map(listing => (
                   <ListingCard key={listing.id} listing={listing} isInfluencer={isInfluencer} getDaysLeft={getDaysLeft} />
                 ))}
@@ -350,17 +350,17 @@ function ListingCard({
   return (
     <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
       <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full flex flex-col">
-        <CardContent className="p-4 md:p-6 flex flex-col h-full">
+        <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
             <div className="flex-1">
               {listing.featured && (
-                <Badge variant="warning" className="mb-2 text-[10px]">
+                <Badge variant="warning" className="mb-1.5 sm:mb-2 text-[10px]">
                   <Zap className="h-3 w-3 mr-1" />
                   Featured
                 </Badge>
               )}
-              <h3 className="text-lg font-bold line-clamp-2">{listing.title}</h3>
+              <h3 className="text-base sm:text-lg font-bold line-clamp-2">{listing.title}</h3>
             </div>
             {listing.status === 'closing_soon' && (
               <Badge variant="error" className="shrink-0 text-[10px]">Closing Soon</Badge>
@@ -368,7 +368,7 @@ function ListingCard({
           </div>
 
           {/* Brand */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white text-[10px] font-bold">
               {listing.brand.name[0]}
             </div>
@@ -381,10 +381,10 @@ function ListingCard({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-4">{listing.description}</p>
+          <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-3 sm:mb-4">{listing.description}</p>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="flex items-center gap-2 text-sm">
               <DollarSign className="h-4 w-4 text-[rgb(var(--success))]" />
               <span>{formatCurrency(listing.budget.min)}-{formatCurrency(listing.budget.max)}</span>
@@ -404,7 +404,7 @@ function ListingCard({
           </div>
 
           {/* Platforms */}
-          <div className="flex flex-wrap gap-1.5 mb-4">
+          <div className="flex flex-wrap gap-1.5 mb-3 sm:mb-4">
             {listing.platforms.map(p => (
               <Badge key={p} variant="outline" className="text-[10px]">{p}</Badge>
             ))}
@@ -412,7 +412,7 @@ function ListingCard({
           </div>
 
           {/* Deliverables */}
-          <div className="mb-4 pb-4 border-b border-[rgb(var(--border))]">
+          <div className="mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-[rgb(var(--border))]">
             <div className="text-xs text-[rgb(var(--muted))] mb-1.5 font-medium">Deliverables:</div>
             <div className="flex flex-wrap gap-1">
               {listing.deliverables.slice(0, 3).map((d, i) => (

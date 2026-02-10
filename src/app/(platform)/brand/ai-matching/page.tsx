@@ -179,14 +179,14 @@ export default function AIMatchingPage() {
       <div className="container py-4 md:py-8">
         <motion.div initial="initial" animate="animate" variants={staggerContainer}>
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-3">
-                  <Sparkles className="h-8 w-8 text-[rgb(var(--brand-primary))]" />
+                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold flex items-center gap-2 sm:gap-3">
+                  <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-[rgb(var(--brand-primary))]" />
                   <span className="gradient-text">AI Intelligence</span>
                 </h1>
-                <p className="text-sm text-[rgb(var(--muted))] mt-1">AI-powered insights to supercharge your campaigns</p>
+                <p className="text-xs sm:text-sm text-[rgb(var(--muted))] mt-1">AI-powered insights to supercharge your campaigns</p>
               </div>
               <Button variant="gradient" onClick={handleAnalyze}>
                 <RefreshCw className={`h-4 w-4 mr-2 ${isAnalyzing ? 'animate-spin' : ''}`} />
@@ -196,7 +196,7 @@ export default function AIMatchingPage() {
           </motion.div>
 
           {/* View Tabs */}
-          <motion.div variants={staggerItem} className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <motion.div variants={staggerItem} className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
             {[
               { value: 'matching' as const, label: 'AI Matching', icon: Target },
               { value: 'content' as const, label: 'Content Ideas', icon: Lightbulb },
@@ -219,11 +219,11 @@ export default function AIMatchingPage() {
 
           {/* AI Matching View */}
           {activeView === 'matching' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* AI Summary */}
               <motion.div variants={staggerItem}>
                 <Card className="border-[rgb(var(--brand-primary))]/20 bg-gradient-to-r from-[rgb(var(--brand-primary))]/5 to-transparent">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-5 lg:p-6">
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-xl bg-[rgb(var(--brand-primary))]/10">
                         <Brain className="h-6 w-6 text-[rgb(var(--brand-primary))]" />
@@ -242,7 +242,7 @@ export default function AIMatchingPage() {
               </motion.div>
 
               {/* Match Cards */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {MOCK_MATCHES.map((match, index) => (
                   <motion.div
                     key={match.id}
@@ -259,8 +259,8 @@ export default function AIMatchingPage() {
                       }`}
                       onClick={() => setSelectedMatch(selectedMatch === match.id ? null : match.id)}
                     >
-                      <CardContent className="p-4 md:p-6">
-                        <div className="flex items-start gap-4">
+                      <CardContent className="p-3 sm:p-4 lg:p-6">
+                        <div className="flex items-start gap-3 sm:gap-4">
                           <div className="relative">
                             <Avatar size="xl" fallback={getInitials(match.influencer.name)} />
                             <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white text-xs font-bold">
@@ -298,7 +298,7 @@ export default function AIMatchingPage() {
                             </div>
 
                             {/* Match Score Bars */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                               {[
                                 { label: 'Audience', value: match.audienceOverlap, color: 'bg-[rgb(var(--info))]' },
                                 { label: 'Safety', value: match.brandSafety, color: 'bg-[rgb(var(--success))]' },
@@ -368,10 +368,10 @@ export default function AIMatchingPage() {
 
           {/* Content Ideas View */}
           {activeView === 'content' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <motion.div variants={staggerItem}>
                 <Card className="border-[rgb(var(--brand-primary))]/20 bg-gradient-to-r from-[rgb(var(--brand-primary))]/5 to-transparent">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-5 lg:p-6">
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-xl bg-[rgb(var(--brand-primary))]/10">
                         <Lightbulb className="h-6 w-6 text-[rgb(var(--brand-primary))]" />
@@ -387,7 +387,7 @@ export default function AIMatchingPage() {
                 </Card>
               </motion.div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {CONTENT_SUGGESTIONS.map((suggestion, index) => (
                   <motion.div
                     key={suggestion.id}
@@ -434,10 +434,10 @@ export default function AIMatchingPage() {
 
           {/* Pricing Intel View */}
           {activeView === 'pricing' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <motion.div variants={staggerItem}>
                 <Card className="border-[rgb(var(--brand-primary))]/20 bg-gradient-to-r from-[rgb(var(--brand-primary))]/5 to-transparent">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-5 lg:p-6">
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-xl bg-[rgb(var(--brand-primary))]/10">
                         <BarChart3 className="h-6 w-6 text-[rgb(var(--brand-primary))]" />
@@ -453,7 +453,7 @@ export default function AIMatchingPage() {
                 </Card>
               </motion.div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {/* Rate Benchmarks */}
                 <Card>
                   <CardHeader>

@@ -155,13 +155,13 @@ export default function BrandMessagesPage() {
         >
           {/* Header - Mobile Only */}
           <motion.div variants={staggerItem} className="mb-4 md:hidden">
-            <h1 className="text-3xl font-bold gradient-text">Messages</h1>
+            <h1 className="text-xl sm:text-2xl font-bold gradient-text">Messages</h1>
           </motion.div>
 
           {/* Desktop Header */}
-          <motion.div variants={staggerItem} className="hidden md:block mb-6">
-            <h1 className="text-5xl font-bold mb-2 gradient-text">Messages</h1>
-            <p className="text-lg text-[rgb(var(--muted))]">
+          <motion.div variants={staggerItem} className="hidden md:block mb-4 lg:mb-6">
+            <h1 className="text-3xl lg:text-5xl font-bold mb-2 gradient-text">Messages</h1>
+            <p className="text-base lg:text-lg text-[rgb(var(--muted))]">
               Chat with influencers about your campaigns
             </p>
           </motion.div>

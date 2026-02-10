@@ -13,29 +13,29 @@ export default function CaseStudiesPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-20 md:py-32">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20">
         <div className="container">
           <motion.div
             initial="initial"
             animate="animate"
             variants={staggerContainer}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 lg:mb-16"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-4">
+              <Badge variant="primary" className="mb-3 sm:mb-4">
                 Case Studies
               </Badge>
             </motion.div>
             <motion.h1
               variants={staggerItem}
-              className="text-4xl md:text-6xl font-bold mb-6"
+              className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6"
             >
               Real Results from{" "}
               <span className="gradient-text">Real Brands</span>
             </motion.h1>
             <motion.p
               variants={staggerItem}
-              className="text-lg md:text-xl text-[rgb(var(--muted))]"
+              className="text-base sm:text-lg lg:text-xl text-[rgb(var(--muted))]"
             >
               See how brands like yours are achieving incredible results with
               influencer marketing.
@@ -43,7 +43,7 @@ export default function CaseStudiesPage() {
           </motion.div>
 
           {/* Case Studies Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {caseStudies.map((study, index) => (
               <motion.div
                 key={study.id}
@@ -53,24 +53,24 @@ export default function CaseStudiesPage() {
               >
                 <Card hoverable className="h-full overflow-hidden">
                   <div className="aspect-video bg-gradient-to-br from-[rgb(var(--brand-primary)_/_0.1)] to-[rgb(var(--brand-secondary)_/_0.1)]" />
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="outline">{study.industry}</Badge>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <Badge variant="outline" className="text-xs">{study.industry}</Badge>
                     </div>
-                    <h3 className="text-xl font-semibold mb-3 line-clamp-2">
+                    <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2 sm:mb-3 line-clamp-2">
                       {study.title}
                     </h3>
-                    <p className="text-[rgb(var(--muted))] mb-4 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4 line-clamp-2">
                       {study.summary}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
                       {study.results.slice(0, 2).map((result) => (
                         <div key={result.metric}>
-                          <div className="text-2xl font-bold text-[rgb(var(--brand-primary))]">
+                          <div className="text-xl sm:text-2xl font-bold text-[rgb(var(--brand-primary))]">
                             {result.value}
                           </div>
-                          <div className="text-xs text-[rgb(var(--muted))]">
+                          <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                             {result.metric}
                           </div>
                         </div>
@@ -79,9 +79,9 @@ export default function CaseStudiesPage() {
 
                     <Link
                       href={`/case-studies/${study.id}`}
-                      className="text-[rgb(var(--brand-primary))] hover:underline text-sm font-medium inline-flex items-center"
+                      className="text-[rgb(var(--brand-primary))] hover:underline text-xs sm:text-sm font-medium inline-flex items-center"
                     >
-                      Read Full Story <ArrowRight className="ml-1 h-4 w-4" />
+                      Read Full Story <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
                     </Link>
                   </CardContent>
                 </Card>
@@ -92,7 +92,7 @@ export default function CaseStudiesPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 md:py-32 bg-[rgb(var(--surface))]">
+      <section className="py-8 sm:py-12 lg:py-16 xl:py-20 bg-[rgb(var(--surface))]">
         <div className="container">
           <motion.div
             initial="initial"
@@ -103,13 +103,13 @@ export default function CaseStudiesPage() {
           >
             <motion.h2
               variants={staggerItem}
-              className="text-3xl md:text-5xl font-bold mb-6"
+              className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6"
             >
               Ready to Write Your Success Story?
             </motion.h2>
             <motion.p
               variants={staggerItem}
-              className="text-lg text-[rgb(var(--muted))] mb-8"
+              className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))] mb-6 sm:mb-8"
             >
               Join these successful brands and start seeing results with
               influencer marketing.

@@ -69,23 +69,23 @@ export default function RoleSelectorPage() {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-20">
+    <div className="min-h-[80vh] flex items-center justify-center py-10 sm:py-16 lg:py-20 px-4 sm:px-6">
       <div className="container max-w-5xl">
         <motion.div
           initial="initial"
           animate="animate"
           variants={staggerContainer}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-10 lg:mb-12"
         >
-          <motion.h1 variants={staggerItem} className="text-4xl md:text-5xl font-bold mb-4">
+          <motion.h1 variants={staggerItem} className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4">
             Welcome to <span className="gradient-text">ViralFluencer</span>
           </motion.h1>
-          <motion.p variants={staggerItem} className="text-lg text-[rgb(var(--muted))]">
+          <motion.p variants={staggerItem} className="text-base sm:text-lg text-[rgb(var(--muted))]">
             Choose your role to get started
           </motion.p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
           {roles.map((role, index) => (
             <motion.div
               key={role.id}
@@ -97,33 +97,33 @@ export default function RoleSelectorPage() {
                 onClick={() => setSelected(role.id)}
                 className={`cursor-pointer transition-all h-full ${
                   selected === role.id
-                    ? 'border-2 border-[rgb(var(--brand-primary))] shadow-xl scale-105'
+                    ? 'border-2 border-[rgb(var(--brand-primary))] shadow-xl sm:scale-105'
                     : 'hover:border-[rgb(var(--brand-primary))] hover:shadow-lg'
                 }`}
               >
-                <CardContent className="p-8">
+                <CardContent className="p-4 sm:p-6 lg:p-8">
                   <div className="flex flex-col items-center text-center">
                     <div
-                      className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
+                      className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mb-4 sm:mb-6 ${
                         selected === role.id
                           ? 'bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]'
                           : 'bg-[rgb(var(--surface))]'
                       }`}
                     >
                       <role.icon
-                        className={`h-10 w-10 ${
+                        className={`h-8 w-8 sm:h-10 sm:w-10 ${
                           selected === role.id ? 'text-white' : 'text-[rgb(var(--muted))]'
                         }`}
                       />
                     </div>
 
-                    <h3 className="text-2xl font-bold mb-2">{role.title}</h3>
-                    <p className="text-[rgb(var(--muted))] mb-6">{role.description}</p>
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2">{role.title}</h3>
+                    <p className="text-sm sm:text-base text-[rgb(var(--muted))] mb-4 sm:mb-6">{role.description}</p>
 
                     <ul className="space-y-2 w-full text-left">
                       {role.features.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[rgb(var(--brand-primary))]" />
+                        <li key={i} className="flex items-center gap-2 text-xs sm:text-sm">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[rgb(var(--brand-primary))] shrink-0" />
                           {feature}
                         </li>
                       ))}
@@ -146,7 +146,7 @@ export default function RoleSelectorPage() {
             variant="gradient"
             onClick={handleContinue}
             disabled={!selected || loading}
-            className="min-w-[200px]"
+            className="w-full sm:w-auto sm:min-w-[200px]"
           >
             {loading ? (
               <>
@@ -159,7 +159,7 @@ export default function RoleSelectorPage() {
               </>
             )}
           </Button>
-          <p className="text-sm text-[rgb(var(--muted))] mt-4">
+          <p className="text-xs sm:text-sm text-[rgb(var(--muted))] mt-3 sm:mt-4 px-4">
             You can change this later in your account settings
           </p>
         </motion.div>

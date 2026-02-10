@@ -105,8 +105,8 @@ export default function CampaignDetailPage() {
 
   if (loading) {
     return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-6">
+      <div className="container py-4 sm:py-6 lg:py-8">
+        <div className="animate-pulse space-y-4 sm:space-y-6">
           <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
           <div className="h-64 bg-[rgb(var(--surface))] rounded" />
         </div>
@@ -116,8 +116,8 @@ export default function CampaignDetailPage() {
 
   if (!campaign) {
     return (
-      <div className="container py-8">
-        <Card className="text-center py-16">
+      <div className="container py-4 sm:py-6 lg:py-8">
+        <Card className="text-center py-8 sm:py-12 lg:py-16">
           <CardContent>
             <AlertCircle className="h-16 w-16 text-[rgb(var(--muted))] mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Campaign not found</h3>
@@ -148,9 +148,9 @@ export default function CampaignDetailPage() {
           variants={staggerContainer}
         >
           {/* Back Button */}
-          <motion.div variants={staggerItem} className="mb-6">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
             <Link href="/influencer/campaigns">
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 min-h-[44px]">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Campaigns
               </Button>
@@ -158,21 +158,21 @@ export default function CampaignDetailPage() {
           </motion.div>
 
           {/* Header Section - Mobile Optimized */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <Card className="border-2">
-              <CardContent className="p-4 md:p-8">
-                <div className="flex flex-col md:flex-row md:items-start gap-6">
+              <CardContent className="p-3 sm:p-4 lg:p-8">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
                   {/* Brand Logo */}
                   <div className="shrink-0">
-                    <Avatar className="h-16 w-16 md:h-20 md:w-20">
+                    <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
                       <img src={campaign.brandLogo} alt={campaign.brandName} />
                     </Avatar>
                   </div>
 
                   {/* Campaign Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-start gap-3 mb-3">
-                      <h1 className="text-2xl md:text-4xl font-bold flex-1 min-w-0">
+                    <div className="flex flex-wrap items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold flex-1 min-w-0">
                         {campaign.title}
                       </h1>
                       {appStatus && (
@@ -182,44 +182,44 @@ export default function CampaignDetailPage() {
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 text-sm md:text-base text-[rgb(var(--muted))] mb-4">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm sm:text-base text-[rgb(var(--muted))] mb-3 sm:mb-4">
                       <span className="font-medium text-[rgb(var(--foreground))]">
                         {campaign.brandName}
                       </span>
                       <Badge variant="outline">{campaign.category}</Badge>
                     </div>
 
-                    <p className="text-sm md:text-base text-[rgb(var(--muted))] mb-6">
+                    <p className="text-sm sm:text-base text-[rgb(var(--muted))] mb-4 sm:mb-6">
                       {campaign.description}
                     </p>
 
                     {/* Quick Stats - Mobile 2 cols */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-green-500" />
+                        <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                         <div>
                           <div className="text-xs text-[rgb(var(--muted))]">Budget</div>
-                          <div className="font-bold text-sm md:text-base">
+                          <div className="font-bold text-sm sm:text-base">
                             {formatCurrency(campaign.budget.min)}-{formatCurrency(campaign.budget.max)}
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Users className="h-5 w-5 text-blue-500" />
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                         <div>
                           <div className="text-xs text-[rgb(var(--muted))]">Spots</div>
-                          <div className="font-bold text-sm md:text-base">
+                          <div className="font-bold text-sm sm:text-base">
                             {campaign.accepted_influencers.length}/{campaign.max_influencers}
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-purple-500" />
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
                         <div>
                           <div className="text-xs text-[rgb(var(--muted))]">Deadline</div>
-                          <div className="font-bold text-sm md:text-base">
+                          <div className="font-bold text-sm sm:text-base">
                             {deadline.toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
@@ -229,10 +229,10 @@ export default function CampaignDetailPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-orange-500" />
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
                         <div>
                           <div className="text-xs text-[rgb(var(--muted))]">Duration</div>
-                          <div className="font-bold text-sm md:text-base">
+                          <div className="font-bold text-sm sm:text-base">
                             {Math.ceil(
                               (new Date(campaign.campaign_end_date).getTime() -
                                 new Date(campaign.campaign_start_date).getTime()) /
@@ -248,19 +248,19 @@ export default function CampaignDetailPage() {
 
                 {/* CTA Section - Mobile Full Width */}
                 {canApply && !isDeadlinePassed && (
-                  <div className="mt-6 pt-6 border-t border-[rgb(var(--border))]">
-                    <div className="flex flex-col md:flex-row gap-4">
+                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-[rgb(var(--border))]">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <Button
                         variant="gradient"
                         size="lg"
-                        className="flex-1"
+                        className="flex-1 min-h-[44px]"
                         onClick={handleApply}
                         disabled={applying}
                       >
                         <Send className="h-5 w-5 mr-2" />
                         {appStatus?.status === 'invited' ? 'Accept Invitation' : 'Apply Now'}
                       </Button>
-                      <Button variant="outline" size="lg" className="flex-1 md:flex-none">
+                      <Button variant="outline" size="lg" className="flex-1 sm:flex-none min-h-[44px]">
                         Save for Later
                       </Button>
                     </div>
@@ -268,7 +268,7 @@ export default function CampaignDetailPage() {
                 )}
 
                 {isDeadlinePassed && (
-                  <div className="mt-6 pt-6 border-t border-[rgb(var(--border))]">
+                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-[rgb(var(--border))]">
                     <div className="flex items-center gap-2 text-[rgb(var(--muted))]">
                       <AlertCircle className="h-5 w-5" />
                       <span>Application deadline has passed</span>
@@ -279,9 +279,9 @@ export default function CampaignDetailPage() {
             </Card>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Campaign Goals */}
               <motion.div variants={staggerItem}>
                 <Card>
@@ -313,12 +313,12 @@ export default function CampaignDetailPage() {
                       Deliverables
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
+                    <div className="space-y-3 sm:space-y-4">
                       {campaign.requirements.deliverables.map((deliverable, index) => (
                         <div
                           key={index}
-                          className="flex gap-4 p-4 rounded-lg bg-[rgb(var(--surface))]"
+                          className="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))]"
                         >
                           <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white font-bold text-sm">
                             {deliverable.quantity}
@@ -385,7 +385,7 @@ export default function CampaignDetailPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Platforms */}
               <motion.div variants={staggerItem}>
                 <Card>

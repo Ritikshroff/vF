@@ -118,8 +118,8 @@ export default function InfluencerProfilePage() {
 
   if (loading) {
     return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-6">
+      <div className="container py-4 sm:py-6 lg:py-8">
+        <div className="animate-pulse space-y-4 sm:space-y-6">
           <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
           <div className="h-64 bg-[rgb(var(--surface))] rounded" />
         </div>
@@ -136,13 +136,13 @@ export default function InfluencerProfilePage() {
           variants={staggerContainer}
         >
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-2 gradient-text">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2 gradient-text">
                   Profile Settings
                 </h1>
-                <p className="text-sm md:text-lg text-[rgb(var(--muted))]">
+                <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))]">
                   Manage your profile and account settings
                 </p>
               </div>
@@ -159,9 +159,9 @@ export default function InfluencerProfilePage() {
             </div>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Main Settings */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Basic Information */}
               <motion.div variants={staggerItem}>
                 <Card>
@@ -171,9 +171,9 @@ export default function InfluencerProfilePage() {
                       Basic Information
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 p-3 sm:p-4 lg:p-6">
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Full Name</label>
+                      <label className="text-sm sm:text-base font-medium mb-2 block">Full Name</label>
                       <Input
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -183,7 +183,7 @@ export default function InfluencerProfilePage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Bio</label>
+                      <label className="text-sm sm:text-base font-medium mb-2 block">Bio</label>
                       <textarea
                         value={formData.bio}
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
@@ -192,9 +192,9 @@ export default function InfluencerProfilePage() {
                       />
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Email</label>
+                        <label className="text-sm sm:text-base font-medium mb-2 block">Email</label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[rgb(var(--muted))]" />
                           <Input
@@ -210,7 +210,7 @@ export default function InfluencerProfilePage() {
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Location</label>
+                        <label className="text-sm sm:text-base font-medium mb-2 block">Location</label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[rgb(var(--muted))]" />
                           <Input
@@ -226,7 +226,7 @@ export default function InfluencerProfilePage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Website</label>
+                      <label className="text-sm sm:text-base font-medium mb-2 block">Website</label>
                       <div className="relative">
                         <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[rgb(var(--muted))]" />
                         <Input
@@ -250,11 +250,11 @@ export default function InfluencerProfilePage() {
                   <CardHeader>
                     <CardTitle>Social Media Accounts</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 p-3 sm:p-4 lg:p-6">
                     {platforms.map((platform, index) => (
                       <div
                         key={index}
-                        className="flex flex-col md:flex-row gap-4 p-4 rounded-lg bg-[rgb(var(--surface))]"
+                        className="flex flex-col sm:flex-row gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))]"
                       >
                         <div className="flex items-center gap-3 flex-1">
                           {platform.name === 'Instagram' && (
@@ -355,10 +355,10 @@ export default function InfluencerProfilePage() {
                       Pricing Range
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-2 gap-4">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
+                    <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Minimum Rate</label>
+                        <label className="text-sm sm:text-base font-medium mb-2 block">Minimum Rate</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
                             $
@@ -376,7 +376,7 @@ export default function InfluencerProfilePage() {
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Maximum Rate</label>
+                        <label className="text-sm sm:text-base font-medium mb-2 block">Maximum Rate</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
                             $
@@ -409,7 +409,7 @@ export default function InfluencerProfilePage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Profile Photo */}
               <motion.div variants={staggerItem}>
                 <Card>

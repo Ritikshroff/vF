@@ -213,11 +213,11 @@ export default function BrandContentReviewPage() {
           variants={staggerContainer}
         >
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
-            <h1 className="text-3xl md:text-5xl font-bold mb-2 gradient-text">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-5xl font-bold mb-2 gradient-text">
               Content Review
             </h1>
-            <p className="text-sm md:text-lg text-[rgb(var(--muted))]">
+            <p className="text-sm lg:text-base xl:text-lg text-[rgb(var(--muted))]">
               Review and approve content from your influencer partners
             </p>
           </motion.div>
@@ -225,47 +225,47 @@ export default function BrandContentReviewPage() {
           {/* Stats Grid - Mobile 2 cols */}
           <motion.div
             variants={staggerItem}
-            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8"
           >
             <Card className="border-2">
-              <CardContent className="p-4 md:p-6">
-                <div className="text-2xl md:text-3xl font-bold gradient-text mb-1">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-1">
                   {stats.total}
                 </div>
-                <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
+                <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
                   Total Submissions
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-2 border-orange-500/20 bg-orange-500/5">
-              <CardContent className="p-4 md:p-6">
-                <div className="text-2xl md:text-3xl font-bold text-orange-500 mb-1">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-orange-500 mb-1">
                   {stats.pending}
                 </div>
-                <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
+                <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
                   Awaiting Review
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-2 border-green-500/20 bg-green-500/5">
-              <CardContent className="p-4 md:p-6">
-                <div className="text-2xl md:text-3xl font-bold text-green-500 mb-1">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-500 mb-1">
                   {stats.approved}
                 </div>
-                <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
+                <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
                   Approved
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-2">
-              <CardContent className="p-4 md:p-6">
-                <div className="text-2xl md:text-3xl font-bold gradient-text mb-1">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-1">
                   {stats.revision}
                 </div>
-                <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
+                <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
                   Revision Needed
                 </div>
               </CardContent>
@@ -273,7 +273,7 @@ export default function BrandContentReviewPage() {
           </motion.div>
 
           {/* Search & Filters */}
-          <motion.div variants={staggerItem} className="mb-6 space-y-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
             <div className="flex flex-col md:flex-row gap-3 md:gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-[rgb(var(--muted))]" />
@@ -355,7 +355,7 @@ export default function BrandContentReviewPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4 md:space-y-6">
+            <div className="space-y-3 sm:space-y-4 lg:space-y-6">
               {filteredContent.map((item) => {
                 const StatusIcon = getStatusIcon(item.review_status);
 
@@ -366,8 +366,8 @@ export default function BrandContentReviewPage() {
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all">
-                      <CardContent className="p-4 md:p-6">
-                        <div className="flex flex-col lg:flex-row gap-6">
+                      <CardContent className="p-3 sm:p-4 lg:p-6">
+                        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                           {/* Thumbnail */}
                           <div className="relative w-full lg:w-80 aspect-video lg:aspect-square shrink-0 rounded-lg overflow-hidden bg-[rgb(var(--surface))]">
                             <img
@@ -443,7 +443,7 @@ export default function BrandContentReviewPage() {
 
                             {/* Metrics */}
                             {item.metrics && (
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4">
                                 <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
                                   <Eye className="h-5 w-5 mx-auto mb-2 text-[rgb(var(--muted))]" />
                                   <div className="text-lg font-bold">

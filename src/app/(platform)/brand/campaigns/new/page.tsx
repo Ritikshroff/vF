@@ -203,10 +203,10 @@ export default function CampaignBuilderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))] py-8">
+    <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))] py-4 sm:py-6 lg:py-8">
       <div className="container max-w-4xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
           <Button variant="ghost" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
@@ -214,17 +214,17 @@ export default function CampaignBuilderPage() {
           <Badge variant="outline">Draft</Badge>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-3 gradient-text">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-3 gradient-text">
             Create New Campaign
           </h1>
-          <p className="text-lg text-[rgb(var(--muted))]">
+          <p className="text-base sm:text-lg text-[rgb(var(--muted))]">
             Launch your influencer marketing campaign in just a few steps
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium">
               Step {step} of {totalSteps}
@@ -243,7 +243,7 @@ export default function CampaignBuilderPage() {
           </div>
 
           {/* Step indicators */}
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between mt-4 overflow-x-auto pb-2 gap-2">
             {[
               { num: 1, label: 'Basic Info' },
               { num: 2, label: 'Requirements' },
@@ -253,12 +253,12 @@ export default function CampaignBuilderPage() {
             ].map((s) => (
               <div
                 key={s.num}
-                className={`flex items-center gap-2 ${
+                className={`flex items-center gap-2 flex-shrink-0 ${
                   step >= s.num ? 'opacity-100' : 'opacity-40'
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-medium ${
                     step >= s.num
                       ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white'
                       : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))]'
@@ -266,7 +266,7 @@ export default function CampaignBuilderPage() {
                 >
                   {step > s.num ? <Check className="h-4 w-4" /> : s.num}
                 </div>
-                <span className="text-xs hidden md:inline">{s.label}</span>
+                <span className="text-xs hidden lg:inline whitespace-nowrap">{s.label}</span>
               </div>
             ))}
           </div>
@@ -282,15 +282,15 @@ export default function CampaignBuilderPage() {
             variants={slideInRight}
           >
             <Card className="border-2">
-              <CardContent className="p-8">
+              <CardContent className="p-4 sm:p-6 lg:p-8">
                 {/* Step 1: Basic Info */}
                 {step === 1 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <FileText className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Campaign Details</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Campaign Details</h2>
                       <p className="text-[rgb(var(--muted))]">
                         Tell us about your campaign
                       </p>
@@ -360,12 +360,12 @@ export default function CampaignBuilderPage() {
 
                 {/* Step 2: Requirements */}
                 {step === 2 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Target className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Target className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">
                         Campaign Requirements
                       </h2>
                       <p className="text-[rgb(var(--muted))]">
@@ -378,7 +378,7 @@ export default function CampaignBuilderPage() {
                       <label className="text-sm font-medium">
                         Campaign Goals * (Select at least one)
                       </label>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {CAMPAIGN_GOALS.map((goal) => (
                           <button
                             key={goal}
@@ -510,7 +510,7 @@ export default function CampaignBuilderPage() {
                       <label className="text-sm font-medium">
                         Content Types * (Select at least one)
                       </label>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {CONTENT_TYPES.map((type) => (
                           <button
                             key={type}

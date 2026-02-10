@@ -154,14 +154,14 @@ export default function MessagesPage() {
           className="h-[calc(100vh-8rem)] md:h-[calc(100vh-12rem)]"
         >
           {/* Header - Mobile Only */}
-          <motion.div variants={staggerItem} className="mb-4 md:hidden">
-            <h1 className="text-3xl font-bold gradient-text">Messages</h1>
+          <motion.div variants={staggerItem} className="mb-4 sm:hidden">
+            <h1 className="text-xl font-bold gradient-text">Messages</h1>
           </motion.div>
 
           {/* Desktop Header */}
-          <motion.div variants={staggerItem} className="hidden md:block mb-6">
-            <h1 className="text-5xl font-bold mb-2 gradient-text">Messages</h1>
-            <p className="text-lg text-[rgb(var(--muted))]">
+          <motion.div variants={staggerItem} className="hidden sm:block mb-4 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 gradient-text">Messages</h1>
+            <p className="text-base sm:text-lg text-[rgb(var(--muted))]">
               Chat with brands and manage collaborations
             </p>
           </motion.div>
@@ -174,17 +174,17 @@ export default function MessagesPage() {
                 <div
                   className={`${
                     showMobileList ? 'flex' : 'hidden'
-                  } md:flex flex-col w-full md:w-80 lg:w-96 border-r border-[rgb(var(--border))]`}
+                  } sm:flex flex-col w-full sm:w-80 lg:w-96 border-r border-[rgb(var(--border))]`}
                 >
                   {/* Search */}
-                  <div className="p-4 border-b border-[rgb(var(--border))]">
+                  <div className="p-3 sm:p-4 border-b border-[rgb(var(--border))]">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgb(var(--muted))]" />
                       <Input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search conversations..."
-                        className="pl-10 h-10"
+                        className="pl-10 h-10 min-h-[44px]"
                       />
                     </div>
                   </div>
@@ -195,7 +195,7 @@ export default function MessagesPage() {
                       <button
                         key={conversation.id}
                         onClick={() => handleSelectConversation(conversation)}
-                        className={`w-full p-4 flex gap-3 hover:bg-[rgb(var(--surface))] transition-colors border-b border-[rgb(var(--border))] ${
+                        className={`w-full p-3 sm:p-4 flex gap-3 min-h-[44px] hover:bg-[rgb(var(--surface))] transition-colors border-b border-[rgb(var(--border))] ${
                           activeConversation.id === conversation.id
                             ? 'bg-[rgb(var(--surface))]'
                             : ''
@@ -247,15 +247,15 @@ export default function MessagesPage() {
                 <div
                   className={`${
                     showMobileList ? 'hidden' : 'flex'
-                  } md:flex flex-col flex-1`}
+                  } sm:flex flex-col flex-1`}
                 >
                   {/* Chat Header */}
-                  <div className="p-4 border-b border-[rgb(var(--border))] flex items-center gap-3">
+                  <div className="p-3 sm:p-4 border-b border-[rgb(var(--border))] flex items-center gap-3">
                     {/* Mobile back button */}
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="md:hidden"
+                      className="sm:hidden min-h-[44px]"
                       onClick={() => setShowMobileList(true)}
                     >
                       <ArrowLeft className="h-5 w-5" />
@@ -286,7 +286,7 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
                     {messages.map((message) => (
                       <div
                         key={message.id}
@@ -295,11 +295,11 @@ export default function MessagesPage() {
                         }`}
                       >
                         <div
-                          className={`max-w-[80%] md:max-w-[70%] ${
+                          className={`max-w-[85%] sm:max-w-[80%] lg:max-w-[70%] ${
                             message.sender === 'me'
                               ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white'
                               : 'bg-[rgb(var(--surface))]'
-                          } rounded-2xl px-4 py-2`}
+                          } rounded-2xl px-3 sm:px-4 py-2`}
                         >
                           <p className="text-sm mb-1">{message.message}</p>
                           <div
@@ -318,9 +318,9 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Message Input */}
-                  <div className="p-4 border-t border-[rgb(var(--border))]">
+                  <div className="p-3 sm:p-4 border-t border-[rgb(var(--border))]">
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="shrink-0">
+                      <Button variant="ghost" size="sm" className="shrink-0 min-h-[44px]">
                         <Paperclip className="h-5 w-5" />
                       </Button>
 
@@ -329,7 +329,7 @@ export default function MessagesPage() {
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                         placeholder="Type a message..."
-                        className="flex-1 h-10"
+                        className="flex-1 h-10 min-h-[44px]"
                       />
 
                       <Button
@@ -337,7 +337,7 @@ export default function MessagesPage() {
                         size="sm"
                         onClick={handleSendMessage}
                         disabled={!newMessage.trim()}
-                        className="shrink-0"
+                        className="shrink-0 min-h-[44px]"
                       >
                         <Send className="h-5 w-5" />
                       </Button>

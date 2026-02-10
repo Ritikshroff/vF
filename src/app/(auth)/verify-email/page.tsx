@@ -78,7 +78,7 @@ export default function VerifyEmailPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-6 sm:py-10 lg:py-12 px-4 sm:px-6">
       <motion.div
         initial="initial"
         animate="animate"
@@ -86,12 +86,12 @@ export default function VerifyEmailPage() {
         className="w-full max-w-md"
       >
         <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center">
+          <CardHeader className="text-center p-4 sm:p-6">
+            <div className="mx-auto mb-4 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center">
               {verified ? (
-                <CheckCircle className="h-8 w-8 text-white" />
+                <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               ) : (
-                <Mail className="h-8 w-8 text-white" />
+                <Mail className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               )}
             </div>
             <CardTitle>
@@ -106,7 +106,7 @@ export default function VerifyEmailPage() {
               <p className="text-sm font-medium mt-2">{user.email}</p>
             )}
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-4 sm:p-6">
             {verified ? (
               <>
                 <div className="text-center text-[rgb(var(--muted))] text-sm">
@@ -119,7 +119,7 @@ export default function VerifyEmailPage() {
             ) : (
               <>
                 {loading ? (
-                  <div className="text-center py-8">
+                  <div className="text-center py-6 sm:py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--brand-primary))] mx-auto mb-4" />
                     <p className="text-sm text-[rgb(var(--muted))]">Verifying your email...</p>
                   </div>
@@ -135,14 +135,14 @@ export default function VerifyEmailPage() {
                     </div>
 
                     {resendSuccess && (
-                      <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-center">
-                        <p className="text-sm text-green-600 dark:text-green-400">
+                      <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-center">
+                        <p className="text-sm text-green-600">
                           Verification email resent!
                         </p>
                       </div>
                     )}
 
-                    <div className="space-y-2">
+                    <div className="space-y-2 sm:space-y-2">
                       <Button
                         variant="outline"
                         className="w-full"

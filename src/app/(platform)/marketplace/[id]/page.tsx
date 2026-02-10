@@ -98,24 +98,24 @@ export default function MarketplaceListingPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-surface">
-      <div className="container max-w-5xl py-4 md:py-8">
+      <div className="container max-w-5xl py-4 sm:py-6 lg:py-8">
         <motion.div initial="initial" animate="animate" variants={staggerContainer}>
           {/* Back Navigation */}
-          <motion.div variants={staggerItem} className="mb-6">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
             <Link href="/marketplace" className="inline-flex items-center gap-2 text-sm text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))] transition-colors">
               <ArrowLeft className="h-4 w-4" />
               Back to Marketplace
             </Link>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Header Card */}
               <motion.div variants={staggerItem}>
                 <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start justify-between mb-3 sm:mb-4">
                       <div className="flex-1">
                         {listing.featured && (
                           <Badge variant="warning" className="mb-2">
@@ -123,7 +123,7 @@ export default function MarketplaceListingPage() {
                             Featured Campaign
                           </Badge>
                         )}
-                        <h1 className="text-2xl md:text-3xl font-bold mb-2">{listing.title}</h1>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">{listing.title}</h1>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white text-xs font-bold">
@@ -153,25 +153,25 @@ export default function MarketplaceListingPage() {
                     </div>
 
                     {/* Key Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-[rgb(var(--surface))]">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-[rgb(var(--surface))]">
                       <div className="text-center">
-                        <DollarSign className="h-5 w-5 mx-auto mb-1 text-[rgb(var(--success))]" />
-                        <div className="text-lg font-bold">{formatCurrency(listing.budget.min)}-{formatCurrency(listing.budget.max)}</div>
+                        <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 text-[rgb(var(--success))]" />
+                        <div className="text-base sm:text-lg font-bold">{formatCurrency(listing.budget.min)}-{formatCurrency(listing.budget.max)}</div>
                         <div className="text-xs text-[rgb(var(--muted))]">Budget</div>
                       </div>
                       <div className="text-center">
-                        <Users className="h-5 w-5 mx-auto mb-1 text-[rgb(var(--info))]" />
-                        <div className="text-lg font-bold">{listing.applicants}/{listing.maxInfluencers}</div>
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 text-[rgb(var(--info))]" />
+                        <div className="text-base sm:text-lg font-bold">{listing.applicants}/{listing.maxInfluencers}</div>
                         <div className="text-xs text-[rgb(var(--muted))]">Applied/Spots</div>
                       </div>
                       <div className="text-center">
-                        <Clock className="h-5 w-5 mx-auto mb-1 text-[rgb(var(--warning))]" />
-                        <div className="text-lg font-bold">{daysLeft}d</div>
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 text-[rgb(var(--warning))]" />
+                        <div className="text-base sm:text-lg font-bold">{daysLeft}d</div>
                         <div className="text-xs text-[rgb(var(--muted))]">Days Left</div>
                       </div>
                       <div className="text-center">
-                        <Target className="h-5 w-5 mx-auto mb-1 text-[rgb(var(--brand-primary))]" />
-                        <div className="text-lg font-bold">{formatCompactNumber(listing.requirements.minFollowers)}+</div>
+                        <Target className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 text-[rgb(var(--brand-primary))]" />
+                        <div className="text-base sm:text-lg font-bold">{formatCompactNumber(listing.requirements.minFollowers)}+</div>
                         <div className="text-xs text-[rgb(var(--muted))]">Min Followers</div>
                       </div>
                     </div>
@@ -222,9 +222,9 @@ export default function MarketplaceListingPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {listing.deliverables.map((del, i) => (
-                        <div key={i} className="flex items-start gap-4 p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div key={i} className="flex items-start gap-3 sm:gap-4 p-3 rounded-lg bg-[rgb(var(--surface))]">
                           <div className="w-8 h-8 rounded-full bg-[rgb(var(--brand-primary))]/10 flex items-center justify-center text-[rgb(var(--brand-primary))] font-bold text-sm shrink-0">
                             {del.quantity}x
                           </div>
@@ -249,7 +249,7 @@ export default function MarketplaceListingPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-2 gap-3">
+                    <div className="grid sm:grid-cols-2 gap-2 sm:gap-3">
                       {listing.perks.map((perk, i) => (
                         <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-[rgb(var(--surface))]">
                           <CheckCircle2 className="h-4 w-4 text-[rgb(var(--success))] shrink-0" />
@@ -263,12 +263,12 @@ export default function MarketplaceListingPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Apply Card */}
               {isInfluencer && (
                 <motion.div variants={staggerItem}>
                   <Card className="border-[rgb(var(--brand-primary))]/30">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4 sm:p-6">
                       {!showApplication ? (
                         <>
                           <Button variant="gradient" className="w-full mb-3" onClick={() => setShowApplication(true)}>
@@ -311,7 +311,7 @@ export default function MarketplaceListingPage() {
                   <CardHeader>
                     <CardTitle className="text-base">Requirements</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 sm:space-y-4">
                     <div>
                       <div className="text-xs text-[rgb(var(--muted))] mb-1">Min Followers</div>
                       <div className="font-semibold">{formatCompactNumber(listing.requirements.minFollowers)}+</div>
@@ -384,13 +384,13 @@ export default function MarketplaceListingPage() {
                       </div>
                     </div>
                     <p className="text-sm text-[rgb(var(--muted))] mb-4">{listing.brand.description}</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div className="font-bold">{listing.brand.campaigns}</div>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div className="text-sm sm:text-base font-bold">{listing.brand.campaigns}</div>
                         <div className="text-xs text-[rgb(var(--muted))]">Campaigns</div>
                       </div>
-                      <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div className="font-bold">{formatCurrency(listing.brand.totalSpend)}</div>
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
+                        <div className="text-sm sm:text-base font-bold">{formatCurrency(listing.brand.totalSpend)}</div>
                         <div className="text-xs text-[rgb(var(--muted))]">Total Spend</div>
                       </div>
                     </div>

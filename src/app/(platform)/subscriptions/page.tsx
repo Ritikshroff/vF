@@ -148,18 +148,18 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-surface">
-      <div className="container max-w-6xl py-4 md:py-8">
+      <div className="container max-w-6xl py-4 sm:py-6 lg:py-8">
         <motion.div initial="initial" animate="animate" variants={staggerContainer}>
           {/* Header */}
-          <motion.div variants={staggerItem} className="text-center mb-8 md:mb-12">
-            <Badge variant="primary" className="mb-4">
+          <motion.div variants={staggerItem} className="text-center mb-6 sm:mb-8 lg:mb-12">
+            <Badge variant="primary" className="mb-3 sm:mb-4">
               <Sparkles className="h-3 w-3 mr-1" />
               Pricing Plans
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4">
               Choose Your <span className="gradient-text">Growth Plan</span>
             </h1>
-            <p className="text-[rgb(var(--muted))] max-w-2xl mx-auto mb-6">
+            <p className="text-sm sm:text-base text-[rgb(var(--muted))] max-w-2xl mx-auto mb-4 sm:mb-6">
               Scale your influencer marketing with the right tools. Start free and upgrade as you grow.
             </p>
 
@@ -190,7 +190,7 @@ export default function SubscriptionsPage() {
           </motion.div>
 
           {/* Plans Grid */}
-          <motion.div variants={staggerItem} className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
+          <motion.div variants={staggerItem} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8 sm:mb-12">
             {PLANS.map((plan, index) => {
               const price = getPrice(plan)
               const isCurrent = plan.id === currentPlan
@@ -216,22 +216,22 @@ export default function SubscriptionsPage() {
                       ? 'border-[rgb(var(--brand-primary))] ring-1 ring-[rgb(var(--brand-primary))]/20'
                       : ''
                   }`}>
-                    <CardContent className="p-5 md:p-6 flex flex-col h-full">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className={`p-2 rounded-lg ${plan.highlighted ? 'bg-[rgb(var(--brand-primary))]/10' : 'bg-[rgb(var(--surface))]'}`}>
-                          <plan.icon className={`h-5 w-5 ${plan.highlighted ? 'text-[rgb(var(--brand-primary))]' : 'text-[rgb(var(--muted))]'}`} />
+                    <CardContent className="p-4 sm:p-5 lg:p-6 flex flex-col h-full">
+                      <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                        <div className={`p-1.5 sm:p-2 rounded-lg ${plan.highlighted ? 'bg-[rgb(var(--brand-primary))]/10' : 'bg-[rgb(var(--surface))]'}`}>
+                          <plan.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${plan.highlighted ? 'text-[rgb(var(--brand-primary))]' : 'text-[rgb(var(--muted))]'}`} />
                         </div>
-                        <h3 className="text-lg font-bold">{plan.name}</h3>
+                        <h3 className="text-base sm:text-lg font-bold">{plan.name}</h3>
                       </div>
 
-                      <div className="mb-4">
+                      <div className="mb-3 sm:mb-4">
                         {price !== null ? (
                           <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-bold">{formatCurrency(price)}</span>
+                            <span className="text-2xl sm:text-3xl font-bold">{formatCurrency(price)}</span>
                             <span className="text-sm text-[rgb(var(--muted))]">/{billingPeriod === 'annual' ? 'mo' : 'mo'}</span>
                           </div>
                         ) : (
-                          <div className="text-3xl font-bold">Custom</div>
+                          <div className="text-2xl sm:text-3xl font-bold">Custom</div>
                         )}
                         <p className="text-sm text-[rgb(var(--muted))] mt-1">{plan.description}</p>
                         {billingPeriod === 'annual' && price !== null && price > 0 && (
@@ -243,14 +243,14 @@ export default function SubscriptionsPage() {
 
                       <Button
                         variant={isCurrent ? 'outline' : plan.highlighted ? 'gradient' : 'outline'}
-                        className="w-full mb-4"
+                        className="w-full mb-3 sm:mb-4"
                         disabled={isCurrent}
                       >
                         {isCurrent ? 'Current Plan' : price === null ? 'Contact Sales' : 'Get Started'}
                         {!isCurrent && <ArrowRight className="h-4 w-4 ml-1" />}
                       </Button>
 
-                      <div className="space-y-2.5 flex-1">
+                      <div className="space-y-2 sm:space-y-2.5 flex-1">
                         {plan.features.map((feature, i) => (
                           <div key={i} className="flex items-start gap-2">
                             {feature.included ? (
@@ -274,8 +274,8 @@ export default function SubscriptionsPage() {
           </motion.div>
 
           {/* Feature Comparison */}
-          <motion.div variants={staggerItem} className="mb-12">
-            <h2 className="text-2xl font-bold text-center mb-6">Feature Comparison</h2>
+          <motion.div variants={staggerItem} className="mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6">Feature Comparison</h2>
             <Card>
               <CardContent className="p-0 overflow-x-auto">
                 <table className="w-full min-w-[600px]">
@@ -325,11 +325,11 @@ export default function SubscriptionsPage() {
 
           {/* FAQs */}
           <motion.div variants={staggerItem}>
-            <h2 className="text-2xl font-bold text-center mb-6">Frequently Asked Questions</h2>
-            <div className="max-w-3xl mx-auto space-y-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6">Frequently Asked Questions</h2>
+            <div className="max-w-3xl mx-auto space-y-2 sm:space-y-3">
               {FAQS.map((faq, i) => (
                 <Card key={i} className="cursor-pointer" onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}>
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <HelpCircle className="h-5 w-5 text-[rgb(var(--brand-primary))] shrink-0" />
