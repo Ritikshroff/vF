@@ -44,10 +44,10 @@ export function MobileBottomNav() {
 
   if (!user?.role) return null
 
-  const items = user.role === 'brand' ? BRAND_BOTTOM_NAV : INFLUENCER_BOTTOM_NAV
+  const items = user.role === 'BRAND' ? BRAND_BOTTOM_NAV : INFLUENCER_BOTTOM_NAV
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[rgb(var(--background))] border-t border-[rgb(var(--border))] safe-bottom">
+    <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[rgb(var(--background))] border-t border-[rgb(var(--border))] safe-bottom">
       <div className="flex items-center justify-around h-16 px-1">
         {items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')

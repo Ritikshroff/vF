@@ -46,12 +46,12 @@ export function Sidebar() {
 
   if (!user?.role) return null
 
-  const role = user.role as 'brand' | 'influencer'
+  const role = user.role.toLowerCase() as 'brand' | 'influencer'
   const links = PLATFORM_NAV_LINKS[role] || []
 
   return (
     <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-[rgb(var(--border))] bg-[rgb(var(--background))] h-[calc(100vh-64px)] sticky top-16 overflow-y-auto">
-      <nav className="flex-1 p-3 space-y-1">
+      <nav aria-label="Sidebar navigation" className="flex-1 p-3 space-y-1">
         {links.map((link) => {
           const Icon = ICON_MAP[link.icon] || LayoutDashboard
           const isActive = pathname === link.href || pathname.startsWith(link.href + '/')

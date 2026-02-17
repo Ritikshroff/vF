@@ -4,6 +4,7 @@ import { withAuth, successResponse, validateBody } from '@/lib/api/with-middlewa
 import { errorHandler, AuthorizationError } from '@/middleware/error.middleware'
 import { AuthenticatedUser } from '@/middleware/auth.middleware'
 import { withdrawFromWallet, getWalletBalance } from '@/services/payment.service'
+import { audit, getClientInfo } from '@/lib/audit'
 
 const withdrawSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
@@ -36,6 +37,13 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const transaction = await withdrawFromWallet(user.id, {
       amount: body.amount,
       payoutMethodId: body.payoutMethodId,
+    })
+
+    audit({
+      action: 'payment.withdraw',
+      userId: user.id,
+      ...getClientInfo(request),
+      metadata: { amount: body.amount, payoutMethodId: body.payoutMethodId },
     })
 
     return successResponse({

@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   Upload,
   Search,
-  Filter,
   Grid3x3,
   List,
   Image as ImageIcon,
@@ -14,125 +13,130 @@ import {
   Eye,
   Heart,
   MessageCircle,
-  Share2,
   MoreVertical,
   Edit,
-  Trash2,
   ExternalLink,
   TrendingUp,
   Instagram,
   Youtube,
-  Facebook,
-  CheckCircle2,
-  Clock,
-  Archive,
+  Globe,
+  AlertCircle,
+  Music,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
-import { fetchInfluencerContent, fetchContentStats } from '@/services/content'
-import { getInfluencerByUserId, getAllInfluencers } from '@/mock-data/influencers'
-import type { ContentItem } from '@/mock-data/content'
+import { api } from '@/lib/api-client'
 import { formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
+
+function getPlatformIcon(platform: string) {
+  switch (platform) {
+    case 'INSTAGRAM':
+      return Instagram
+    case 'YOUTUBE':
+      return Youtube
+    case 'TIKTOK':
+      return Music
+    case 'FACEBOOK':
+      return Globe
+    default:
+      return ImageIcon
+  }
+}
+
+function formatPlatformName(platform: string): string {
+  const names: Record<string, string> = {
+    INSTAGRAM: 'Instagram',
+    YOUTUBE: 'YouTube',
+    TIKTOK: 'TikTok',
+    TWITTER: 'Twitter',
+    FACEBOOK: 'Facebook',
+  }
+  return names[platform] || platform
+}
+
+function formatContentType(type: string): string {
+  const names: Record<string, string> = {
+    IMAGE: 'Image',
+    VIDEO: 'Video',
+    REEL: 'Reel',
+    STORY: 'Story',
+    CAROUSEL: 'Carousel',
+    SHORT: 'Short',
+  }
+  return names[type] || type
+}
 
 export default function ContentLibraryPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [content, setContent] = useState<ContentItem[]>([])
+  const [content, setContent] = useState<any[]>([])
   const [stats, setStats] = useState<any>(null)
-  const [influencer, setInfluencer] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [filterPlatform, setFilterPlatform] = useState<string>('all')
-  const [filterStatus, setFilterStatus] = useState<string>('all')
 
-  useEffect(() => {
-    loadContent()
-  }, [user])
-
-  const loadContent = async () => {
-    if (!user) return
+  const loadContent = useCallback(async () => {
+    if (!user?.influencerId) return
 
     try {
-      let inf = getInfluencerByUserId(user.id)
-
-      // Fallback: use first influencer for demo
-      if (!inf) {
-        console.warn(`No influencer found for user ID: ${user.id}, using fallback influencer`)
-        inf = getAllInfluencers()[0]
+      const res = await api.get<any>(`/discovery/influencers/${user.influencerId}`)
+      if (res.error) {
+        console.error('Error loading content:', res.error)
+        return
       }
 
-      if (inf) {
-        setInfluencer(inf)
-        const [contentData, statsData] = await Promise.all([
-          fetchInfluencerContent(inf.id),
-          fetchContentStats(inf.id),
-        ])
-        setContent(contentData)
-        setStats(statsData)
-      }
+      const profile = res.data
+      const posts = profile?.recentPosts || []
+      setContent(posts)
+
+      // Compute stats from posts
+      setStats({
+        total_content: posts.length,
+        total_views: posts.reduce((sum: number, p: any) => sum + (p.views || 0), 0),
+        total_likes: posts.reduce((sum: number, p: any) => sum + (p.likes || 0), 0),
+        avg_engagement: posts.length > 0
+          ? posts.reduce((sum: number, p: any) => sum + Number(p.engagementRate || 0), 0) / posts.length
+          : 0,
+      })
     } catch (error) {
       console.error('Error loading content:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.influencerId])
+
+  useEffect(() => {
+    loadContent()
+  }, [loadContent])
 
   const filteredContent = content.filter((item) => {
     const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      searchQuery === '' ||
+      formatPlatformName(item.platform).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      formatContentType(item.type).toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesPlatform =
       filterPlatform === 'all' || item.platform === filterPlatform
 
-    const matchesStatus =
-      filterStatus === 'all' || item.status === filterStatus
-
-    return matchesSearch && matchesPlatform && matchesStatus
+    return matchesSearch && matchesPlatform
   })
 
-  const getPlatformIcon = (platform: string) => {
-    switch (platform) {
-      case 'Instagram':
-        return Instagram
-      case 'YouTube':
-        return Youtube
-      case 'Facebook':
-        return Facebook
-      default:
-        return ImageIcon
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published':
-        return 'success'
-      case 'draft':
-        return 'warning'
-      case 'archived':
-        return 'default'
-      default:
-        return 'default'
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'published':
-        return CheckCircle2
-      case 'draft':
-        return Clock
-      case 'archived':
-        return Archive
-      default:
-        return Clock
-    }
+  if (!user?.influencerId) {
+    return (
+      <div className="container py-8">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <AlertCircle className="h-12 w-12 text-[rgb(var(--muted))] mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Influencer Profile Required</h2>
+          <p className="text-[rgb(var(--muted))] max-w-md">
+            Complete your onboarding to access the content library.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -176,7 +180,7 @@ export default function ContentLibraryPage() {
             </div>
           </motion.div>
 
-          {/* Stats Grid - Mobile 2 cols */}
+          {/* Stats Grid */}
           {stats && (
             <motion.div
               variants={staggerItem}
@@ -280,10 +284,9 @@ export default function ContentLibraryPage() {
               </div>
             </div>
 
-            {/* Filter Tabs - Mobile Scrollable */}
+            {/* Platform Filter Tabs */}
             <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-              {/* Platform Filters */}
-              {['all', 'Instagram', 'YouTube', 'TikTok', 'Facebook'].map((platform) => (
+              {['all', 'INSTAGRAM', 'YOUTUBE', 'TIKTOK', 'FACEBOOK'].map((platform) => (
                 <button
                   key={platform}
                   onClick={() => setFilterPlatform(platform)}
@@ -293,29 +296,7 @@ export default function ContentLibraryPage() {
                       : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
                   }`}
                 >
-                  {platform === 'all' ? 'All Platforms' : platform}
-                </button>
-              ))}
-
-              <div className="h-7 sm:h-8 w-px bg-[rgb(var(--border))]" />
-
-              {/* Status Filters */}
-              {[
-                { value: 'all', label: 'All' },
-                { value: 'published', label: 'Published' },
-                { value: 'draft', label: 'Drafts' },
-                { value: 'archived', label: 'Archived' },
-              ].map((status) => (
-                <button
-                  key={status.value}
-                  onClick={() => setFilterStatus(status.value)}
-                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                    filterStatus === status.value
-                      ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
-                      : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
-                  }`}
-                >
-                  {status.label}
+                  {platform === 'all' ? 'All Platforms' : formatPlatformName(platform)}
                 </button>
               ))}
             </div>
@@ -351,7 +332,7 @@ export default function ContentLibraryPage() {
             >
               {filteredContent.map((item) => {
                 const PlatformIcon = getPlatformIcon(item.platform)
-                const StatusIcon = getStatusIcon(item.status)
+                const engagementRate = Number(item.engagementRate || 0)
 
                 return viewMode === 'grid' ? (
                   /* Grid View */
@@ -364,11 +345,17 @@ export default function ContentLibraryPage() {
                     <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all overflow-hidden">
                       {/* Thumbnail */}
                       <div className="relative aspect-square overflow-hidden bg-[rgb(var(--surface))]">
-                        <img
-                          src={item.thumbnail}
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                        />
+                        {item.thumbnail ? (
+                          <img
+                            src={item.thumbnail}
+                            alt={formatContentType(item.type)}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[rgb(var(--muted))]">
+                            <ImageIcon className="h-12 w-12" />
+                          </div>
+                        )}
 
                         {/* Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity">
@@ -390,9 +377,9 @@ export default function ContentLibraryPage() {
                         {/* Type Badge */}
                         <div className="absolute top-3 left-3">
                           <Badge variant="default" className="backdrop-blur-sm">
-                            {item.type === 'video' && <Video className="h-3 w-3 mr-1" />}
-                            {item.type === 'reel' && <Play className="h-3 w-3 mr-1" />}
-                            {item.type}
+                            {(item.type === 'VIDEO' || item.type === 'SHORT') && <Video className="h-3 w-3 mr-1" />}
+                            {item.type === 'REEL' && <Play className="h-3 w-3 mr-1" />}
+                            {formatContentType(item.type)}
                           </Badge>
                         </div>
 
@@ -405,61 +392,44 @@ export default function ContentLibraryPage() {
                       </div>
 
                       <CardContent className="p-3 sm:p-4">
-                        {/* Title & Status */}
-                        <div className="flex items-start justify-between gap-2 mb-1.5 sm:mb-2">
+                        {/* Platform & Type */}
+                        <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
                           <h3 className="font-bold text-xs sm:text-sm line-clamp-1 flex-1">
-                            {item.title}
+                            {formatPlatformName(item.platform)} {formatContentType(item.type)}
                           </h3>
-                          <Badge variant={getStatusColor(item.status) as any} className="text-[10px]">
-                            <StatusIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-                            {item.status}
-                          </Badge>
-                        </div>
-
-                        {/* Campaign */}
-                        {item.campaign_name && (
-                          <p className="text-[10px] sm:text-xs text-[rgb(var(--muted))] mb-2 sm:mb-3">
-                            {item.campaign_name}
-                          </p>
-                        )}
-
-                        {/* Metrics */}
-                        {item.metrics && (
-                          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                            <div className="text-center p-1.5 sm:p-2 rounded bg-[rgb(var(--surface))]">
-                              <div className="text-[10px] sm:text-xs font-bold">
-                                {formatCompactNumber(item.metrics.views)}
-                              </div>
-                              <div className="text-[9px] sm:text-[10px] text-[rgb(var(--muted))]">Views</div>
-                            </div>
-                            <div className="text-center p-1.5 sm:p-2 rounded bg-[rgb(var(--surface))]">
-                              <div className="text-[10px] sm:text-xs font-bold">
-                                {formatCompactNumber(item.metrics.likes)}
-                              </div>
-                              <div className="text-[9px] sm:text-[10px] text-[rgb(var(--muted))]">Likes</div>
-                            </div>
-                            <div className="text-center p-1.5 sm:p-2 rounded bg-[rgb(var(--surface))]">
-                              <div className="text-[10px] sm:text-xs font-bold">
-                                {item.metrics.engagement_rate.toFixed(1)}%
-                              </div>
-                              <div className="text-[9px] sm:text-[10px] text-[rgb(var(--muted))]">Eng.</div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-1">
-                          {item.tags.slice(0, 2).map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-[10px]">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {item.tags.length > 2 && (
-                            <Badge variant="outline" className="text-[10px]">
-                              +{item.tags.length - 2}
-                            </Badge>
+                          {item.postedAt && (
+                            <span className="text-[10px] text-[rgb(var(--muted))] whitespace-nowrap">
+                              {new Date(item.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
                           )}
                         </div>
+
+                        {/* Metrics */}
+                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                          <div className="text-center p-1.5 sm:p-2 rounded bg-[rgb(var(--surface))]">
+                            <div className="text-[10px] sm:text-xs font-bold">
+                              {formatCompactNumber(item.views || 0)}
+                            </div>
+                            <div className="text-[9px] sm:text-[10px] text-[rgb(var(--muted))]">Views</div>
+                          </div>
+                          <div className="text-center p-1.5 sm:p-2 rounded bg-[rgb(var(--surface))]">
+                            <div className="text-[10px] sm:text-xs font-bold">
+                              {formatCompactNumber(item.likes || 0)}
+                            </div>
+                            <div className="text-[9px] sm:text-[10px] text-[rgb(var(--muted))]">Likes</div>
+                          </div>
+                          <div className="text-center p-1.5 sm:p-2 rounded bg-[rgb(var(--surface))]">
+                            <div className="text-[10px] sm:text-xs font-bold">
+                              {engagementRate.toFixed(1)}%
+                            </div>
+                            <div className="text-[9px] sm:text-[10px] text-[rgb(var(--muted))]">Eng.</div>
+                          </div>
+                        </div>
+
+                        {/* Platform badge */}
+                        <Badge variant="outline" className="text-[10px]">
+                          {formatPlatformName(item.platform)}
+                        </Badge>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -475,11 +445,17 @@ export default function ContentLibraryPage() {
                         <div className="flex gap-4">
                           {/* Thumbnail */}
                           <div className="relative w-32 h-32 shrink-0 rounded-lg overflow-hidden bg-[rgb(var(--surface))]">
-                            <img
-                              src={item.thumbnail}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                            />
+                            {item.thumbnail ? (
+                              <img
+                                src={item.thumbnail}
+                                alt={formatContentType(item.type)}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[rgb(var(--muted))]">
+                                <ImageIcon className="h-8 w-8" />
+                              </div>
+                            )}
                             <div className="absolute top-2 left-2">
                               <PlatformIcon className="h-4 w-4 text-white drop-shadow" />
                             </div>
@@ -490,45 +466,38 @@ export default function ContentLibraryPage() {
                             <div className="flex items-start justify-between gap-3 mb-2">
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-bold text-lg mb-1 line-clamp-1">
-                                  {item.title}
+                                  {formatPlatformName(item.platform)} {formatContentType(item.type)}
                                 </h3>
-                                <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-2">
-                                  {item.description}
-                                </p>
-                                {item.campaign_name && (
-                                  <Badge variant="outline" className="text-xs mb-2">
-                                    {item.campaign_name}
-                                  </Badge>
+                                {item.postedAt && (
+                                  <p className="text-sm text-[rgb(var(--muted))] mb-2">
+                                    Posted {new Date(item.postedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                  </p>
                                 )}
                               </div>
-
-                              <Badge variant={getStatusColor(item.status) as any}>
-                                <StatusIcon className="h-3 w-3 mr-1" />
-                                {item.status}
+                              <Badge variant="outline">
+                                {formatContentType(item.type)}
                               </Badge>
                             </div>
 
                             {/* Metrics */}
-                            {item.metrics && (
-                              <div className="flex gap-4 mb-3">
-                                <div className="flex items-center gap-1 text-sm">
-                                  <Eye className="h-4 w-4 text-[rgb(var(--muted))]" />
-                                  {formatCompactNumber(item.metrics.views)}
-                                </div>
-                                <div className="flex items-center gap-1 text-sm">
-                                  <Heart className="h-4 w-4 text-[rgb(var(--muted))]" />
-                                  {formatCompactNumber(item.metrics.likes)}
-                                </div>
-                                <div className="flex items-center gap-1 text-sm">
-                                  <MessageCircle className="h-4 w-4 text-[rgb(var(--muted))]" />
-                                  {formatCompactNumber(item.metrics.comments)}
-                                </div>
-                                <div className="flex items-center gap-1 text-sm">
-                                  <TrendingUp className="h-4 w-4 text-[rgb(var(--muted))]" />
-                                  {item.metrics.engagement_rate.toFixed(1)}%
-                                </div>
+                            <div className="flex gap-4 mb-3">
+                              <div className="flex items-center gap-1 text-sm">
+                                <Eye className="h-4 w-4 text-[rgb(var(--muted))]" />
+                                {formatCompactNumber(item.views || 0)}
                               </div>
-                            )}
+                              <div className="flex items-center gap-1 text-sm">
+                                <Heart className="h-4 w-4 text-[rgb(var(--muted))]" />
+                                {formatCompactNumber(item.likes || 0)}
+                              </div>
+                              <div className="flex items-center gap-1 text-sm">
+                                <MessageCircle className="h-4 w-4 text-[rgb(var(--muted))]" />
+                                {formatCompactNumber(item.comments || 0)}
+                              </div>
+                              <div className="flex items-center gap-1 text-sm">
+                                <TrendingUp className="h-4 w-4 text-[rgb(var(--muted))]" />
+                                {engagementRate.toFixed(1)}%
+                              </div>
+                            </div>
 
                             {/* Actions */}
                             <div className="flex gap-2">
@@ -540,9 +509,9 @@ export default function ContentLibraryPage() {
                                 <Edit className="h-4 w-4 mr-1" />
                                 Edit
                               </Button>
-                              {item.url && (
+                              {item.postUrl && (
                                 <a
-                                  href={item.url}
+                                  href={item.postUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center justify-center h-8 px-3 rounded-md text-sm font-medium hover:bg-[rgb(var(--surface))] transition-colors"

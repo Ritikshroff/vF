@@ -202,9 +202,7 @@ export default function MessagesPage() {
                         }`}
                       >
                         <div className="relative shrink-0">
-                          <Avatar className="h-12 w-12">
-                            <img src={conversation.avatar} alt={conversation.name} />
-                          </Avatar>
+                          <Avatar className="h-12 w-12" src={conversation.avatar} alt={conversation.name} fallback={conversation.name} />
                           {conversation.online && (
                             <Circle className="absolute bottom-0 right-0 h-3 w-3 fill-green-500 text-green-500" />
                           )}

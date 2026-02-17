@@ -27,8 +27,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { fetchInfluencerById } from '@/services/influencers'
-import type { InfluencerProfile } from '@/mock-data/influencers'
+import { api } from '@/lib/api-client'
 import { formatCompactNumber, formatCurrency } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import {
@@ -48,10 +47,65 @@ import {
 
 const COLORS = ['#8B5CF6', '#3B82F6', '#10B981']
 
+async function fetchInfluencerProfile(id: string) {
+  const res = await api.get<any>(`/discovery/influencers/${id}`)
+  if (res.error) throw new Error(res.error)
+  return res.data
+}
+
+/** Map of pricing field keys to human-readable labels */
+const PRICING_FIELDS: { key: string; label: string }[] = [
+  { key: 'instagramPost', label: 'Instagram Post' },
+  { key: 'instagramStory', label: 'Instagram Story' },
+  { key: 'instagramReel', label: 'Instagram Reel' },
+  { key: 'tiktokVideo', label: 'TikTok Video' },
+  { key: 'youtubeVideo', label: 'YouTube Video' },
+  { key: 'youtubeShort', label: 'YouTube Short' },
+  { key: 'twitterPost', label: 'Twitter Post' },
+  { key: 'facebookPost', label: 'Facebook Post' },
+]
+
+function getPlatformIcon(platform: string) {
+  switch (platform) {
+    case 'INSTAGRAM':
+      return <Instagram className="h-6 w-6" />
+    case 'YOUTUBE':
+      return <Youtube className="h-6 w-6" />
+    case 'TIKTOK':
+      return <BarChart3 className="h-6 w-6" />
+    case 'TWITTER':
+      return <Share2 className="h-6 w-6" />
+    case 'FACEBOOK':
+      return <Users className="h-6 w-6" />
+    default:
+      return <Sparkles className="h-6 w-6" />
+  }
+}
+
+function formatPlatformName(platform: string) {
+  const names: Record<string, string> = {
+    INSTAGRAM: 'Instagram',
+    YOUTUBE: 'YouTube',
+    TIKTOK: 'TikTok',
+    TWITTER: 'Twitter',
+    FACEBOOK: 'Facebook',
+  }
+  return names[platform] || platform
+}
+
+function formatAvailability(availability: string) {
+  const map: Record<string, string> = {
+    AVAILABLE: 'Available',
+    BUSY: 'Busy',
+    NOT_AVAILABLE: 'Not Available',
+  }
+  return map[availability] || availability
+}
+
 export default function InfluencerProfilePage() {
   const params = useParams()
   const router = useRouter()
-  const [influencer, setInfluencer] = useState<InfluencerProfile | null>(null)
+  const [influencer, setInfluencer] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSaved, setIsSaved] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'content'>('overview')
@@ -62,7 +116,7 @@ export default function InfluencerProfilePage() {
 
   const loadInfluencer = async () => {
     try {
-      const data = await fetchInfluencerById(params.id as string)
+      const data = await fetchInfluencerProfile(params.id as string)
       setInfluencer(data)
     } catch (error) {
       console.error('Error loading influencer:', error)
@@ -97,17 +151,38 @@ export default function InfluencerProfilePage() {
     )
   }
 
-  const primaryPlatform = influencer.platforms[0]
-  const ageData = Object.entries(influencer.audience.age_ranges).map(([range, percentage]) => ({
+  const primaryPlatform = influencer.platforms?.[0]
+  const ageRanges = influencer.audience?.ageRanges || {}
+  const ageData = Object.entries(ageRanges).map(([range, percentage]) => ({
     range,
-    percentage,
+    percentage: Number(percentage),
   }))
 
+  const genderSplit = (influencer.audience?.genderSplit as any) || {}
   const genderData = [
-    { name: 'Male', value: influencer.audience.gender.male },
-    { name: 'Female', value: influencer.audience.gender.female },
-    { name: 'Other', value: influencer.audience.gender.other },
+    { name: 'Male', value: Number(genderSplit.male || 0) },
+    { name: 'Female', value: Number(genderSplit.female || 0) },
+    { name: 'Other', value: Number(genderSplit.other || 0) },
   ]
+
+  const topCountries = (influencer.audience?.topCountries as any[]) || []
+
+  const growthTrend = (influencer.growthTrend || []).map((entry: any) => ({
+    month: new Date(entry.month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+    followers: entry.followers,
+    engagementRate: Number(entry.engagementRate),
+  }))
+
+  const recentPosts = influencer.recentPosts || []
+
+  const engagementRate = Number(influencer.metrics?.avgEngagementRate || 0)
+  const totalReach = Number(influencer.metrics?.totalReach || 0)
+  const authenticityScore = influencer.metrics?.authenticityScore || 0
+  const brandSafetyScore = influencer.metrics?.brandSafetyScore || 0
+  const rating = Number(influencer.rating || 0)
+  const totalReviews = influencer.totalReviews || 0
+  const totalCampaigns = influencer.totalCampaigns || 0
+  const campaignSuccessRate = Number(influencer.campaignSuccessRate || 0)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
@@ -133,13 +208,15 @@ export default function InfluencerProfilePage() {
           <motion.div variants={staggerItem}>
             <Card className="overflow-hidden border-2 mb-4 sm:mb-6 lg:mb-8">
               <div className="relative h-48 bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20">
-                <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url(${influencer.coverImage})`,
-                    opacity: 0.3,
-                  }}
-                />
+                {influencer.coverImage && (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{
+                      backgroundImage: `url(${influencer.coverImage})`,
+                      opacity: 0.3,
+                    }}
+                  />
+                )}
               </div>
 
               <CardContent className="p-3 sm:p-4 lg:p-6 xl:p-8">
@@ -205,7 +282,7 @@ export default function InfluencerProfilePage() {
 
                     {/* Categories */}
                     <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
-                      {influencer.categories.map((cat) => (
+                      {(influencer.categories || []).map((cat: string) => (
                         <Badge key={cat} variant="outline">
                           {cat}
                         </Badge>
@@ -216,7 +293,7 @@ export default function InfluencerProfilePage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                       <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
                         <div className="text-lg sm:text-xl lg:text-2xl font-bold gradient-text">
-                          {formatCompactNumber(primaryPlatform.followers)}
+                          {primaryPlatform ? formatCompactNumber(primaryPlatform.followers) : '0'}
                         </div>
                         <div className="text-xs text-[rgb(var(--muted))]">
                           Followers
@@ -224,7 +301,7 @@ export default function InfluencerProfilePage() {
                       </div>
                       <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
                         <div className="text-lg sm:text-xl lg:text-2xl font-bold gradient-text">
-                          {influencer.metrics.avg_engagement_rate.toFixed(1)}%
+                          {engagementRate.toFixed(1)}%
                         </div>
                         <div className="text-xs text-[rgb(var(--muted))]">
                           Engagement
@@ -232,7 +309,7 @@ export default function InfluencerProfilePage() {
                       </div>
                       <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
                         <div className="text-lg sm:text-xl lg:text-2xl font-bold gradient-text">
-                          {formatCompactNumber(influencer.metrics.total_reach)}
+                          {formatCompactNumber(totalReach)}
                         </div>
                         <div className="text-xs text-[rgb(var(--muted))]">
                           Total Reach
@@ -240,11 +317,11 @@ export default function InfluencerProfilePage() {
                       </div>
                       <div className="text-center p-2 sm:p-3 rounded-lg bg-[rgb(var(--surface))]">
                         <div className="flex items-center justify-center gap-1 text-lg sm:text-xl lg:text-2xl font-bold">
-                          {influencer.rating}
+                          {rating.toFixed(1)}
                           <Star className="h-5 w-5 fill-[rgb(var(--warning))] text-[rgb(var(--warning))]" />
                         </div>
                         <div className="text-xs text-[rgb(var(--muted))]">
-                          Rating ({influencer.total_reviews})
+                          Rating ({totalReviews})
                         </div>
                       </div>
                     </div>
@@ -287,22 +364,17 @@ export default function InfluencerProfilePage() {
                     <CardTitle>Platform Stats</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {influencer.platforms.map((platform) => (
+                    {(influencer.platforms || []).map((platform: any) => (
                       <div
                         key={platform.platform}
                         className="p-4 rounded-lg bg-[rgb(var(--surface))] space-y-3"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            {platform.platform === 'Instagram' && (
-                              <Instagram className="h-6 w-6" />
-                            )}
-                            {platform.platform === 'YouTube' && (
-                              <Youtube className="h-6 w-6" />
-                            )}
+                            {getPlatformIcon(platform.platform)}
                             <div>
                               <div className="font-semibold">
-                                {platform.platform}
+                                {formatPlatformName(platform.platform)}
                               </div>
                               <div className="text-sm text-[rgb(var(--muted))]">
                                 {platform.handle}
@@ -314,7 +386,7 @@ export default function InfluencerProfilePage() {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="grid grid-cols-2 gap-4 text-center">
                           <div>
                             <div className="text-lg font-bold">
                               {formatCompactNumber(platform.followers)}
@@ -325,18 +397,10 @@ export default function InfluencerProfilePage() {
                           </div>
                           <div>
                             <div className="text-lg font-bold">
-                              {platform.engagement_rate.toFixed(1)}%
+                              {Number(platform.engagementRate).toFixed(1)}%
                             </div>
                             <div className="text-xs text-[rgb(var(--muted))]">
                               Engagement
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-lg font-bold">
-                              {formatCompactNumber(platform.avg_views || platform.avg_likes)}
-                            </div>
-                            <div className="text-xs text-[rgb(var(--muted))]">
-                              Avg Views
                             </div>
                           </div>
                         </div>
@@ -345,26 +409,16 @@ export default function InfluencerProfilePage() {
                   </CardContent>
                 </Card>
 
-                {/* Past Collaborations */}
+                {/* Campaign Stats (replaces Past Collaborations) */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Past Collaborations</CardTitle>
+                    <CardTitle>Campaign Stats</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-3">
-                      {influencer.past_brands.map((brand) => (
-                        <div
-                          key={brand}
-                          className="px-4 py-2 rounded-lg bg-[rgb(var(--surface))] font-medium"
-                        >
-                          {brand}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-6 flex items-center gap-8">
+                    <div className="flex items-center gap-8">
                       <div>
                         <div className="text-2xl font-bold">
-                          {influencer.total_campaigns}
+                          {totalCampaigns}
                         </div>
                         <div className="text-sm text-[rgb(var(--muted))]">
                           Total Campaigns
@@ -372,7 +426,7 @@ export default function InfluencerProfilePage() {
                       </div>
                       <div>
                         <div className="text-2xl font-bold text-green-500">
-                          {influencer.campaign_success_rate}%
+                          {campaignSuccessRate.toFixed(0)}%
                         </div>
                         <div className="text-sm text-[rgb(var(--muted))]">
                           Success Rate
@@ -394,22 +448,36 @@ export default function InfluencerProfilePage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {Object.entries(influencer.pricing).map(([type, price]) => {
-                      if (price === 0) return null
-                      return (
-                        <div
-                          key={type}
-                          className="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--surface))]"
-                        >
-                          <span className="text-sm capitalize">
-                            {type.replace(/_/g, ' ')}
-                          </span>
-                          <span className="font-bold gradient-text">
-                            {formatCurrency(price)}
-                          </span>
-                        </div>
-                      )
-                    })}
+                    {influencer.pricing ? (
+                      <>
+                        {PRICING_FIELDS.map(({ key, label }) => {
+                          const price = Number(influencer.pricing?.[key] || 0)
+                          if (price === 0) return null
+                          return (
+                            <div
+                              key={key}
+                              className="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--surface))]"
+                            >
+                              <span className="text-sm">
+                                {label}
+                              </span>
+                              <span className="font-bold gradient-text">
+                                {formatCurrency(price, influencer.pricing?.currency || 'USD')}
+                              </span>
+                            </div>
+                          )
+                        })}
+                        {influencer.pricing.negotiable && (
+                          <p className="text-sm text-[rgb(var(--muted))] mt-2">
+                            Prices are negotiable
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-[rgb(var(--muted))]">
+                        Pricing not available
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -424,15 +492,22 @@ export default function InfluencerProfilePage() {
                   <CardContent>
                     <Badge
                       variant={
-                        influencer.availability === 'available' ? 'success' : 'warning'
+                        influencer.availability === 'AVAILABLE' ? 'success' : 'warning'
                       }
                       className="mb-3"
                     >
-                      {influencer.availability}
+                      {formatAvailability(influencer.availability)}
                     </Badge>
-                    <p className="text-sm text-[rgb(var(--muted))]">
-                      Next available: {influencer.next_available_date}
-                    </p>
+                    {influencer.nextAvailableDate && (
+                      <p className="text-sm text-[rgb(var(--muted))]">
+                        Next available:{' '}
+                        {new Date(influencer.nextAvailableDate).toLocaleDateString('en-US', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -449,14 +524,14 @@ export default function InfluencerProfilePage() {
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm">Authenticity Score</span>
                         <span className="font-bold">
-                          {influencer.metrics.authenticity_score}/100
+                          {authenticityScore}/100
                         </span>
                       </div>
                       <div className="h-2 bg-[rgb(var(--surface))] rounded-full">
                         <div
                           className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
                           style={{
-                            width: `${influencer.metrics.authenticity_score}%`,
+                            width: `${authenticityScore}%`,
                           }}
                         />
                       </div>
@@ -465,14 +540,14 @@ export default function InfluencerProfilePage() {
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm">Brand Safety Score</span>
                         <span className="font-bold">
-                          {influencer.metrics.brand_safety_score}/100
+                          {brandSafetyScore}/100
                         </span>
                       </div>
                       <div className="h-2 bg-[rgb(var(--surface))] rounded-full">
                         <div
                           className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
                           style={{
-                            width: `${influencer.metrics.brand_safety_score}%`,
+                            width: `${brandSafetyScore}%`,
                           }}
                         />
                       </div>
@@ -491,22 +566,28 @@ export default function InfluencerProfilePage() {
                   <CardTitle>Growth Trend</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={influencer.growth_trend}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line
-                          type="monotone"
-                          dataKey="followers"
-                          stroke="#8B5CF6"
-                          strokeWidth={3}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {growthTrend.length > 0 ? (
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={growthTrend}>
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip />
+                          <Line
+                            type="monotone"
+                            dataKey="followers"
+                            stroke="#8B5CF6"
+                            strokeWidth={3}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p className="text-[rgb(var(--muted))] text-center py-8">
+                      No growth trend data available
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -515,17 +596,23 @@ export default function InfluencerProfilePage() {
                   <CardTitle>Age Demographics</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={ageData}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="range" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="percentage" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {ageData.length > 0 ? (
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={ageData}>
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                          <XAxis dataKey="range" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="percentage" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p className="text-[rgb(var(--muted))] text-center py-8">
+                      No demographic data available
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -534,29 +621,35 @@ export default function InfluencerProfilePage() {
                   <CardTitle>Gender Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={genderData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, value }) => `${name}: ${value}%`}
-                          outerRadius={80}
-                          dataKey="value"
-                        >
-                          {genderData.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {genderData.some((d) => d.value > 0) ? (
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={genderData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, value }) => `${name}: ${value}%`}
+                            outerRadius={80}
+                            dataKey="value"
+                          >
+                            {genderData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p className="text-[rgb(var(--muted))] text-center py-8">
+                      No gender data available
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -565,24 +658,30 @@ export default function InfluencerProfilePage() {
                   <CardTitle>Top Countries</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {influencer.audience.top_countries.map((country) => (
-                      <div key={country.country} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{country.country}</span>
-                          <span className="text-sm text-[rgb(var(--muted))]">
-                            {country.percentage}%
-                          </span>
+                  {topCountries.length > 0 ? (
+                    <div className="space-y-4">
+                      {topCountries.map((country: any) => (
+                        <div key={country.country} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{country.country}</span>
+                            <span className="text-sm text-[rgb(var(--muted))]">
+                              {country.percentage}%
+                            </span>
+                          </div>
+                          <div className="h-2 bg-[rgb(var(--surface))] rounded-full">
+                            <div
+                              className="h-full bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] rounded-full"
+                              style={{ width: `${country.percentage}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 bg-[rgb(var(--surface))] rounded-full">
-                          <div
-                            className="h-full bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] rounded-full"
-                            style={{ width: `${country.percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[rgb(var(--muted))] text-center py-8">
+                      No country data available
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -591,15 +690,21 @@ export default function InfluencerProfilePage() {
           {/* Recent Content Tab */}
           {activeTab === 'content' && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {influencer.recent_posts.length > 0 ? (
-                influencer.recent_posts.map((post) => (
+              {recentPosts.length > 0 ? (
+                recentPosts.map((post: any) => (
                   <Card key={post.id} className="overflow-hidden group">
                     <div className="aspect-square bg-[rgb(var(--surface))] relative">
-                      <img
-                        src={post.thumbnail}
-                        alt="Content"
-                        className="w-full h-full object-cover"
-                      />
+                      {post.thumbnail ? (
+                        <img
+                          src={post.thumbnail}
+                          alt="Content"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[rgb(var(--muted))]">
+                          <Eye className="h-12 w-12" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6 text-white">
                         <div className="flex items-center gap-2">
                           <Heart className="h-5 w-5" />
@@ -619,11 +724,23 @@ export default function InfluencerProfilePage() {
                     </div>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <Badge variant="outline">{post.type}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{post.type}</Badge>
+                          <Badge variant="outline">{formatPlatformName(post.platform)}</Badge>
+                        </div>
                         <span className="text-sm text-[rgb(var(--muted))]">
-                          {post.engagement_rate.toFixed(1)}% engagement
+                          {Number(post.engagementRate).toFixed(1)}% eng.
                         </span>
                       </div>
+                      {post.postedAt && (
+                        <p className="text-xs text-[rgb(var(--muted))] mt-2">
+                          {new Date(post.postedAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 ))

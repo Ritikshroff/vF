@@ -1,55 +1,98 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Users, Megaphone, DollarSign, Star } from 'lucide-react'
+import { TrendingUp, Users, Megaphone, DollarSign, Star, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { fadeInUp } from '@/lib/animations'
+import { getWallet } from '@/services/api/wallet'
+import { getCollaborations } from '@/services/api/collaborations'
+import { getMyApplications } from '@/services/api/marketplace'
 
 export default function InfluencerDashboardPage() {
+  const [loading, setLoading] = useState(true)
+  const [walletData, setWalletData] = useState<any>(null)
+  const [collaborations, setCollaborations] = useState<any[]>([])
+  const [applications, setApplications] = useState<any[]>([])
+
+  useEffect(() => {
+    loadDashboard()
+  }, [])
+
+  const loadDashboard = async () => {
+    try {
+      const [walletRes, collabRes, appsRes] = await Promise.allSettled([
+        getWallet(),
+        getCollaborations(),
+        getMyApplications(),
+      ])
+
+      if (walletRes.status === 'fulfilled' && walletRes.value) {
+        setWalletData(walletRes.value)
+      }
+      if (collabRes.status === 'fulfilled') {
+        const data = collabRes.value
+        setCollaborations(Array.isArray(data) ? data : data?.data ?? [])
+      }
+      if (appsRes.status === 'fulfilled') {
+        const data = appsRes.value
+        setApplications(Array.isArray(data) ? data : data?.data ?? [])
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
+      </div>
+    )
+  }
+
+  const totalEarnings = Number(walletData?.balance ?? 0) + Number(walletData?.pendingBalance ?? 0)
+  const activeCampaigns = collaborations.filter((c: any) =>
+    ['PROPOSAL_SENT', 'NEGOTIATION', 'CONTRACT_SIGNED', 'IN_PRODUCTION', 'IN_REVIEW'].includes(c.status)
+  )
+  const pendingInvites = collaborations.filter((c: any) => c.status === 'PROPOSAL_SENT')
+  const completedCampaigns = collaborations.filter((c: any) => c.status === 'COMPLETED')
+
   const stats = [
     {
       title: 'Total Earnings',
-      value: formatCurrency(28500),
-      change: '+$3,200 this month',
+      value: formatCurrency(totalEarnings),
+      change: `${formatCurrency(Number(walletData?.pendingBalance ?? 0))} pending`,
       icon: DollarSign,
       color: 'text-[rgb(var(--success))]',
     },
     {
       title: 'Active Campaigns',
-      value: '5',
-      change: '2 pending invites',
+      value: String(activeCampaigns.length),
+      change: `${pendingInvites.length} pending invites`,
       icon: Megaphone,
       color: 'text-[rgb(var(--brand-primary))]',
     },
     {
-      title: 'Total Reach',
-      value: formatCompactNumber(850000),
-      change: '+12% this month',
+      title: 'Applications',
+      value: String(applications.length),
+      change: `${applications.filter((a: any) => a.status === 'PENDING').length} pending`,
       icon: Users,
       color: 'text-[rgb(var(--info))]',
     },
     {
-      title: 'Rating',
-      value: '4.9',
-      change: 'Based on 24 reviews',
+      title: 'Completed',
+      value: String(completedCampaigns.length),
+      change: 'Total campaigns',
       icon: Star,
       color: 'text-[rgb(var(--warning))]',
     },
-  ]
-
-  const activeCampaigns = [
-    { name: 'Summer Fashion Collab', brand: 'FashionCo', status: 'in_progress', payout: '$2,500' },
-    { name: 'Tech Product Review', brand: 'TechGear', status: 'in_progress', payout: '$1,800' },
-    { name: 'Wellness Campaign', brand: 'Wellness Co', status: 'pending', payout: '$3,200' },
-  ]
-
-  const recentInvites = [
-    { campaign: 'Beauty Product Launch', brand: 'BeautyLuxe', budget: '$4,000' },
-    { campaign: 'Food Brand Partnership', brand: 'FoodBrand', budget: '$2,800' },
   ]
 
   return (
@@ -107,57 +150,73 @@ export default function InfluencerDashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {activeCampaigns.map((campaign, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
-                  >
-                    <div>
-                      <h4 className="font-semibold mb-1">{campaign.name}</h4>
-                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[rgb(var(--muted))]">
-                        <span>{campaign.brand}</span>
-                        <span>{campaign.payout}</span>
-                      </div>
-                    </div>
-                    <Badge
-                      variant={campaign.status === 'in_progress' ? 'primary' : 'warning'}
+              {activeCampaigns.length === 0 ? (
+                <div className="text-center py-6 text-[rgb(var(--muted))] text-sm">No active campaigns yet.</div>
+              ) : (
+                <div className="space-y-4">
+                  {activeCampaigns.slice(0, 5).map((collab: any) => (
+                    <div
+                      key={collab.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
                     >
-                      {campaign.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+                      <div>
+                        <h4 className="font-semibold mb-1">{collab.campaign?.title || 'Campaign'}</h4>
+                        <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[rgb(var(--muted))]">
+                          <span>{collab.brand?.companyName || 'Brand'}</span>
+                          {collab.agreedRate && <span>{formatCurrency(Number(collab.agreedRate))}</span>}
+                        </div>
+                      </div>
+                      <Badge
+                        variant={
+                          collab.status === 'IN_PRODUCTION' || collab.status === 'IN_REVIEW'
+                            ? 'primary'
+                            : collab.status === 'PROPOSAL_SENT'
+                            ? 'warning'
+                            : 'default'
+                        }
+                      >
+                        {collab.status.replace(/_/g, ' ')}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Campaign Invites */}
+          {/* Pending Invitations */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>New Invitations</CardTitle>
-                <Badge variant="primary">{recentInvites.length}</Badge>
+                <Badge variant="primary">{pendingInvites.length}</Badge>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentInvites.map((invite, index) => (
-                  <div
-                    key={index}
-                    className="p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
-                  >
-                    <h4 className="font-semibold mb-1">{invite.campaign}</h4>
-                    <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[rgb(var(--muted))] mb-3">
-                      <span>{invite.brand}</span>
-                      <span className="text-[rgb(var(--success))]">{invite.budget}</span>
+              {pendingInvites.length === 0 ? (
+                <div className="text-center py-6 text-[rgb(var(--muted))] text-sm">No new invitations.</div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingInvites.slice(0, 5).map((invite: any) => (
+                    <div
+                      key={invite.id}
+                      className="p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
+                    >
+                      <h4 className="font-semibold mb-1">{invite.campaign?.title || 'Campaign Invite'}</h4>
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[rgb(var(--muted))] mb-3">
+                        <span>{invite.brand?.companyName || 'Brand'}</span>
+                        {invite.agreedRate && (
+                          <span className="text-[rgb(var(--success))]">{formatCurrency(Number(invite.agreedRate))}</span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="primary" className="flex-1 min-h-[44px] sm:min-h-0">Accept</Button>
+                        <Button size="sm" variant="outline" className="flex-1 min-h-[44px] sm:min-h-0">Decline</Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="primary" className="flex-1 min-h-[44px] sm:min-h-0">Accept</Button>
-                      <Button size="sm" variant="outline" className="flex-1 min-h-[44px] sm:min-h-0">Decline</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

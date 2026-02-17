@@ -1,194 +1,106 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Search,
   Filter,
   DollarSign,
   Users,
-  Calendar,
-  MapPin,
   Clock,
   TrendingUp,
   Briefcase,
   Star,
-  ChevronDown,
   Eye,
   Send,
   Zap,
   Target,
+  Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
 import { formatCurrency, formatCompactNumber, formatRelativeTime } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-
-interface MarketplaceListing {
-  id: string
-  title: string
-  brand: { id: string; name: string; logo?: string; verified: boolean }
-  description: string
-  category: string
-  budget: { min: number; max: number }
-  platforms: string[]
-  requirements: {
-    minFollowers: number
-    minEngagement: number
-    categories: string[]
-    locations?: string[]
-  }
-  deliverables: string[]
-  deadline: string
-  applicants: number
-  maxInfluencers: number
-  status: 'open' | 'closing_soon' | 'filled'
-  featured: boolean
-  createdAt: string
-}
-
-const MOCK_LISTINGS: MarketplaceListing[] = [
-  {
-    id: '1',
-    title: 'Summer Fashion Collection Launch',
-    brand: { id: 'b1', name: 'Luxe Fashion', verified: true },
-    description: 'Looking for fashion and lifestyle influencers to showcase our new summer collection. Must have strong Instagram and TikTok presence with engaged audience in the 18-35 age range.',
-    category: 'Fashion',
-    budget: { min: 2000, max: 5000 },
-    platforms: ['Instagram', 'TikTok'],
-    requirements: { minFollowers: 50000, minEngagement: 3.5, categories: ['Fashion', 'Lifestyle'] },
-    deliverables: ['3 Instagram Posts', '2 Instagram Reels', '1 TikTok Video'],
-    deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 23,
-    maxInfluencers: 5,
-    status: 'open',
-    featured: true,
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Tech Product Review Campaign',
-    brand: { id: 'b2', name: 'TechVibe', verified: true },
-    description: 'Seeking tech reviewers and gadget enthusiasts for our latest smart home device launch. Honest, detailed reviews preferred.',
-    category: 'Technology',
-    budget: { min: 3000, max: 8000 },
-    platforms: ['YouTube', 'Instagram'],
-    requirements: { minFollowers: 100000, minEngagement: 4.0, categories: ['Tech', 'Gadgets'] },
-    deliverables: ['1 YouTube Review (10+ min)', '2 Instagram Posts', '3 Stories'],
-    deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 45,
-    maxInfluencers: 10,
-    status: 'open',
-    featured: true,
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Organic Skincare Brand Ambassador',
-    brand: { id: 'b3', name: 'GreenLeaf Beauty', verified: false },
-    description: 'Long-term partnership opportunity for beauty and wellness influencers who are passionate about organic, sustainable skincare products.',
-    category: 'Beauty',
-    budget: { min: 1500, max: 3000 },
-    platforms: ['Instagram', 'TikTok', 'YouTube'],
-    requirements: { minFollowers: 25000, minEngagement: 5.0, categories: ['Beauty', 'Wellness'] },
-    deliverables: ['2 Posts/month', '4 Stories/month', '1 Reel/month'],
-    deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 67,
-    maxInfluencers: 3,
-    status: 'closing_soon',
-    featured: false,
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '4',
-    title: 'Fitness Challenge Campaign',
-    brand: { id: 'b4', name: 'FitPro Supplements', verified: true },
-    description: 'Join our 30-day fitness challenge campaign! Looking for fitness influencers to document their journey using our new pre-workout supplement.',
-    category: 'Fitness',
-    budget: { min: 1000, max: 2500 },
-    platforms: ['Instagram', 'TikTok', 'YouTube'],
-    requirements: { minFollowers: 10000, minEngagement: 6.0, categories: ['Fitness', 'Health'] },
-    deliverables: ['Daily Stories for 30 days', '4 Feed Posts', '2 Reels', '1 YouTube Video'],
-    deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 89,
-    maxInfluencers: 8,
-    status: 'open',
-    featured: false,
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '5',
-    title: 'Food & Restaurant Review Series',
-    brand: { id: 'b5', name: 'FoodieApp', verified: true },
-    description: 'We\'re launching in 5 new cities and need local food influencers to review top restaurants using our app. Great exposure and competitive pay!',
-    category: 'Food',
-    budget: { min: 500, max: 1500 },
-    platforms: ['Instagram', 'TikTok'],
-    requirements: { minFollowers: 5000, minEngagement: 4.5, categories: ['Food', 'Lifestyle'], locations: ['New York', 'LA', 'Chicago', 'Miami', 'Austin'] },
-    deliverables: ['5 Restaurant Reviews', '10 Stories', '3 Reels'],
-    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 156,
-    maxInfluencers: 25,
-    status: 'open',
-    featured: false,
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '6',
-    title: 'Gaming Peripherals Showcase',
-    brand: { id: 'b6', name: 'EliteGear', verified: true },
-    description: 'Looking for gaming content creators to showcase our new line of mechanical keyboards and gaming mice. Must be able to produce high-quality gameplay content.',
-    category: 'Gaming',
-    budget: { min: 2500, max: 6000 },
-    platforms: ['YouTube', 'Twitch'],
-    requirements: { minFollowers: 75000, minEngagement: 3.0, categories: ['Gaming', 'Tech'] },
-    deliverables: ['1 Dedicated YouTube Video', '3 Twitch Stream Mentions', '2 Social Posts'],
-    deadline: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(),
-    applicants: 34,
-    maxInfluencers: 6,
-    status: 'open',
-    featured: true,
-    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-]
+import { getListings, applyToListing } from '@/services/api/marketplace'
 
 const CATEGORIES = ['All', 'Fashion', 'Technology', 'Beauty', 'Fitness', 'Food', 'Gaming', 'Travel', 'Lifestyle']
 
 export default function MarketplacePage() {
   const { user } = useAuth()
+  const [listings, setListings] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [sortBy, setSortBy] = useState<'newest' | 'budget' | 'deadline'>('newest')
   const [showFilters, setShowFilters] = useState(false)
 
-  const isInfluencer = user?.role === 'influencer'
+  const isInfluencer = user?.role === 'INFLUENCER'
 
-  const filteredListings = MOCK_LISTINGS
+  useEffect(() => {
+    loadListings()
+  }, [])
+
+  const loadListings = async () => {
+    try {
+      setLoading(true)
+      const data = await getListings()
+      setListings(data?.data ?? [])
+    } catch (err) {
+      console.error('Failed to load listings:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleApply = async (listingId: string) => {
+    try {
+      await applyToListing(listingId, { coverLetter: 'Interested in this opportunity!' })
+      loadListings()
+    } catch (err) {
+      console.error('Failed to apply:', err)
+    }
+  }
+
+  const filteredListings = listings
     .filter(l => {
-      const matchesSearch = l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.brand.name.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory = selectedCategory === 'All' || l.category === selectedCategory
+      const matchesSearch = !searchQuery ||
+        l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        l.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        l.brand?.companyName?.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesCategory = selectedCategory === 'All' ||
+        (l.targetNiches || []).some((n: string) => n.toLowerCase() === selectedCategory.toLowerCase())
       return matchesSearch && matchesCategory
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'budget': return b.budget.max - a.budget.max
-        case 'deadline': return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+        case 'budget': return (Number(b.budgetMax) || 0) - (Number(a.budgetMax) || 0)
+        case 'deadline': return new Date(a.applicationDeadline || 0).getTime() - new Date(b.applicationDeadline || 0).getTime()
         default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       }
     })
 
-  const featuredListings = filteredListings.filter(l => l.featured)
-  const regularListings = filteredListings.filter(l => !l.featured)
+  const featuredListings = filteredListings.filter(l => l.isFeatured)
+  const regularListings = filteredListings.filter(l => !l.isFeatured)
 
   const getDaysLeft = (deadline: string) => {
+    if (!deadline) return 0
     const days = Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     return days
+  }
+
+  const totalBudget = listings.reduce((sum, l) => sum + (Number(l.budgetMax) || 0), 0)
+  const totalApplicants = listings.reduce((sum, l) => sum + (l._count?.applications || 0), 0)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
+      </div>
+    )
   }
 
   return (
@@ -218,9 +130,9 @@ export default function MarketplacePage() {
           {/* Stats Bar */}
           <motion.div variants={staggerItem} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
             {[
-              { label: 'Open Campaigns', value: MOCK_LISTINGS.filter(l => l.status === 'open').length, icon: Briefcase, color: 'text-[rgb(var(--brand-primary))]' },
-              { label: 'Total Budget', value: formatCurrency(MOCK_LISTINGS.reduce((sum, l) => sum + l.budget.max, 0)), icon: DollarSign, color: 'text-[rgb(var(--success))]' },
-              { label: 'Applications', value: MOCK_LISTINGS.reduce((sum, l) => sum + l.applicants, 0), icon: Users, color: 'text-[rgb(var(--info))]' },
+              { label: 'Open Campaigns', value: listings.length, icon: Briefcase, color: 'text-[rgb(var(--brand-primary))]' },
+              { label: 'Total Budget', value: formatCurrency(totalBudget), icon: DollarSign, color: 'text-[rgb(var(--success))]' },
+              { label: 'Applications', value: totalApplicants, icon: Users, color: 'text-[rgb(var(--info))]' },
               { label: 'Featured', value: featuredListings.length, icon: Star, color: 'text-[rgb(var(--warning))]' },
             ].map(stat => (
               <Card key={stat.label}>
@@ -299,7 +211,7 @@ export default function MarketplacePage() {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {featuredListings.map(listing => (
-                  <ListingCard key={listing.id} listing={listing} isInfluencer={isInfluencer} getDaysLeft={getDaysLeft} />
+                  <ListingCard key={listing.id} listing={listing} isInfluencer={isInfluencer} getDaysLeft={getDaysLeft} onApply={handleApply} />
                 ))}
               </div>
             </motion.div>
@@ -325,7 +237,7 @@ export default function MarketplacePage() {
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {regularListings.map(listing => (
-                  <ListingCard key={listing.id} listing={listing} isInfluencer={isInfluencer} getDaysLeft={getDaysLeft} />
+                  <ListingCard key={listing.id} listing={listing} isInfluencer={isInfluencer} getDaysLeft={getDaysLeft} onApply={handleApply} />
                 ))}
               </div>
             )}
@@ -340,12 +252,15 @@ function ListingCard({
   listing,
   isInfluencer,
   getDaysLeft,
+  onApply,
 }: {
-  listing: MarketplaceListing
+  listing: any
   isInfluencer: boolean
   getDaysLeft: (d: string) => number
+  onApply: (id: string) => void
 }) {
-  const daysLeft = getDaysLeft(listing.deadline)
+  const daysLeft = listing.applicationDeadline ? getDaysLeft(listing.applicationDeadline) : null
+  const applicants = listing._count?.applications || 0
 
   return (
     <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
@@ -354,7 +269,7 @@ function ListingCard({
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
             <div className="flex-1">
-              {listing.featured && (
+              {listing.isFeatured && (
                 <Badge variant="warning" className="mb-1.5 sm:mb-2 text-[10px]">
                   <Zap className="h-3 w-3 mr-1" />
                   Featured
@@ -362,18 +277,15 @@ function ListingCard({
               )}
               <h3 className="text-base sm:text-lg font-bold line-clamp-2">{listing.title}</h3>
             </div>
-            {listing.status === 'closing_soon' && (
-              <Badge variant="error" className="shrink-0 text-[10px]">Closing Soon</Badge>
-            )}
           </div>
 
           {/* Brand */}
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white text-[10px] font-bold">
-              {listing.brand.name[0]}
+              {(listing.brand?.companyName || 'B')[0]}
             </div>
-            <span className="text-sm text-[rgb(var(--muted))]">{listing.brand.name}</span>
-            {listing.brand.verified && (
+            <span className="text-sm text-[rgb(var(--muted))]">{listing.brand?.companyName || 'Brand'}</span>
+            {listing.brand?.verified && (
               <svg className="h-3.5 w-3.5 text-[rgb(var(--brand-primary))]" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
@@ -385,44 +297,53 @@ function ListingCard({
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <div className="flex items-center gap-2 text-sm">
-              <DollarSign className="h-4 w-4 text-[rgb(var(--success))]" />
-              <span>{formatCurrency(listing.budget.min)}-{formatCurrency(listing.budget.max)}</span>
-            </div>
+            {(listing.budgetMin || listing.budgetMax) && (
+              <div className="flex items-center gap-2 text-sm">
+                <DollarSign className="h-4 w-4 text-[rgb(var(--success))]" />
+                <span>
+                  {listing.budgetMin && listing.budgetMax
+                    ? `${formatCurrency(Number(listing.budgetMin))}-${formatCurrency(Number(listing.budgetMax))}`
+                    : formatCurrency(Number(listing.budgetMax || listing.budgetMin || 0))}
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4 text-[rgb(var(--info))]" />
-              <span>{listing.applicants} applied</span>
+              <span>{applicants} applied</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-[rgb(var(--warning))]" />
-              <span>{daysLeft}d left</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Target className="h-4 w-4 text-[rgb(var(--muted))]" />
-              <span>{formatCompactNumber(listing.requirements.minFollowers)}+ followers</span>
-            </div>
+            {daysLeft !== null && (
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="h-4 w-4 text-[rgb(var(--warning))]" />
+                <span>{daysLeft > 0 ? `${daysLeft}d left` : 'Expired'}</span>
+              </div>
+            )}
+            {listing.minFollowers && (
+              <div className="flex items-center gap-2 text-sm">
+                <Target className="h-4 w-4 text-[rgb(var(--muted))]" />
+                <span>{formatCompactNumber(listing.minFollowers)}+ followers</span>
+              </div>
+            )}
           </div>
 
-          {/* Platforms */}
+          {/* Platforms & Niches */}
           <div className="flex flex-wrap gap-1.5 mb-3 sm:mb-4">
-            {listing.platforms.map(p => (
+            {(listing.targetPlatforms || []).map((p: string) => (
               <Badge key={p} variant="outline" className="text-[10px]">{p}</Badge>
             ))}
-            <Badge variant="outline" className="text-[10px]">{listing.category}</Badge>
+            {(listing.targetNiches || []).slice(0, 2).map((n: string) => (
+              <Badge key={n} variant="outline" className="text-[10px]">{n}</Badge>
+            ))}
           </div>
 
-          {/* Deliverables */}
-          <div className="mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-[rgb(var(--border))]">
-            <div className="text-xs text-[rgb(var(--muted))] mb-1.5 font-medium">Deliverables:</div>
-            <div className="flex flex-wrap gap-1">
-              {listing.deliverables.slice(0, 3).map((d, i) => (
-                <span key={i} className="text-[10px] px-2 py-0.5 bg-[rgb(var(--surface))] rounded">{d}</span>
-              ))}
-              {listing.deliverables.length > 3 && (
-                <span className="text-[10px] px-2 py-0.5 bg-[rgb(var(--surface))] rounded">+{listing.deliverables.length - 3}</span>
-              )}
+          {/* Compensation Type */}
+          {listing.compensationType && (
+            <div className="mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-[rgb(var(--border))]">
+              <div className="text-xs text-[rgb(var(--muted))] mb-1.5 font-medium">Compensation:</div>
+              <span className="text-[10px] px-2 py-0.5 bg-[rgb(var(--surface))] rounded">
+                {listing.compensationType.replace(/_/g, ' ')}
+              </span>
             </div>
-          </div>
+          )}
 
           {/* Actions */}
           <div className="mt-auto flex gap-2">
@@ -433,7 +354,7 @@ function ListingCard({
               </Button>
             </Link>
             {isInfluencer && (
-              <Button variant="gradient" size="sm" className="flex-1">
+              <Button variant="gradient" size="sm" className="flex-1" onClick={() => onApply(listing.id)}>
                 <Send className="h-4 w-4 mr-1" />
                 Apply
               </Button>

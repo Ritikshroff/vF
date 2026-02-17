@@ -42,7 +42,7 @@ export function Header({ variant = 'marketing', className }: HeaderProps) {
 
           {/* Desktop Navigation */}
           {mounted && variant === 'marketing' && (
-            <nav className="hidden lg:flex items-center space-x-1">
+            <nav aria-label="Main navigation" className="hidden lg:flex items-center space-x-1">
               {MARKETING_NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}

@@ -6,13 +6,29 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import {
-  getUserNotifications,
-  getUnreadCount,
-  markAsRead,
-  markAllAsRead,
-} from "@/mock-data/notifications";
-import type { Notification } from "@/mock-data/notifications";
+
+// TODO: Wire to notifications API when endpoint is created
+
+// Notification type (will be replaced when notifications API is created)
+type Notification = {
+  id: string;
+  type:
+    | "campaign_invite"
+    | "campaign_application"
+    | "campaign_accepted"
+    | "campaign_rejected"
+    | "message"
+    | "payment"
+    | "content_approved"
+    | "content_revision"
+    | "deadline_reminder"
+    | "milestone";
+  title: string;
+  message: string;
+  read: boolean;
+  link?: string;
+  created_at: string;
+};
 
 interface NotificationsDropdownProps {
   userId: string;
@@ -27,20 +43,25 @@ export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
     loadNotifications();
   }, [userId]);
 
-  const loadNotifications = () => {
-    const userNotifs = getUserNotifications(userId);
-    setNotifications(userNotifs);
-    setUnreadCount(getUnreadCount(userId));
+  const loadNotifications = async () => {
+    // TODO: Wire to notifications API when endpoint is created
+    // For now, notifications will show as empty
+    setNotifications([]);
+    setUnreadCount(0);
   };
 
   const handleMarkAsRead = (notificationId: string) => {
-    markAsRead(notificationId);
-    loadNotifications();
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === notificationId ? { ...n, read: true } : n
+      )
+    );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
   };
 
   const handleMarkAllAsRead = () => {
-    markAllAsRead(userId);
-    loadNotifications();
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
   };
 
   const getNotificationIcon = (type: Notification["type"]) => {

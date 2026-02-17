@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
+
+export const metadata: Metadata = {
+  title: 'Get Started',
+  robots: { index: false, follow: false },
+}
 
 export default function OnboardingLayout({
   children,
@@ -19,7 +25,7 @@ export default function OnboardingLayout({
       </header>
 
       {/* Main content */}
-      <main>{children}</main>
+      <main id="main-content">{children}</main>
     </div>
   )
 }

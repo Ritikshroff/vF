@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   Heart,
@@ -22,72 +22,84 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/auth-context'
-import { fetchSavedInfluencers } from '@/services/brands'
-import { getBrandByUserId, getAllBrands } from '@/mock-data/brands'
-import { getAllInfluencers } from '@/mock-data/influencers'
+import { getCRMContacts, deleteContact } from '@/services/api/crm'
 import { formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
+
+interface CRMContact {
+  id: string
+  influencerId: string
+  status: string
+  customLabels: string[]
+  internalNotes: string
+  influencer: {
+    id: string
+    fullName: string
+    avatar: string | null
+    categories: string[]
+    rating: number | string | null
+  }
+  _count: {
+    notes: number
+    activities: number
+  }
+}
 
 export default function SavedInfluencersPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [savedIds, setSavedIds] = useState<string[]>([])
-  const [influencers, setInfluencers] = useState<any[]>([])
+  const [contacts, setContacts] = useState<CRMContact[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState<'all' | string>('all')
 
-  useEffect(() => {
-    loadSavedInfluencers()
-  }, [user])
-
-  const loadSavedInfluencers = async () => {
+  const loadSavedInfluencers = useCallback(async () => {
     if (!user) return
 
     try {
-      let brand = getBrandByUserId(user.id)
-
-      // Fallback: use first brand for demo
-      if (!brand) {
-        console.warn(`No brand found for user ID: ${user.id}, using fallback brand`)
-        brand = getAllBrands()[0]
-      }
-
-      if (brand) {
-        const ids = await fetchSavedInfluencers(brand.id)
-        setSavedIds(ids)
-
-        const allInfs = getAllInfluencers()
-        const saved = allInfs.filter((inf) => ids.includes(inf.id))
-        setInfluencers(saved)
-      }
+      const result = await getCRMContacts()
+      const contactList: CRMContact[] = result?.data ?? []
+      setContacts(contactList)
     } catch (error) {
       console.error('Error loading saved influencers:', error)
     } finally {
       setLoading(false)
     }
+  }, [user])
+
+  useEffect(() => {
+    loadSavedInfluencers()
+  }, [loadSavedInfluencers])
+
+  const handleUnsave = async (contactId: string) => {
+    try {
+      await deleteContact(contactId)
+      setContacts((prev) => prev.filter((c) => c.id !== contactId))
+    } catch (error) {
+      console.error('Error removing contact:', error)
+    }
   }
 
-  const handleUnsave = (influencerId: string) => {
-    setSavedIds(savedIds.filter((id) => id !== influencerId))
-    setInfluencers(influencers.filter((inf) => inf.id !== influencerId))
-  }
+  const filteredContacts = contacts.filter((contact) => {
+    const name = contact.influencer.fullName ?? ''
+    const categories = contact.influencer.categories ?? []
 
-  const filteredInfluencers = influencers.filter((inf) => {
     const matchesSearch =
-      inf.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inf.categories.some((cat: string) =>
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      categories.some((cat: string) =>
         cat.toLowerCase().includes(searchQuery.toLowerCase())
       )
 
     const matchesFilter =
-      filter === 'all' || inf.categories.includes(filter)
+      filter === 'all' || categories.includes(filter)
 
     return matchesSearch && matchesFilter
   })
 
-  // Get unique categories
-  const categories = Array.from(
-    new Set(influencers.flatMap((inf) => inf.categories))
+  // Get unique categories from all contacts
+  const categories: string[] = Array.from(
+    new Set(
+      contacts.flatMap((c) => c.influencer.categories ?? [])
+    )
   ).slice(0, 6)
 
   if (loading) {
@@ -121,7 +133,7 @@ export default function SavedInfluencersPage() {
                   Saved Influencers
                 </h1>
                 <p className="text-sm lg:text-base xl:text-lg text-[rgb(var(--muted))]">
-                  {influencers.length} influencer{influencers.length !== 1 ? 's' : ''} saved
+                  {contacts.length} influencer{contacts.length !== 1 ? 's' : ''} saved
                 </p>
               </div>
               <Button variant="outline" size="lg" className="w-full md:w-auto">
@@ -174,7 +186,7 @@ export default function SavedInfluencersPage() {
           </motion.div>
 
           {/* Influencers Grid */}
-          {filteredInfluencers.length === 0 ? (
+          {filteredContacts.length === 0 ? (
             <Card className="text-center py-12 md:py-16">
               <CardContent>
                 <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
@@ -195,112 +207,104 @@ export default function SavedInfluencersPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-              {filteredInfluencers.map((influencer) => (
-                <motion.div
-                  key={influencer.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                >
-                  <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full">
-                    <CardContent className="p-3 sm:p-4 lg:p-6">
-                      {/* Header with Unsave Button */}
-                      <div className="flex items-start justify-between mb-4">
-                        <Avatar className="h-16 w-16 md:h-20 md:w-20">
-                          <img src={influencer.avatar} alt={influencer.name} />
-                        </Avatar>
-                        <button
-                          onClick={() => handleUnsave(influencer.id)}
-                          className="p-2 rounded-full hover:bg-red-500/10 text-red-500 transition-colors"
-                          title="Remove from saved"
-                        >
-                          <Heart className="h-5 w-5 fill-current" />
-                        </button>
-                      </div>
+              {filteredContacts.map((contact) => {
+                const influencer = contact.influencer
+                const rating = influencer.rating != null ? Number(influencer.rating) : null
+                const activitiesCount = contact._count?.activities ?? 0
+                const contactCategories = influencer.categories ?? []
 
-                      {/* Name & Rating */}
-                      <div className="mb-3">
-                        <h3 className="text-lg font-bold mb-1 line-clamp-1">
-                          {influencer.name}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                            <span className="text-sm font-medium">{influencer.rating}</span>
-                          </div>
-                          <span className="text-xs text-[rgb(var(--muted))]">
-                            ({influencer.campaigns_completed} campaigns)
-                          </span>
+                return (
+                  <motion.div
+                    key={contact.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                  >
+                    <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full">
+                      <CardContent className="p-3 sm:p-4 lg:p-6">
+                        {/* Header with Unsave Button */}
+                        <div className="flex items-start justify-between mb-4">
+                          <Avatar
+                            className="h-16 w-16 md:h-20 md:w-20"
+                            src={influencer.avatar ?? undefined}
+                            alt={influencer.fullName}
+                            fallback={influencer.fullName}
+                          />
+                          <button
+                            onClick={() => handleUnsave(contact.id)}
+                            className="p-2 rounded-full hover:bg-red-500/10 text-red-500 transition-colors"
+                            title="Remove from saved"
+                          >
+                            <Heart className="h-5 w-5 fill-current" />
+                          </button>
                         </div>
-                      </div>
 
-                      {/* Location */}
-                      <div className="text-sm text-[rgb(var(--muted))] mb-3">
-                        {influencer.location}
-                      </div>
-
-                      {/* Stats Grid */}
-                      <div className="grid grid-cols-2 gap-3 mb-4 p-3 rounded-lg bg-[rgb(var(--surface))]">
-                        <div>
-                          <div className="text-xs text-[rgb(var(--muted))] mb-1">
-                            Total Reach
-                          </div>
-                          <div className="font-bold text-sm">
-                            {formatCompactNumber(
-                              influencer.platforms.reduce(
-                                (sum: number, p: any) => sum + p.followers,
-                                0
-                              )
+                        {/* Name & Rating */}
+                        <div className="mb-3">
+                          <h3 className="text-lg font-bold mb-1 line-clamp-1">
+                            {influencer.fullName}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            {rating != null && (
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                                <span className="text-sm font-medium">
+                                  {rating.toFixed(1)}
+                                </span>
+                              </div>
                             )}
+                            <span className="text-xs text-[rgb(var(--muted))]">
+                              ({activitiesCount} activit{activitiesCount === 1 ? 'y' : 'ies'})
+                            </span>
                           </div>
                         </div>
-                        <div>
-                          <div className="text-xs text-[rgb(var(--muted))] mb-1">
-                            Avg Engagement
-                          </div>
-                          <div className="font-bold text-sm">
-                            {(
-                              influencer.platforms.reduce(
-                                (sum: number, p: any) => sum + p.engagement_rate,
-                                0
-                              ) / influencer.platforms.length
-                            ).toFixed(1)}
-                            %
-                          </div>
+
+                        {/* Status & Labels */}
+                        <div className="mb-3">
+                          {contact.status && (
+                            <Badge variant="outline" className="text-xs mr-2">
+                              {contact.status}
+                            </Badge>
+                          )}
+                          {(contact.customLabels ?? []).slice(0, 2).map((label) => (
+                            <Badge key={label} variant="outline" className="text-xs mr-1 mb-1">
+                              {label}
+                            </Badge>
+                          ))}
                         </div>
-                      </div>
 
-                      {/* Categories */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {influencer.categories.slice(0, 2).map((category: string) => (
-                          <Badge key={category} variant="outline" className="text-xs">
-                            {category}
-                          </Badge>
-                        ))}
-                        {influencer.categories.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{influencer.categories.length - 2}
-                          </Badge>
-                        )}
-                      </div>
+                        {/* Categories */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {contactCategories.slice(0, 2).map((category: string) => (
+                            <Badge key={category} variant="outline" className="text-xs">
+                              {category}
+                            </Badge>
+                          ))}
+                          {contactCategories.length > 2 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{contactCategories.length - 2}
+                            </Badge>
+                          )}
+                        </div>
 
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        <Link href={`/brand/discover/${influencer.id}`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full">
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <Link href={`/brand/discover/${influencer.id}`} className="flex-1">
+                            <Button variant="outline" size="sm" className="w-full">
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </Link>
+                          <Button variant="gradient" size="sm" className="flex-1">
+                            <MessageCircle className="h-4 w-4 mr-1" />
+                            Message
                           </Button>
-                        </Link>
-                        <Button variant="gradient" size="sm" className="flex-1">
-                          <MessageCircle className="h-4 w-4 mr-1" />
-                          Message
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )
+              })}
             </div>
           )}
         </motion.div>

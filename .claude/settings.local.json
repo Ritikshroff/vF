@@ -10,7 +10,16 @@
       "Bash(node -e:*)",
       "Bash(npm ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run test:*)",
+      "Bash(npx next build:*)",
+      "Bash(npx vitest run)",
+      "Bash(test:*)",
+      "Bash(npx tsx:*)",
+      "Bash(NODE_TLS_REJECT_UNAUTHORIZED=0 npx tsx:*)",
+      "Bash(npx vitest:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)"
     ]
   }
 }

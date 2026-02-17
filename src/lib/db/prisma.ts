@@ -12,7 +12,10 @@ declare global {
 // In development with hot-reloading, this prevents creating multiple instances
 
 const prismaClientSingleton = () => {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  });
 
   return new PrismaClient({
     adapter,

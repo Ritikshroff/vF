@@ -10,12 +10,15 @@ import {
   Instagram,
   Youtube,
   Facebook,
+  Twitter,
   DollarSign,
   Save,
   Upload,
   Plus,
   X,
   CheckCircle2,
+  AlertCircle,
+  Music,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,14 +26,56 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/auth-context'
-import { getInfluencerByUserId, getAllInfluencers } from '@/mock-data/influencers'
+import { api } from '@/lib/api-client'
 import { staggerContainer, staggerItem } from '@/lib/animations'
+
+/** Map UPPERCASE platform enum to a display name */
+function platformDisplayName(platform: string): string {
+  const map: Record<string, string> = {
+    INSTAGRAM: 'Instagram',
+    YOUTUBE: 'YouTube',
+    TIKTOK: 'TikTok',
+    TWITTER: 'Twitter',
+    FACEBOOK: 'Facebook',
+  }
+  return map[platform] || platform
+}
+
+/** Render the appropriate icon for a platform */
+function PlatformIcon({ platform, className }: { platform: string; className?: string }) {
+  switch (platform) {
+    case 'INSTAGRAM':
+      return <Instagram className={className || 'h-6 w-6 text-pink-500'} />
+    case 'YOUTUBE':
+      return <Youtube className={className || 'h-6 w-6 text-red-500'} />
+    case 'FACEBOOK':
+      return <Facebook className={className || 'h-6 w-6 text-blue-500'} />
+    case 'TWITTER':
+      return <Twitter className={className || 'h-6 w-6 text-sky-500'} />
+    case 'TIKTOK':
+      return <Music className={className || 'h-6 w-6 text-purple-500'} />
+    default:
+      return <Globe className={className || 'h-6 w-6 text-[rgb(var(--muted))]'} />
+  }
+}
+
+/** Format a date string into "Mon YYYY" */
+function formatMemberSince(dateStr: string | undefined): string {
+  if (!dateStr) return 'N/A'
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  } catch {
+    return 'N/A'
+  }
+}
 
 export default function InfluencerProfilePage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [influencer, setInfluencer] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -50,37 +95,47 @@ export default function InfluencerProfilePage() {
 
   useEffect(() => {
     loadProfile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   const loadProfile = async () => {
     if (!user) return
 
-    try {
-      let inf = getInfluencerByUserId(user.id)
+    if (!user.influencerId) {
+      setError('No influencer profile linked to this account. Please complete onboarding first.')
+      setLoading(false)
+      return
+    }
 
-      // Fallback: use first influencer for demo
-      if (!inf) {
-        console.warn(`No influencer found for user ID: ${user.id}, using fallback influencer`)
-        inf = getAllInfluencers()[0]
+    try {
+      setError(null)
+      const res = await api.get<any>(`/discovery/influencers/${user.influencerId}`)
+
+      if (res.error) {
+        setError(res.error)
+        setLoading(false)
+        return
       }
 
+      const inf = res.data
       if (inf) {
         setInfluencer(inf)
         setFormData({
-          name: inf.fullName,
-          bio: inf.bio,
-          email: '',
-          location: inf.location,
+          name: inf.fullName || '',
+          bio: inf.bio || '',
+          email: user.email || '',
+          location: inf.location || '',
           website: '',
-          categories: inf.categories,
-          pricing_min: inf.pricing.instagram_post || 0,
-          pricing_max: inf.pricing.youtube_video || inf.pricing.tiktok_video || 0,
-          available: inf.availability === 'available',
+          categories: inf.categories || [],
+          pricing_min: Number(inf.pricing?.instagramPost || 0),
+          pricing_max: Number(inf.pricing?.youtubeVideo || inf.pricing?.tiktokVideo || 0),
+          available: inf.availability === 'AVAILABLE',
         })
-        setPlatforms(inf.platforms)
+        setPlatforms(inf.platforms || [])
       }
-    } catch (error) {
-      console.error('Error loading profile:', error)
+    } catch (err) {
+      console.error('Error loading profile:', err)
+      setError('Failed to load profile. Please try again later.')
     } finally {
       setLoading(false)
     }
@@ -89,10 +144,10 @@ export default function InfluencerProfilePage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      // Simulate API call
+      // No update API available yet -- show a placeholder toast
       await new Promise((resolve) => setTimeout(resolve, 1000))
       alert('Profile updated successfully!')
-    } catch (error) {
+    } catch {
       alert('Failed to update profile')
     } finally {
       setSaving(false)
@@ -123,6 +178,23 @@ export default function InfluencerProfilePage() {
           <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
           <div className="h-64 bg-[rgb(var(--surface))] rounded" />
         </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container py-4 sm:py-6 lg:py-8">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <AlertCircle className="h-12 w-12 text-orange-500 mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Profile Unavailable</h2>
+            <p className="text-[rgb(var(--muted))] max-w-md">{error}</p>
+            <Button variant="outline" className="mt-6" onClick={() => { setLoading(true); setError(null); loadProfile() }}>
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -251,25 +323,17 @@ export default function InfluencerProfilePage() {
                     <CardTitle>Social Media Accounts</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 p-3 sm:p-4 lg:p-6">
-                    {platforms.map((platform, index) => (
+                    {platforms.map((platform: any, index: number) => (
                       <div
                         key={index}
                         className="flex flex-col sm:flex-row gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))]"
                       >
                         <div className="flex items-center gap-3 flex-1">
-                          {platform.name === 'Instagram' && (
-                            <Instagram className="h-6 w-6 text-pink-500" />
-                          )}
-                          {platform.name === 'YouTube' && (
-                            <Youtube className="h-6 w-6 text-red-500" />
-                          )}
-                          {platform.name === 'Facebook' && (
-                            <Facebook className="h-6 w-6 text-blue-500" />
-                          )}
+                          <PlatformIcon platform={platform.platform} />
                           <div className="flex-1">
-                            <div className="font-semibold">{platform.name}</div>
+                            <div className="font-semibold">{platformDisplayName(platform.platform)}</div>
                             <div className="text-sm text-[rgb(var(--muted))]">
-                              @{platform.username}
+                              @{platform.handle}
                             </div>
                           </div>
                         </div>
@@ -277,11 +341,11 @@ export default function InfluencerProfilePage() {
                         <div className="grid grid-cols-2 gap-4 text-center">
                           <div>
                             <div className="text-xs text-[rgb(var(--muted))]">Followers</div>
-                            <div className="font-bold">{platform.followers.toLocaleString()}</div>
+                            <div className="font-bold">{(platform.followers || 0).toLocaleString()}</div>
                           </div>
                           <div>
                             <div className="text-xs text-[rgb(var(--muted))]">Engagement</div>
-                            <div className="font-bold">{platform.engagement_rate}%</div>
+                            <div className="font-bold">{Number(platform.engagementRate || 0)}%</div>
                           </div>
                         </div>
 
@@ -417,9 +481,7 @@ export default function InfluencerProfilePage() {
                     <CardTitle className="text-lg">Profile Photo</CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center">
-                    <Avatar className="h-32 w-32 mb-4">
-                      <img src={influencer?.avatar} alt={formData.name} />
-                    </Avatar>
+                    <Avatar className="h-32 w-32 mb-4" src={influencer?.avatar} alt={formData.name} fallback={formData.name} />
 
                     <Button variant="outline" size="sm" className="w-full">
                       <Upload className="h-4 w-4 mr-2" />
@@ -504,15 +566,19 @@ export default function InfluencerProfilePage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-[rgb(var(--muted))]">Total Campaigns</span>
-                      <span className="font-bold">{influencer?.campaigns_completed || 0}</span>
+                      <span className="font-bold">{influencer?.totalCampaigns || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-[rgb(var(--muted))]">Success Rate</span>
-                      <span className="font-bold text-green-500">98%</span>
+                      <span className="font-bold text-green-500">
+                        {influencer?.campaignSuccessRate
+                          ? `${Number(influencer.campaignSuccessRate)}%`
+                          : '0%'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-[rgb(var(--muted))]">Member Since</span>
-                      <span className="font-bold">Jan 2025</span>
+                      <span className="font-bold">{formatMemberSince(influencer?.createdAt)}</span>
                     </div>
                   </CardContent>
                 </Card>

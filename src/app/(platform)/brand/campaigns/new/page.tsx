@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { createCampaign } from '@/services/campaigns'
+import { createCampaign } from '@/services/api/campaigns'
 import { INFLUENCER_CATEGORIES, SOCIAL_PLATFORMS } from '@/lib/constants'
 import { slideInRight } from '@/lib/animations'
 
@@ -128,46 +128,42 @@ export default function CampaignBuilderPage() {
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      const campaignData = {
-        brandId: 'brand_001', // In real app, get from auth
-        brandName: 'Your Brand',
-        brandLogo: '',
+      // Build requirements string from deliverables and content types
+      const requirementsParts: string[] = []
+      if (formData.contentTypes.length > 0) {
+        requirementsParts.push(`Content types: ${formData.contentTypes.join(', ')}`)
+      }
+      if (formData.deliverables.length > 0) {
+        requirementsParts.push(
+          `Deliverables: ${formData.deliverables.map((d) => `${d.quantity}x ${d.type} - ${d.description}`).join('; ')}`
+        )
+      }
+      if (formData.minEngagement) {
+        requirementsParts.push(`Min engagement rate: ${formData.minEngagement}%`)
+      }
+
+      const listingData = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        goals: formData.goals,
-        platforms: formData.platforms,
-        target_audience: {
-          age_range: formData.targetAgeRanges,
-          gender: formData.targetGenders,
-          locations: formData.targetLocations,
-        },
-        requirements: {
-          min_followers: parseInt(formData.minFollowers) || 0,
-          max_followers: formData.maxFollowers ? parseInt(formData.maxFollowers) : null,
-          min_engagement_rate: parseFloat(formData.minEngagement) || 0,
-          content_types: formData.contentTypes,
-          deliverables: formData.deliverables,
-        },
-        budget: {
-          min: parseInt(formData.minBudget) || 0,
-          max: parseInt(formData.maxBudget) || 0,
-          currency: 'USD',
-        },
-        compensation_type: 'fixed' as const,
-        application_deadline: formData.applicationDeadline,
-        campaign_start_date: formData.startDate,
-        campaign_end_date: formData.endDate,
-        content_due_date: formData.contentDueDate,
-        status: 'draft' as const,
-        visibility: 'public' as const,
-        invited_influencers: [],
-        applied_influencers: [],
-        accepted_influencers: [],
-        max_influencers: 10,
+        requirements: requirementsParts.join('\n') || undefined,
+        budgetMin: parseInt(formData.minBudget) || 0,
+        budgetMax: parseInt(formData.maxBudget) || 0,
+        compensationType: 'FIXED' as const,
+        targetNiches: formData.goals.length > 0 ? formData.goals : [formData.category].filter(Boolean),
+        targetPlatforms: formData.platforms,
+        minFollowers: parseInt(formData.minFollowers) || undefined,
+        maxFollowers: formData.maxFollowers ? parseInt(formData.maxFollowers) : undefined,
+        targetLocations: formData.targetLocations.length > 0 ? formData.targetLocations : undefined,
+        targetAgeRange: formData.targetAgeRanges.length > 0 ? formData.targetAgeRanges.join(', ') : undefined,
+        targetGender: formData.targetGenders.length > 0 ? formData.targetGenders.join(', ') : undefined,
+        totalSlots: 10,
+        applicationDeadline: formData.applicationDeadline ? new Date(formData.applicationDeadline).toISOString() : undefined,
+        campaignStartDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
+        campaignEndDate: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
       }
 
-      await createCampaign(campaignData)
+      await createCampaign(listingData)
       router.push('/brand/campaigns')
     } catch (error) {
       console.error('Error creating campaign:', error)

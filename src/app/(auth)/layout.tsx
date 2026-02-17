@@ -1,5 +1,10 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default function AuthLayout({
   children,
@@ -19,7 +24,7 @@ export default function AuthLayout({
       </header>
 
       {/* Main content */}
-      <main>{children}</main>
+      <main id="main-content">{children}</main>
     </div>
   )
 }

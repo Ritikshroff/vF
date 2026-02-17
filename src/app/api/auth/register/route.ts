@@ -5,6 +5,7 @@ import { generateSecureToken, hashToken } from '@/lib/auth/password';
 import { TOKEN_EXPIRY } from '@/lib/auth/jwt';
 import { registerSchema } from '@/validators/auth.schema';
 import { errorHandler, ConflictError } from '@/middleware/error.middleware';
+import { audit, getClientInfo } from '@/lib/audit';
 
 /**
  * POST /api/auth/register
@@ -64,6 +65,8 @@ export async function POST(request: NextRequest) {
     // TODO: Send verification email
     // In production, integrate with email service (SendGrid, AWS SES, etc.)
     console.log(`[DEV] Verification token for ${user.email}: ${verificationToken}`);
+
+    audit({ action: 'auth.register', userId: user.id, ...getClientInfo(request) });
 
     return NextResponse.json(
       {

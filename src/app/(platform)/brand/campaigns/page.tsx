@@ -5,34 +5,30 @@ import { motion } from 'framer-motion'
 import {
   Plus,
   Search,
-  Filter,
   Calendar,
   Users,
   DollarSign,
   TrendingUp,
   Eye,
   Edit,
-  Trash2,
-  MoreVertical,
   CheckCircle2,
   Clock,
-  XCircle,
   PlayCircle,
+  Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { fetchBrandCampaigns } from '@/services/campaigns'
-import type { Campaign } from '@/mock-data/campaigns'
-import { formatCurrency, formatCompactNumber } from '@/lib/utils'
+import { fetchBrandCampaigns } from '@/services/api/campaigns'
+import { formatCurrency } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 
 export default function BrandCampaignsPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [campaigns, setCampaigns] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'draft' | 'active' | 'completed'>('all')
+  const [filter, setFilter] = useState<'all' | 'DRAFT' | 'ACTIVE' | 'CLOSED' | 'PAUSED'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -41,8 +37,7 @@ export default function BrandCampaignsPage() {
 
   const loadCampaigns = async () => {
     try {
-      // In real app, get brandId from auth
-      const data = await fetchBrandCampaigns('brand_001')
+      const data = await fetchBrandCampaigns()
       setCampaigns(data)
     } catch (error) {
       console.error('Error loading campaigns:', error)
@@ -51,41 +46,45 @@ export default function BrandCampaignsPage() {
     }
   }
 
-  const filteredCampaigns = campaigns.filter((campaign) => {
-    const matchesFilter = filter === 'all' || campaign.status === filter
+  const filteredCampaigns = campaigns.filter((listing) => {
+    const matchesFilter = filter === 'all' || listing.status === filter
     const matchesSearch =
-      campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      campaign.description.toLowerCase().includes(searchQuery.toLowerCase())
+      listing.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.description?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesFilter && matchesSearch
   })
 
   const stats = {
     total: campaigns.length,
-    active: campaigns.filter((c) => c.status === 'active').length,
-    draft: campaigns.filter((c) => c.status === 'draft').length,
-    completed: campaigns.filter((c) => c.status === 'completed').length,
+    active: campaigns.filter((c) => c.status === 'ACTIVE').length,
+    draft: campaigns.filter((c) => c.status === 'DRAFT').length,
+    closed: campaigns.filter((c) => c.status === 'CLOSED' || c.status === 'FILLED').length,
   }
 
-  const getStatusIcon = (status: Campaign['status']) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'ACTIVE':
         return PlayCircle
-      case 'completed':
+      case 'CLOSED':
+      case 'FILLED':
         return CheckCircle2
-      case 'draft':
+      case 'DRAFT':
         return Edit
+      case 'PAUSED':
+        return Clock
       default:
         return Clock
     }
   }
 
-  const getStatusColor = (status: Campaign['status']) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'ACTIVE':
         return 'success'
-      case 'completed':
+      case 'CLOSED':
+      case 'FILLED':
         return 'default'
-      case 'draft':
+      case 'DRAFT':
         return 'warning'
       default:
         return 'default'
@@ -100,7 +99,7 @@ export default function BrandCampaignsPage() {
           animate="animate"
           variants={staggerContainer}
         >
-          {/* Header - Mobile Optimized */}
+          {/* Header */}
           <motion.div variants={staggerItem} className="mb-6 md:mb-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
@@ -120,7 +119,7 @@ export default function BrandCampaignsPage() {
             </div>
           </motion.div>
 
-          {/* Stats Cards - Mobile Responsive Grid */}
+          {/* Stats Cards */}
           <motion.div
             variants={staggerItem}
             className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8"
@@ -129,7 +128,7 @@ export default function BrandCampaignsPage() {
               { label: 'Total', value: stats.total, color: 'from-purple-500 to-pink-500' },
               { label: 'Active', value: stats.active, color: 'from-green-500 to-emerald-500' },
               { label: 'Draft', value: stats.draft, color: 'from-orange-500 to-yellow-500' },
-              { label: 'Completed', value: stats.completed, color: 'from-blue-500 to-cyan-500' },
+              { label: 'Closed', value: stats.closed, color: 'from-blue-500 to-cyan-500' },
             ].map((stat) => (
               <Card key={stat.label} className="border-2">
                 <CardContent className="p-4 md:p-6">
@@ -144,7 +143,7 @@ export default function BrandCampaignsPage() {
             ))}
           </motion.div>
 
-          {/* Search & Filters - Mobile Optimized */}
+          {/* Search & Filters */}
           <motion.div variants={staggerItem} className="mb-6 space-y-4">
             <div className="flex flex-col md:flex-row gap-3 md:gap-4">
               <div className="relative flex-1">
@@ -158,13 +157,12 @@ export default function BrandCampaignsPage() {
               </div>
             </div>
 
-            {/* Filter Tabs - Mobile Scrollable */}
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
               {[
                 { value: 'all' as const, label: 'All Campaigns' },
-                { value: 'active' as const, label: 'Active' },
-                { value: 'draft' as const, label: 'Drafts' },
-                { value: 'completed' as const, label: 'Completed' },
+                { value: 'ACTIVE' as const, label: 'Active' },
+                { value: 'DRAFT' as const, label: 'Drafts' },
+                { value: 'CLOSED' as const, label: 'Closed' },
               ].map((tab) => (
                 <button
                   key={tab.value}
@@ -181,17 +179,10 @@ export default function BrandCampaignsPage() {
             </div>
           </motion.div>
 
-          {/* Campaigns List - Mobile Optimized Cards */}
+          {/* Campaigns List */}
           {loading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-4 md:p-6">
-                    <div className="h-6 bg-[rgb(var(--surface))] rounded mb-3" />
-                    <div className="h-4 bg-[rgb(var(--surface))] rounded w-2/3" />
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--brand-primary))]" />
             </div>
           ) : filteredCampaigns.length === 0 ? (
             <Card className="text-center py-12 md:py-16">
@@ -212,86 +203,85 @@ export default function BrandCampaignsPage() {
             </Card>
           ) : (
             <div className="space-y-4 md:space-y-6">
-              {filteredCampaigns.map((campaign) => {
-                const StatusIcon = getStatusIcon(campaign.status)
+              {filteredCampaigns.map((listing) => {
+                const StatusIcon = getStatusIcon(listing.status)
                 return (
                   <motion.div
-                    key={campaign.id}
+                    key={listing.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all">
                       <CardContent className="p-4 md:p-6">
-                        {/* Mobile: Stacked Layout, Desktop: Horizontal */}
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          {/* Main Info */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-3 mb-3">
                               <div className="flex-1 min-w-0">
                                 <h3 className="text-lg md:text-xl font-bold mb-2 line-clamp-1">
-                                  {campaign.title}
+                                  {listing.title}
                                 </h3>
                                 <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-3">
-                                  {campaign.description}
+                                  {listing.description}
                                 </p>
                               </div>
-                              <Badge variant={getStatusColor(campaign.status) as any}>
+                              <Badge variant={getStatusColor(listing.status) as any}>
                                 <StatusIcon className="h-3 w-3 mr-1" />
-                                {campaign.status}
+                                {listing.status}
                               </Badge>
                             </div>
 
-                            {/* Stats Grid - Mobile 2 cols, Desktop 4 cols */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
                               <div className="flex items-center gap-2 text-sm">
                                 <Users className="h-4 w-4 text-[rgb(var(--muted))]" />
                                 <span className="text-[rgb(var(--muted))]">
-                                  {Array.isArray(campaign.accepted_influencers) ? campaign.accepted_influencers.length : 0}/{campaign.max_influencers} influencers
+                                  {listing.totalSlots || 1} slots
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 text-sm">
                                 <DollarSign className="h-4 w-4 text-[rgb(var(--muted))]" />
                                 <span className="text-[rgb(var(--muted))]">
-                                  {formatCurrency(campaign.budget.min)}-{formatCurrency(campaign.budget.max)}
+                                  {formatCurrency(Number(listing.budgetMin || 0))}-{formatCurrency(Number(listing.budgetMax || 0))}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm">
-                                <Calendar className="h-4 w-4 text-[rgb(var(--muted))]" />
-                                <span className="text-[rgb(var(--muted))]">
-                                  {new Date(campaign.campaign_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                </span>
-                              </div>
+                              {listing.campaignStartDate && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Calendar className="h-4 w-4 text-[rgb(var(--muted))]" />
+                                  <span className="text-[rgb(var(--muted))]">
+                                    {new Date(listing.campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                  </span>
+                                </div>
+                              )}
                               <div className="flex items-center gap-2 text-sm">
                                 <TrendingUp className="h-4 w-4 text-[rgb(var(--muted))]" />
                                 <span className="text-[rgb(var(--muted))]">
-                                  {campaign.applied_influencers.length} applied
+                                  {listing._count?.applications ?? 0} applied
                                 </span>
                               </div>
                             </div>
 
-                            {/* Platforms & Category - Mobile Wrap */}
                             <div className="flex flex-wrap gap-2">
-                              <Badge variant="outline">{campaign.category}</Badge>
-                              {campaign.platforms.slice(0, 2).map((platform) => (
+                              {listing.compensationType && (
+                                <Badge variant="outline">{listing.compensationType}</Badge>
+                              )}
+                              {(listing.targetPlatforms || []).slice(0, 2).map((platform: string) => (
                                 <Badge key={platform} variant="outline">
                                   {platform}
                                 </Badge>
                               ))}
-                              {campaign.platforms.length > 2 && (
-                                <Badge variant="outline">+{campaign.platforms.length - 2}</Badge>
+                              {(listing.targetPlatforms || []).length > 2 && (
+                                <Badge variant="outline">+{listing.targetPlatforms.length - 2}</Badge>
                               )}
                             </div>
                           </div>
 
-                          {/* Actions - Mobile Full Width, Desktop Auto */}
                           <div className="flex md:flex-col gap-2 md:gap-3 pt-4 md:pt-0 border-t md:border-t-0 md:border-l md:pl-6 border-[rgb(var(--border))]">
-                            <Link href={`/brand/campaigns/${campaign.id}`} className="flex-1 md:flex-none">
+                            <Link href={`/brand/campaigns/${listing.id}`} className="flex-1 md:flex-none">
                               <Button variant="outline" size="sm" className="w-full">
                                 <Eye className="h-4 w-4 mr-2" />
                                 <span className="hidden md:inline">View</span>
                               </Button>
                             </Link>
-                            {campaign.status === 'draft' && (
+                            {listing.status === 'DRAFT' && (
                               <Button variant="ghost" size="sm" className="flex-1 md:flex-none">
                                 <Edit className="h-4 w-4 mr-2" />
                                 <span className="hidden md:inline">Edit</span>
@@ -299,38 +289,6 @@ export default function BrandCampaignsPage() {
                             )}
                           </div>
                         </div>
-
-                        {/* Performance Bar (only for completed campaigns) */}
-                        {campaign.performance && (
-                          <div className="mt-4 pt-4 border-t border-[rgb(var(--border))]">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                              <div>
-                                <div className="text-lg md:text-xl font-bold gradient-text">
-                                  {formatCompactNumber(campaign.performance.total_reach)}
-                                </div>
-                                <div className="text-xs text-[rgb(var(--muted))]">Total Reach</div>
-                              </div>
-                              <div>
-                                <div className="text-lg md:text-xl font-bold gradient-text">
-                                  {formatCompactNumber(campaign.performance.total_engagement)}
-                                </div>
-                                <div className="text-xs text-[rgb(var(--muted))]">Engagement</div>
-                              </div>
-                              <div>
-                                <div className="text-lg md:text-xl font-bold gradient-text">
-                                  {formatCompactNumber(campaign.performance.total_conversions)}
-                                </div>
-                                <div className="text-xs text-[rgb(var(--muted))]">Conversions</div>
-                              </div>
-                              <div>
-                                <div className="text-lg md:text-xl font-bold text-green-500">
-                                  {campaign.performance.roi}%
-                                </div>
-                                <div className="text-xs text-[rgb(var(--muted))]">ROI</div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   </motion.div>

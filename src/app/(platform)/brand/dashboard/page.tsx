@@ -1,51 +1,87 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Users, Megaphone, DollarSign, Plus } from 'lucide-react'
+import { TrendingUp, Users, Megaphone, DollarSign, Plus, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { fadeInUp } from '@/lib/animations'
+import { getWallet } from '@/services/api/wallet'
+import { fetchBrandCampaigns } from '@/services/api/campaigns'
+import { getCollaborations } from '@/services/api/collaborations'
 
 export default function BrandDashboardPage() {
+  const [loading, setLoading] = useState(true)
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [campaigns, setCampaigns] = useState<any[]>([])
+  const [collaborationCount, setCollaborationCount] = useState(0)
+
+  useEffect(() => {
+    loadDashboard()
+  }, [])
+
+  const loadDashboard = async () => {
+    try {
+      const [walletData, campaignsData, collabData] = await Promise.allSettled([
+        getWallet(),
+        fetchBrandCampaigns(),
+        getCollaborations(),
+      ])
+
+      if (walletData.status === 'fulfilled') {
+        setWalletBalance(Number(walletData.value?.balance ?? 0))
+      }
+      if (campaignsData.status === 'fulfilled') {
+        setCampaigns(campaignsData.value ?? [])
+      }
+      if (collabData.status === 'fulfilled') {
+        setCollaborationCount(collabData.value?.data?.length ?? 0)
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const activeCampaigns = campaigns.filter((c: any) => c.status === 'ACTIVE')
+  const totalSpent = campaigns.reduce((sum: number, c: any) => sum + Number(c.budgetMax || 0), 0)
+
   const stats = [
     {
       title: 'Active Campaigns',
-      value: '12',
-      change: '+3 this month',
+      value: loading ? '...' : String(activeCampaigns.length),
+      change: `${campaigns.length} total campaigns`,
       icon: Megaphone,
       color: 'text-[rgb(var(--brand-primary))]',
     },
     {
-      title: 'Total Spend',
-      value: formatCurrency(45000),
-      change: '+12% vs last month',
+      title: 'Wallet Balance',
+      value: loading ? '...' : formatCurrency(walletBalance),
+      change: totalSpent > 0 ? `${formatCurrency(totalSpent)} total spent` : 'No spending yet',
       icon: DollarSign,
       color: 'text-[rgb(var(--success))]',
     },
     {
-      title: 'Total Reach',
-      value: formatCompactNumber(2500000),
-      change: '+25% this month',
+      title: 'Campaigns Created',
+      value: loading ? '...' : String(campaigns.length),
+      change: `${activeCampaigns.length} currently active`,
       icon: TrendingUp,
       color: 'text-[rgb(var(--info))]',
     },
     {
-      title: 'Influencers Worked With',
-      value: '48',
-      change: '+8 this month',
+      title: 'Collaborations',
+      value: loading ? '...' : String(collaborationCount),
+      change: 'Total collaborations',
       icon: Users,
       color: 'text-[rgb(var(--warning))]',
     },
   ]
 
-  const recentCampaigns = [
-    { name: 'Summer Collection Launch', status: 'active', influencers: 12, reach: '850K' },
-    { name: 'Brand Awareness Q2', status: 'active', influencers: 8, reach: '620K' },
-    { name: 'Product Launch', status: 'completed', influencers: 15, reach: '1.2M' },
-  ]
+  const recentCampaigns = campaigns.slice(0, 5)
 
   return (
     <div className="container py-4 sm:py-6 lg:py-8">
@@ -104,27 +140,36 @@ export default function BrandDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentCampaigns.map((campaign, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
-                >
-                  <div>
-                    <h4 className="font-semibold mb-1">{campaign.name}</h4>
-                    <div className="flex items-center gap-2 sm:gap-4 text-sm text-[rgb(var(--muted))]">
-                      <span>{campaign.influencers} influencers</span>
-                      <span>{campaign.reach} reach</span>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-[rgb(var(--muted))]" />
+              </div>
+            ) : recentCampaigns.length === 0 ? (
+              <div className="text-center py-8 text-[rgb(var(--muted))]">
+                <p>No campaigns yet. Create your first campaign to get started!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentCampaigns.map((campaign: any) => (
+                  <Link key={campaign.id} href={`/brand/campaigns/${campaign.id}`}>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors">
+                      <div>
+                        <h4 className="font-semibold mb-1">{campaign.title}</h4>
+                        <div className="flex items-center gap-2 sm:gap-4 text-sm text-[rgb(var(--muted))]">
+                          <span>{campaign.totalSlots || 1} slots</span>
+                          <span>{formatCurrency(Number(campaign.budgetMax || 0))} budget</span>
+                        </div>
+                      </div>
+                      <Badge
+                        variant={campaign.status === 'ACTIVE' ? 'success' : campaign.status === 'DRAFT' ? 'secondary' : 'default'}
+                      >
+                        {campaign.status}
+                      </Badge>
                     </div>
-                  </div>
-                  <Badge
-                    variant={campaign.status === 'active' ? 'success' : 'default'}
-                  >
-                    {campaign.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

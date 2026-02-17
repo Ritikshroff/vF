@@ -30,21 +30,20 @@ export default function VerifyEmailPage() {
       return
     }
 
-    // In a real app, this would verify based on a token in the URL
-    // For demo, we'll auto-verify after a delay to simulate the flow
-    const timer = setTimeout(() => {
-      handleVerify()
-    }, 3000)
+    // Check if there's a verification token in the URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const token = urlParams.get('token')
+    if (token) {
+      handleVerify(token)
+    }
+  }, [user, router]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    return () => clearTimeout(timer)
-  }, [user, router])
-
-  const handleVerify = async () => {
-    if (!user) return
+  const handleVerify = async (token?: string) => {
+    if (!user || !token) return
 
     setLoading(true)
     try {
-      await verifyEmail('mock-token')
+      await verifyEmail(token)
       refreshUser()
       setVerified(true)
 

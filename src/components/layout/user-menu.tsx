@@ -27,7 +27,7 @@ export function UserMenu() {
     router.push('/')
   }
 
-  const dashboardLink = user.role ? `/${user.role}/dashboard` : '/role-selector'
+  const dashboardLink = user.role ? `/${user.role.toLowerCase()}/dashboard` : '/role-selector'
 
   return (
     <div className="relative">
@@ -36,7 +36,7 @@ export function UserMenu() {
         className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[rgb(var(--surface-hover))] transition-colors"
       >
         <Avatar
-          src={user.avatar}
+          src={user.avatar ?? undefined}
           alt={user.name}
           fallback={getInitials(user.name)}
           size="sm"
@@ -86,7 +86,7 @@ export function UserMenu() {
 
                 {user.role && (
                   <Link
-                    href={`/${user.role}/profile`}
+                    href={`/${user.role.toLowerCase()}/profile`}
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-[rgb(var(--surface-hover))] transition-colors"
                   >
@@ -97,7 +97,7 @@ export function UserMenu() {
 
                 {user.role && (
                   <Link
-                    href={`/${user.role}/settings`}
+                    href={`/${user.role.toLowerCase()}/settings`}
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-[rgb(var(--surface-hover))] transition-colors"
                   >

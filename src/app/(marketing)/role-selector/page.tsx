@@ -13,7 +13,7 @@ import { staggerContainer, staggerItem } from '@/lib/animations'
 export default function RoleSelectorPage() {
   const router = useRouter()
   const { user, refreshUser, isLoading } = useAuth()
-  const [selected, setSelected] = useState<'brand' | 'influencer' | null>(null)
+  const [selected, setSelected] = useState<'BRAND' | 'INFLUENCER' | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function RoleSelectorPage() {
       router.push('/sign-up')
     } else if (!isLoading && user?.role && user?.onboardingCompleted) {
       // Already has role and completed onboarding, redirect to dashboard
-      router.push(`/${user.role}/dashboard`)
+      router.push(`/${user.role.toLowerCase()}/dashboard`)
     }
   }, [user, isLoading, router])
 
@@ -34,7 +34,7 @@ export default function RoleSelectorPage() {
       await updateUser({ role: selected })
       refreshUser()
       // Redirect to onboarding flow
-      router.push(`/onboarding/${selected}`)
+      router.push(`/onboarding/${selected.toLowerCase()}`)
     } catch (err) {
       console.error('Failed to update role:', err)
     } finally {
@@ -44,14 +44,14 @@ export default function RoleSelectorPage() {
 
   const roles = [
     {
-      id: 'brand' as const,
+      id: 'BRAND' as const,
       icon: Building2,
       title: "I'm a Brand",
       description: 'Find influencers and launch campaigns to grow your business',
       features: ['Discover creators', 'Manage campaigns', 'Track analytics', 'Secure payments'],
     },
     {
-      id: 'influencer' as const,
+      id: 'INFLUENCER' as const,
       icon: UserCircle,
       title: "I'm an Influencer",
       description: 'Get discovered by brands and monetize your influence',

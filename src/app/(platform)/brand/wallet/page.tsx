@@ -1,139 +1,115 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import {
   Wallet,
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
-  CreditCard,
-  Send,
   Shield,
   Clock,
   CheckCircle2,
-  AlertCircle,
   FileText,
   Download,
-  Filter,
   Eye,
   Lock,
-  Unlock,
-  RefreshCw,
   Plus,
   TrendingUp,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatDate, formatRelativeTime } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-
-interface Transaction {
-  id: string
-  type: 'deposit' | 'escrow_fund' | 'escrow_release' | 'refund' | 'fee'
-  description: string
-  amount: number
-  status: 'completed' | 'pending' | 'failed'
-  date: string
-  reference?: string
-}
-
-interface EscrowAccount {
-  id: string
-  campaignName: string
-  influencer: string
-  amount: number
-  funded: number
-  released: number
-  status: 'pending' | 'funded' | 'partially_released' | 'fully_released' | 'disputed'
-  milestones: { name: string; amount: number; status: 'pending' | 'released' }[]
-  createdAt: string
-}
-
-const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: '1', type: 'deposit', description: 'Wallet top-up via Stripe', amount: 10000, status: 'completed', date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '2', type: 'escrow_fund', description: 'Escrow funded: Summer Fashion Campaign', amount: -5000, status: 'completed', date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '3', type: 'escrow_release', description: 'Milestone released: Content Delivery', amount: -2500, status: 'completed', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '4', type: 'fee', description: 'Platform fee (5%)', amount: -125, status: 'completed', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '5', type: 'escrow_fund', description: 'Escrow funded: Tech Review Campaign', amount: -3000, status: 'pending', date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '6', type: 'deposit', description: 'Wallet top-up via PayPal', amount: 5000, status: 'completed', date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '7', type: 'refund', description: 'Campaign cancellation refund', amount: 1500, status: 'completed', date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
-]
-
-const MOCK_ESCROWS: EscrowAccount[] = [
-  {
-    id: 'e1',
-    campaignName: 'Summer Fashion Collection',
-    influencer: 'Sarah Chen',
-    amount: 5000,
-    funded: 5000,
-    released: 2500,
-    status: 'partially_released',
-    milestones: [
-      { name: 'Content Creation', amount: 2500, status: 'released' },
-      { name: 'Final Delivery', amount: 2500, status: 'pending' },
-    ],
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'e2',
-    campaignName: 'Tech Review Campaign',
-    influencer: 'Alex Rivera',
-    amount: 3000,
-    funded: 3000,
-    released: 0,
-    status: 'funded',
-    milestones: [
-      { name: 'Video Production', amount: 2000, status: 'pending' },
-      { name: 'Social Posts', amount: 1000, status: 'pending' },
-    ],
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'e3',
-    campaignName: 'Beauty Brand Ambassador',
-    influencer: 'Mia Johnson',
-    amount: 8000,
-    funded: 0,
-    released: 0,
-    status: 'pending',
-    milestones: [
-      { name: 'Month 1 Content', amount: 2000, status: 'pending' },
-      { name: 'Month 2 Content', amount: 2000, status: 'pending' },
-      { name: 'Month 3 Content', amount: 2000, status: 'pending' },
-      { name: 'Final Review', amount: 2000, status: 'pending' },
-    ],
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-]
+import { getWallet, getEscrows, getInvoices, depositFunds } from '@/services/api/wallet'
 
 export default function BrandWalletPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'invoices'>('overview')
   const [txFilter, setTxFilter] = useState<string>('all')
+  const [loading, setLoading] = useState(true)
+  const [walletData, setWalletData] = useState<any>(null)
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [escrows, setEscrows] = useState<any[]>([])
+  const [invoices, setInvoices] = useState<any[]>([])
+  const [depositAmount, setDepositAmount] = useState('')
+  const [depositing, setDepositing] = useState(false)
 
-  const walletBalance = 5875
-  const escrowHeld = 8000
-  const totalSpent = 42500
-  const pendingPayments = 3000
+  useEffect(() => {
+    loadWalletData()
+  }, [])
 
-  const filteredTxs = MOCK_TRANSACTIONS.filter(tx => {
+  const loadWalletData = async () => {
+    try {
+      const [wallet, escrowData, invoiceData] = await Promise.allSettled([
+        getWallet(),
+        getEscrows(),
+        getInvoices(),
+      ])
+
+      if (wallet.status === 'fulfilled' && wallet.value) {
+        setWalletData(wallet.value)
+        setTransactions(wallet.value.transactions ?? [])
+      }
+      if (escrowData.status === 'fulfilled') {
+        const data = escrowData.value
+        setEscrows(Array.isArray(data) ? data : data?.data ?? [])
+      }
+      if (invoiceData.status === 'fulfilled') {
+        const data = invoiceData.value
+        setInvoices(Array.isArray(data) ? data : data?.data ?? [])
+      }
+    } catch (err) {
+      console.error('Failed to load wallet:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeposit = async () => {
+    const amount = parseFloat(depositAmount)
+    if (!amount || amount <= 0) return
+    setDepositing(true)
+    try {
+      await depositFunds(amount)
+      setDepositAmount('')
+      loadWalletData()
+    } catch (err) {
+      console.error('Deposit failed:', err)
+    } finally {
+      setDepositing(false)
+    }
+  }
+
+  const balance = Number(walletData?.balance ?? 0)
+  const pendingBalance = Number(walletData?.pendingBalance ?? 0)
+  const totalEscrowHeld = escrows.reduce((sum: number, e: any) => sum + Number(e.heldAmount || 0), 0)
+  const totalSpent = transactions
+    .filter((t: any) => Number(t.amount) < 0)
+    .reduce((sum: number, t: any) => sum + Math.abs(Number(t.amount)), 0)
+
+  const filteredTxs = transactions.filter((tx: any) => {
     if (txFilter === 'all') return true
-    return tx.type === txFilter
+    return tx.type === txFilter.toUpperCase()
   })
 
   const getEscrowStatusColor = (status: string) => {
     switch (status) {
-      case 'funded': return 'info'
-      case 'partially_released': return 'warning'
-      case 'fully_released': return 'success'
-      case 'disputed': return 'error'
+      case 'FUNDED': return 'info'
+      case 'PARTIALLY_RELEASED': return 'warning'
+      case 'FULLY_RELEASED': return 'success'
+      case 'DISPUTED': return 'error'
       default: return 'default'
     }
   }
 
-  const getEscrowStatusLabel = (status: string) => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
+      </div>
+    )
   }
 
   return (
@@ -147,14 +123,17 @@ export default function BrandWalletPage() {
                 <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold gradient-text">Wallet & Payments</h1>
                 <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">Manage your funds, escrow, and invoices</p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-                <Button variant="gradient">
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  placeholder="Amount"
+                  value={depositAmount}
+                  onChange={e => setDepositAmount(e.target.value)}
+                  className="w-28 px-3 py-2 rounded-lg bg-[rgb(var(--surface))] border border-[rgb(var(--border))] text-sm outline-none"
+                />
+                <Button variant="gradient" onClick={handleDeposit} disabled={depositing}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Funds
+                  {depositing ? 'Adding...' : 'Add Funds'}
                 </Button>
               </div>
             </div>
@@ -163,10 +142,10 @@ export default function BrandWalletPage() {
           {/* Balance Cards */}
           <motion.div variants={staggerItem} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {[
-              { label: 'Available Balance', value: formatCurrency(walletBalance), icon: Wallet, color: 'text-[rgb(var(--brand-primary))]', bg: 'bg-[rgb(var(--brand-primary))]/10' },
-              { label: 'Held in Escrow', value: formatCurrency(escrowHeld), icon: Lock, color: 'text-[rgb(var(--info))]', bg: 'bg-[rgb(var(--info))]/10' },
+              { label: 'Available Balance', value: formatCurrency(balance), icon: Wallet, color: 'text-[rgb(var(--brand-primary))]', bg: 'bg-[rgb(var(--brand-primary))]/10' },
+              { label: 'Held in Escrow', value: formatCurrency(totalEscrowHeld), icon: Lock, color: 'text-[rgb(var(--info))]', bg: 'bg-[rgb(var(--info))]/10' },
               { label: 'Total Spent', value: formatCurrency(totalSpent), icon: TrendingUp, color: 'text-[rgb(var(--success))]', bg: 'bg-[rgb(var(--success))]/10' },
-              { label: 'Pending', value: formatCurrency(pendingPayments), icon: Clock, color: 'text-[rgb(var(--warning))]', bg: 'bg-[rgb(var(--warning))]/10' },
+              { label: 'Pending', value: formatCurrency(pendingBalance), icon: Clock, color: 'text-[rgb(var(--warning))]', bg: 'bg-[rgb(var(--warning))]/10' },
             ].map((stat, i) => (
               <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
                 <Card>
@@ -217,48 +196,46 @@ export default function BrandWalletPage() {
                     >
                       <option value="all">All Types</option>
                       <option value="deposit">Deposits</option>
-                      <option value="escrow_fund">Escrow Funds</option>
+                      <option value="escrow_hold">Escrow Holds</option>
                       <option value="escrow_release">Releases</option>
                       <option value="refund">Refunds</option>
-                      <option value="fee">Fees</option>
+                      <option value="platform_fee">Fees</option>
                     </select>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {filteredTxs.map(tx => (
-                      <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-[rgb(var(--surface))] transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            tx.amount > 0 ? 'bg-[rgb(var(--success))]/10' : 'bg-[rgb(var(--surface))]'
-                          }`}>
-                            {tx.amount > 0 ? (
-                              <ArrowDownRight className="h-4 w-4 text-[rgb(var(--success))]" />
-                            ) : tx.type === 'fee' ? (
-                              <DollarSign className="h-4 w-4 text-[rgb(var(--muted))]" />
-                            ) : (
-                              <ArrowUpRight className="h-4 w-4 text-[rgb(var(--warning))]" />
-                            )}
+                  {filteredTxs.length === 0 ? (
+                    <div className="text-center py-8 text-[rgb(var(--muted))]">No transactions found.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredTxs.map((tx: any) => (
+                        <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-[rgb(var(--surface))] transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${
+                              Number(tx.amount) > 0 ? 'bg-[rgb(var(--success))]/10' : 'bg-[rgb(var(--surface))]'
+                            }`}>
+                              {Number(tx.amount) > 0 ? (
+                                <ArrowDownRight className="h-4 w-4 text-[rgb(var(--success))]" />
+                              ) : tx.type === 'PLATFORM_FEE' ? (
+                                <DollarSign className="h-4 w-4 text-[rgb(var(--muted))]" />
+                              ) : (
+                                <ArrowUpRight className="h-4 w-4 text-[rgb(var(--warning))]" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">{tx.description || tx.type}</div>
+                              <div className="text-xs text-[rgb(var(--muted))]">{formatDate(tx.createdAt)}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-sm font-medium">{tx.description}</div>
-                            <div className="text-xs text-[rgb(var(--muted))]">{formatDate(tx.date)}</div>
+                          <div className="text-right">
+                            <div className={`font-semibold ${Number(tx.amount) > 0 ? 'text-[rgb(var(--success))]' : ''}`}>
+                              {Number(tx.amount) > 0 ? '+' : ''}{formatCurrency(Math.abs(Number(tx.amount)))}
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className={`font-semibold ${tx.amount > 0 ? 'text-[rgb(var(--success))]' : ''}`}>
-                            {tx.amount > 0 ? '+' : ''}{formatCurrency(Math.abs(tx.amount))}
-                          </div>
-                          <Badge
-                            variant={tx.status === 'completed' ? 'success' : tx.status === 'pending' ? 'warning' : 'error'}
-                            className="text-[10px]"
-                          >
-                            {tx.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -280,82 +257,57 @@ export default function BrandWalletPage() {
                 </Card>
               </motion.div>
 
-              {MOCK_ESCROWS.map((escrow, index) => (
-                <motion.div
-                  key={escrow.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card>
-                    <CardContent className="p-3 sm:p-4 lg:p-5">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-bold">{escrow.campaignName}</h3>
-                          <p className="text-sm text-[rgb(var(--muted))]">with {escrow.influencer}</p>
-                        </div>
-                        <Badge variant={getEscrowStatusColor(escrow.status) as any}>
-                          {getEscrowStatusLabel(escrow.status)}
-                        </Badge>
-                      </div>
-
-                      {/* Escrow Progress */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className="text-[rgb(var(--muted))]">Progress</span>
-                          <span className="font-medium">
-                            {formatCurrency(escrow.released)} / {formatCurrency(escrow.amount)}
-                          </span>
-                        </div>
-                        <div className="h-2 rounded-full bg-[rgb(var(--surface))] overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]"
-                            style={{ width: `${(escrow.released / escrow.amount) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Milestones */}
-                      <div className="space-y-2">
-                        {escrow.milestones.map((milestone, i) => (
-                          <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-[rgb(var(--surface))]">
-                            <div className="flex items-center gap-2">
-                              {milestone.status === 'released' ? (
-                                <CheckCircle2 className="h-4 w-4 text-[rgb(var(--success))]" />
-                              ) : (
-                                <Clock className="h-4 w-4 text-[rgb(var(--muted))]" />
-                              )}
-                              <span className="text-sm">{milestone.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium">{formatCurrency(milestone.amount)}</span>
-                              {milestone.status === 'pending' && escrow.status === 'funded' && (
-                                <Button variant="outline" size="xs">Release</Button>
-                              )}
-                            </div>
+              {escrows.length === 0 ? (
+                <div className="text-center py-12 text-[rgb(var(--muted))]">No escrow accounts yet.</div>
+              ) : (
+                escrows.map((escrow: any, index: number) => (
+                  <motion.div
+                    key={escrow.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card>
+                      <CardContent className="p-3 sm:p-4 lg:p-5">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h3 className="font-bold">{escrow.collaboration?.campaign?.title || 'Escrow Account'}</h3>
+                            <p className="text-sm text-[rgb(var(--muted))]">
+                              with {escrow.influencer?.fullName || 'Influencer'}
+                            </p>
                           </div>
-                        ))}
-                      </div>
+                          <Badge variant={getEscrowStatusColor(escrow.status) as any}>
+                            {escrow.status.replace(/_/g, ' ')}
+                          </Badge>
+                        </div>
 
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-[rgb(var(--border))]">
-                        <span className="text-xs text-[rgb(var(--muted))]">Created {formatDate(escrow.createdAt)}</span>
-                        <div className="flex gap-2">
-                          {escrow.status === 'pending' && (
-                            <Button variant="gradient" size="sm">
-                              <Lock className="h-3 w-3 mr-1" />
-                              Fund Escrow
-                            </Button>
-                          )}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between text-sm mb-2">
+                            <span className="text-[rgb(var(--muted))]">Progress</span>
+                            <span className="font-medium">
+                              {formatCurrency(Number(escrow.releasedAmount))} / {formatCurrency(Number(escrow.totalAmount))}
+                            </span>
+                          </div>
+                          <div className="h-2 rounded-full bg-[rgb(var(--surface))] overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]"
+                              style={{ width: `${Number(escrow.totalAmount) > 0 ? (Number(escrow.releasedAmount) / Number(escrow.totalAmount)) * 100 : 0}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-[rgb(var(--border))]">
+                          <span className="text-xs text-[rgb(var(--muted))]">Created {formatDate(escrow.createdAt)}</span>
                           <Button variant="ghost" size="sm">
                             <Eye className="h-3 w-3 mr-1" />
                             Details
                           </Button>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))
+              )}
             </div>
           )}
 
@@ -373,36 +325,32 @@ export default function BrandWalletPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { id: 'INV-001', description: 'Campaign: Summer Fashion Collection', amount: 5000, status: 'paid', date: '2026-01-15', type: 'brand_deposit' },
-                      { id: 'INV-002', description: 'Platform Fee - January 2026', amount: 299, status: 'paid', date: '2026-01-01', type: 'platform_fee' },
-                      { id: 'INV-003', description: 'Campaign: Tech Review Campaign', amount: 3000, status: 'pending', date: '2026-02-01', type: 'brand_deposit' },
-                      { id: 'INV-004', description: 'Platform Fee - February 2026', amount: 299, status: 'due', date: '2026-02-01', type: 'platform_fee' },
-                    ].map(invoice => (
-                      <div key={invoice.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-[rgb(var(--surface))] transition-colors">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-[rgb(var(--muted))]" />
-                          <div>
-                            <div className="text-sm font-medium">{invoice.description}</div>
-                            <div className="text-xs text-[rgb(var(--muted))]">{invoice.id} · {formatDate(invoice.date)}</div>
+                  {invoices.length === 0 ? (
+                    <div className="text-center py-8 text-[rgb(var(--muted))]">No invoices yet.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {invoices.map((invoice: any) => (
+                        <div key={invoice.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-[rgb(var(--surface))] transition-colors">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-[rgb(var(--muted))]" />
+                            <div>
+                              <div className="text-sm font-medium">{invoice.type?.replace(/_/g, ' ') || 'Invoice'}</div>
+                              <div className="text-xs text-[rgb(var(--muted))]">{invoice.invoiceNumber} · {formatDate(invoice.createdAt)}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold">{formatCurrency(Number(invoice.totalAmount || 0))}</span>
+                            <Badge
+                              variant={invoice.status === 'PAID' ? 'success' : invoice.status === 'PENDING' ? 'warning' : 'error'}
+                              className="text-[10px]"
+                            >
+                              {invoice.status}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold">{formatCurrency(invoice.amount)}</span>
-                          <Badge
-                            variant={invoice.status === 'paid' ? 'success' : invoice.status === 'pending' ? 'warning' : 'error'}
-                            className="text-[10px]"
-                          >
-                            {invoice.status}
-                          </Badge>
-                          <Button variant="ghost" size="sm">
-                            <Download className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

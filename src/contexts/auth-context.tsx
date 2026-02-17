@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const user = await authLib.signUp(data)
     setState({
       user,
-      isAuthenticated: true,
+      isAuthenticated: false, // Not authenticated until email verified + login
       isLoading: false,
     })
     return user

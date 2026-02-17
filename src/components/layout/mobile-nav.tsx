@@ -55,8 +55,8 @@ export function MobileNav({ open, onClose, variant = 'marketing' }: MobileNavPro
     }
   }, [open])
 
-  const role = user?.role as 'brand' | 'influencer' | null
-  const platformLinks = role ? PLATFORM_NAV_LINKS[role] : []
+  const role = user?.role?.toLowerCase() as 'brand' | 'influencer' | null
+  const platformLinks = role ? PLATFORM_NAV_LINKS[role] ?? [] : []
 
   return (
     <AnimatePresence>

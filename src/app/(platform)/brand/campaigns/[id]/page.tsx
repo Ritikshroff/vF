@@ -12,12 +12,10 @@ import {
   Edit,
   MoreVertical,
   CheckCircle2,
-  XCircle,
-  Clock,
-  Send,
   Star,
   Mail,
   ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -25,19 +23,92 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import {
-  fetchCampaignById,
-  acceptInfluencerForCampaign,
-} from "@/services/campaigns";
-import { getAllInfluencers } from "@/mock-data/influencers";
-import type { Campaign } from "@/mock-data/campaigns";
+import { api } from "@/lib/api-client";
 import { formatCurrency, formatCompactNumber } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
+type ListingDetail = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  compensationType: string;
+  requirements: string | null;
+  targetNiches: string[];
+  targetPlatforms: string[];
+  targetLocations: string[];
+  targetAgeRange: string | null;
+  targetGender: string | null;
+  minFollowers: number | null;
+  maxFollowers: number | null;
+  totalSlots: number;
+  filledSlots: number;
+  applicationDeadline: string | null;
+  isFeatured: boolean;
+  campaign: {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    startDate: string;
+    endDate: string;
+    maxInfluencers: number;
+    status: string;
+  };
+  brand: {
+    id: string;
+    companyName: string;
+    logo: string | null;
+  };
+  _count?: {
+    applications: number;
+  };
+};
+
+type Application = {
+  id: string;
+  status: string;
+  coverLetter: string | null;
+  proposedRate: number | null;
+  createdAt: string;
+  influencer: {
+    id: string;
+    fullName: string;
+    avatar: string | null;
+    bio: string | null;
+    rating: any;
+    platforms: Array<{
+      platform: string;
+      followers: number;
+    }>;
+  };
+};
+
+type Collaboration = {
+  id: string;
+  status: string;
+  agreedAmount: number;
+  influencer: {
+    id: string;
+    fullName: string;
+    avatar: string | null;
+    rating: any;
+    platforms: Array<{
+      platform: string;
+      followers: number;
+    }>;
+  };
+};
+
 export default function BrandCampaignDetailPage() {
   const params = useParams();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [listing, setListing] = useState<ListingDetail | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
     "overview" | "applicants" | "accepted" | "performance"
   >("overview");
@@ -48,25 +119,59 @@ export default function BrandCampaignDetailPage() {
 
   const loadCampaign = async () => {
     try {
-      const campaignId = params.id as string;
-      const data = await fetchCampaignById(campaignId);
-      setCampaign(data);
-    } catch (error) {
-      console.error("Error loading campaign:", error);
+      const listingId = params.id as string;
+
+      // Fetch listing details
+      const listingRes = await api.get<any>(`/marketplace/listings/${listingId}`);
+      if (listingRes.error) throw new Error(listingRes.error);
+      setListing(listingRes.data);
+
+      // Fetch applications and collaborations in parallel
+      const [appsRes, collabsRes] = await Promise.allSettled([
+        api.get<any>(`/marketplace/listings/${listingId}/applications`),
+        api.get<any>("/collaborations", { campaignId: listingRes.data?.campaign?.id }),
+      ]);
+
+      if (appsRes.status === "fulfilled" && !appsRes.value.error) {
+        setApplications(appsRes.value.data?.data || []);
+      }
+      if (collabsRes.status === "fulfilled" && !collabsRes.value.error) {
+        setCollaborations(collabsRes.value.data?.data || []);
+      }
+    } catch (err) {
+      console.error("Error loading campaign:", err);
+      setError("Failed to load campaign details.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAcceptInfluencer = async (influencerId: string) => {
-    if (!campaign) return;
+  const handleAcceptApplication = async (applicationId: string, influencerId: string) => {
+    if (!listing) return;
 
     try {
-      await acceptInfluencerForCampaign(campaign.id, influencerId);
-      alert("Influencer accepted!");
+      // Create a collaboration for the accepted influencer
+      const res = await api.post<any>("/collaborations", {
+        campaignId: listing.campaign.id,
+        influencerId,
+        agreedAmount: listing.budgetMin || 0,
+        message: "Your application has been accepted!",
+      });
+
+      if (res.error) throw new Error(res.error);
+
+      // Update application status locally
+      setApplications((prev) =>
+        prev.map((a) =>
+          a.id === applicationId ? { ...a, status: "ACCEPTED" } : a
+        )
+      );
+
+      // Reload to get updated data
       loadCampaign();
-    } catch (error: any) {
-      alert(error.message || "Failed to accept influencer");
+    } catch (err: any) {
+      console.error("Error accepting application:", err);
+      alert(err.message || "Failed to accept application");
     }
   };
 
@@ -81,12 +186,15 @@ export default function BrandCampaignDetailPage() {
     );
   }
 
-  if (!campaign) {
+  if (error || !listing) {
     return (
       <div className="container py-8">
         <Card className="text-center py-16">
           <CardContent>
-            <h3 className="text-xl font-semibold mb-2">Campaign not found</h3>
+            <AlertCircle className="h-16 w-16 mx-auto mb-4 text-[rgb(var(--muted))]" />
+            <h3 className="text-xl font-semibold mb-2">
+              {error || "Campaign not found"}
+            </h3>
             <Link href="/brand/campaigns">
               <Button>Back to Campaigns</Button>
             </Link>
@@ -96,19 +204,16 @@ export default function BrandCampaignDetailPage() {
     );
   }
 
-  const allInfluencers = getAllInfluencers();
-  const appliedInfluencers = allInfluencers.filter((inf) =>
-    campaign.applied_influencers.includes(inf.id),
-  );
-  const acceptedInfluencers = allInfluencers.filter((inf) =>
-    campaign.accepted_influencers.includes(inf.id),
-  );
-  const invitedInfluencers = allInfluencers.filter((inf) =>
-    campaign.invited_influencers.includes(inf.id),
+  const pendingApplications = applications.filter((a) => a.status === "PENDING" || a.status === "SUBMITTED");
+  const acceptedCollaborations = collaborations.filter(
+    (c) => c.status === "ACCEPTED" || c.status === "IN_PROGRESS" || c.status === "COMPLETED"
   );
 
-  const spotsRemaining =
-    campaign.max_influencers - campaign.accepted_influencers.length;
+  const spotsRemaining = listing.totalSlots - listing.filledSlots;
+
+  const requirementsList = listing.requirements
+    ? listing.requirements.split("\n").filter(Boolean)
+    : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
@@ -128,7 +233,7 @@ export default function BrandCampaignDetailPage() {
             </Link>
           </motion.div>
 
-          {/* Header Section - Mobile Optimized */}
+          {/* Header Section */}
           <motion.div variants={staggerItem} className="mb-6 md:mb-8">
             <Card className="border-2">
               <CardContent className="p-4 md:p-8">
@@ -136,30 +241,30 @@ export default function BrandCampaignDetailPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-start gap-3 mb-3">
                       <h1 className="text-2xl md:text-4xl font-bold flex-1 min-w-0">
-                        {campaign.title}
+                        {listing.title}
                       </h1>
                       <Badge
                         variant={
-                          campaign.status === "active"
+                          listing.status === "OPEN"
                             ? "success"
-                            : campaign.status === "draft"
+                            : listing.status === "DRAFT"
                               ? "warning"
                               : "default"
                         }
                       >
-                        {campaign.status}
+                        {listing.status}
                       </Badge>
                     </div>
 
                     <p className="text-sm md:text-base text-[rgb(var(--muted))] mb-4">
-                      {campaign.description}
+                      {listing.description}
                     </p>
 
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">{campaign.category}</Badge>
-                      {campaign.platforms.map((platform) => (
+                      <Badge variant="outline">{listing.campaign.category}</Badge>
+                      {listing.targetPlatforms.map((platform) => (
                         <Badge key={platform} variant="outline">
-                          {platform}
+                          {platform.charAt(0) + platform.slice(1).toLowerCase()}
                         </Badge>
                       ))}
                     </div>
@@ -167,7 +272,7 @@ export default function BrandCampaignDetailPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2 shrink-0">
-                    {campaign.status === "draft" && (
+                    {listing.status === "DRAFT" && (
                       <Button variant="outline" size="sm">
                         <Edit className="h-4 w-4 mr-2" />
                         <span className="hidden md:inline">Edit</span>
@@ -179,15 +284,15 @@ export default function BrandCampaignDetailPage() {
                   </div>
                 </div>
 
-                {/* Stats Grid - Mobile 2 cols */}
+                {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-[rgb(var(--border))]">
                   <div>
                     <div className="text-xs text-[rgb(var(--muted))] mb-1">
                       Budget
                     </div>
                     <div className="text-lg md:text-xl font-bold gradient-text">
-                      {formatCurrency(campaign.budget.min)}-
-                      {formatCurrency(campaign.budget.max)}
+                      {formatCurrency(listing.budgetMin || 0)}-
+                      {formatCurrency(listing.budgetMax || 0)}
                     </div>
                   </div>
 
@@ -196,8 +301,7 @@ export default function BrandCampaignDetailPage() {
                       Influencers
                     </div>
                     <div className="text-lg md:text-xl font-bold gradient-text">
-                      {campaign.accepted_influencers.length}/
-                      {campaign.max_influencers}
+                      {listing.filledSlots}/{listing.totalSlots}
                     </div>
                   </div>
 
@@ -206,7 +310,7 @@ export default function BrandCampaignDetailPage() {
                       Applicants
                     </div>
                     <div className="text-lg md:text-xl font-bold gradient-text">
-                      {campaign.applied_influencers.length}
+                      {applications.length}
                     </div>
                   </div>
 
@@ -215,12 +319,12 @@ export default function BrandCampaignDetailPage() {
                       Deadline
                     </div>
                     <div className="text-lg md:text-xl font-bold gradient-text">
-                      {new Date(
-                        campaign.application_deadline,
-                      ).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {listing.applicationDeadline
+                        ? new Date(listing.applicationDeadline).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "N/A"}
                     </div>
                   </div>
                 </div>
@@ -228,18 +332,18 @@ export default function BrandCampaignDetailPage() {
             </Card>
           </motion.div>
 
-          {/* Tabs - Mobile Scrollable */}
+          {/* Tabs */}
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
               {[
                 { value: "overview" as const, label: "Overview" },
                 {
                   value: "applicants" as const,
-                  label: `Applicants (${appliedInfluencers.length})`,
+                  label: `Applicants (${pendingApplications.length})`,
                 },
                 {
                   value: "accepted" as const,
-                  label: `Accepted (${acceptedInfluencers.length})`,
+                  label: `Accepted (${acceptedCollaborations.length})`,
                 },
                 { value: "performance" as const, label: "Performance" },
               ].map((tab) => (
@@ -273,13 +377,15 @@ export default function BrandCampaignDetailPage() {
                   </CardHeader>
                   <CardContent className="space-y-3 sm:space-y-4">
                     <div>
-                      <div className="text-sm font-medium mb-2">Goals</div>
+                      <div className="text-sm font-medium mb-2">Niches</div>
                       <div className="flex flex-wrap gap-2">
-                        {campaign.goals.map((goal) => (
-                          <Badge key={goal} variant="outline">
-                            {goal}
-                          </Badge>
-                        ))}
+                        {listing.targetNiches.length > 0
+                          ? listing.targetNiches.map((niche) => (
+                              <Badge key={niche} variant="outline">
+                                {niche}
+                              </Badge>
+                            ))
+                          : <span className="text-sm text-[rgb(var(--muted))]">No specific niches</span>}
                       </div>
                     </div>
 
@@ -288,71 +394,49 @@ export default function BrandCampaignDetailPage() {
                         Target Audience
                       </div>
                       <div className="space-y-2 text-sm text-[rgb(var(--muted))]">
-                        <div>
-                          Age: {campaign.target_audience.age_range.join(", ")}
-                        </div>
-                        <div>
-                          Gender: {campaign.target_audience.gender.join(", ")}
-                        </div>
-                        <div>
-                          Locations:{" "}
-                          {campaign.target_audience.locations
-                            .slice(0, 3)
-                            .join(", ")}
-                          {campaign.target_audience.locations.length > 3 &&
-                            " ..."}
-                        </div>
+                        {listing.targetAgeRange && (
+                          <div>Age: {listing.targetAgeRange}</div>
+                        )}
+                        {listing.targetGender && (
+                          <div>Gender: {listing.targetGender}</div>
+                        )}
+                        {listing.targetLocations.length > 0 && (
+                          <div>
+                            Locations: {listing.targetLocations.slice(0, 3).join(", ")}
+                            {listing.targetLocations.length > 3 && " ..."}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div>
-                      <div className="text-sm font-medium mb-2">
-                        Requirements
+                    {requirementsList.length > 0 && (
+                      <div>
+                        <div className="text-sm font-medium mb-2">
+                          Requirements
+                        </div>
+                        <div className="space-y-2 text-sm text-[rgb(var(--muted))]">
+                          {requirementsList.map((req, idx) => (
+                            <div key={idx}>{req}</div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="space-y-2 text-sm text-[rgb(var(--muted))]">
-                        <div>
-                          Min Followers:{" "}
-                          {formatCompactNumber(
-                            campaign.requirements.min_followers,
+                    )}
+
+                    {(listing.minFollowers || listing.maxFollowers) && (
+                      <div>
+                        <div className="text-sm font-medium mb-2">
+                          Follower Requirements
+                        </div>
+                        <div className="space-y-2 text-sm text-[rgb(var(--muted))]">
+                          {listing.minFollowers && (
+                            <div>Min Followers: {formatCompactNumber(listing.minFollowers)}</div>
+                          )}
+                          {listing.maxFollowers && (
+                            <div>Max Followers: {formatCompactNumber(listing.maxFollowers)}</div>
                           )}
                         </div>
-                        <div>
-                          Min Engagement:{" "}
-                          {campaign.requirements.min_engagement_rate}%
-                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Deliverables */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base sm:text-lg">Deliverables</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 sm:space-y-3">
-                      {campaign.requirements.deliverables.map(
-                        (deliverable, index) => (
-                          <div
-                            key={index}
-                            className="flex gap-3 p-3 rounded-lg bg-[rgb(var(--surface))]"
-                          >
-                            <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white font-bold text-sm">
-                              {deliverable.quantity}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-sm mb-1">
-                                {deliverable.type}
-                              </h4>
-                              <p className="text-xs text-[rgb(var(--muted))]">
-                                {deliverable.description}
-                              </p>
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -362,19 +446,19 @@ export default function BrandCampaignDetailPage() {
                     <CardTitle className="text-base sm:text-lg">Timeline</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 sm:space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-5 w-5 text-[rgb(var(--muted))]" />
-                      <div>
-                        <div className="text-sm text-[rgb(var(--muted))]">
-                          Application Deadline
-                        </div>
-                        <div className="font-semibold">
-                          {new Date(
-                            campaign.application_deadline,
-                          ).toLocaleDateString()}
+                    {listing.applicationDeadline && (
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-[rgb(var(--muted))]" />
+                        <div>
+                          <div className="text-sm text-[rgb(var(--muted))]">
+                            Application Deadline
+                          </div>
+                          <div className="font-semibold">
+                            {new Date(listing.applicationDeadline).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                     <div className="flex items-center gap-3">
                       <Calendar className="h-5 w-5 text-[rgb(var(--muted))]" />
                       <div>
@@ -382,26 +466,20 @@ export default function BrandCampaignDetailPage() {
                           Campaign Period
                         </div>
                         <div className="font-semibold">
-                          {new Date(
-                            campaign.campaign_start_date,
-                          ).toLocaleDateString()}{" "}
+                          {new Date(listing.campaign.startDate).toLocaleDateString()}{" "}
                           -{" "}
-                          {new Date(
-                            campaign.campaign_end_date,
-                          ).toLocaleDateString()}
+                          {new Date(listing.campaign.endDate).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Clock className="h-5 w-5 text-[rgb(var(--muted))]" />
+                      <DollarSign className="h-5 w-5 text-[rgb(var(--muted))]" />
                       <div>
                         <div className="text-sm text-[rgb(var(--muted))]">
-                          Content Due
+                          Compensation
                         </div>
                         <div className="font-semibold">
-                          {new Date(
-                            campaign.content_due_date,
-                          ).toLocaleDateString()}
+                          {listing.compensationType.charAt(0) + listing.compensationType.slice(1).toLowerCase()}
                         </div>
                       </div>
                     </div>
@@ -421,13 +499,13 @@ export default function BrandCampaignDetailPage() {
                       {spotsRemaining} spots
                     </div>
                     <div className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4">
-                      remaining out of {campaign.max_influencers}
+                      remaining out of {listing.totalSlots}
                     </div>
                     <div className="h-2 bg-[rgb(var(--surface))] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] rounded-full transition-all"
                         style={{
-                          width: `${(campaign.accepted_influencers.length / campaign.max_influencers) * 100}%`,
+                          width: `${listing.totalSlots > 0 ? (listing.filledSlots / listing.totalSlots) * 100 : 0}%`,
                         }}
                       />
                     </div>
@@ -439,7 +517,7 @@ export default function BrandCampaignDetailPage() {
             {/* Applicants Tab */}
             {activeTab === "applicants" && (
               <motion.div variants={staggerItem}>
-                {appliedInfluencers.length === 0 ? (
+                {pendingApplications.length === 0 ? (
                   <Card className="text-center py-16">
                     <CardContent>
                       <Users className="h-16 w-16 text-[rgb(var(--muted))] mx-auto mb-4" />
@@ -453,48 +531,62 @@ export default function BrandCampaignDetailPage() {
                   </Card>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-                    {appliedInfluencers.map((influencer) => (
+                    {pendingApplications.map((application) => (
                       <Card
-                        key={influencer.id}
+                        key={application.id}
                         className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all"
                       >
                         <CardContent className="p-4 md:p-6">
                           <div className="flex flex-col md:flex-row gap-4">
                             <Avatar className="h-16 w-16 shrink-0">
-                              <img
-                                src={influencer.avatar}
-                                alt={influencer.fullName}
-                              />
+                              {application.influencer.avatar ? (
+                                <img
+                                  src={application.influencer.avatar}
+                                  alt={application.influencer.fullName}
+                                />
+                              ) : (
+                                <Users className="h-8 w-8" />
+                              )}
                             </Avatar>
 
                             <div className="flex-1 min-w-0">
                               <h3 className="text-lg font-bold mb-1">
-                                {influencer.fullName}
+                                {application.influencer.fullName}
                               </h3>
                               <p className="text-sm text-[rgb(var(--muted))] mb-3 line-clamp-2">
-                                {influencer.bio}
+                                {application.influencer.bio || "No bio available"}
                               </p>
+
+                              {/* Cover letter excerpt */}
+                              {application.coverLetter && (
+                                <div className="mb-3 p-2 rounded bg-[rgb(var(--surface))] text-sm text-[rgb(var(--muted))] line-clamp-2">
+                                  "{application.coverLetter}"
+                                </div>
+                              )}
 
                               {/* Stats */}
                               <div className="grid grid-cols-2 gap-3 mb-4">
-                                {influencer.platforms
-                                  .slice(0, 2)
+                                {application.influencer.platforms
+                                  ?.slice(0, 2)
                                   .map((platform) => (
-                                    <div
-                                      key={platform?.platform}
-                                      className="text-sm"
-                                    >
+                                    <div key={platform.platform} className="text-sm">
                                       <div className="text-xs text-[rgb(var(--muted))]">
-                                        {platform.platform}
+                                        {platform.platform.charAt(0) + platform.platform.slice(1).toLowerCase()}
                                       </div>
                                       <div className="font-semibold">
-                                        {formatCompactNumber(
-                                          platform.followers,
-                                        )}
+                                        {formatCompactNumber(platform.followers)}
                                       </div>
                                     </div>
                                   ))}
                               </div>
+
+                              {/* Proposed rate */}
+                              {application.proposedRate && (
+                                <div className="text-sm mb-3">
+                                  <span className="text-[rgb(var(--muted))]">Proposed rate: </span>
+                                  <span className="font-semibold">{formatCurrency(application.proposedRate)}</span>
+                                </div>
+                              )}
 
                               {/* Actions */}
                               <div className="flex gap-2">
@@ -503,7 +595,7 @@ export default function BrandCampaignDetailPage() {
                                   size="sm"
                                   className="flex-1"
                                   onClick={() =>
-                                    handleAcceptInfluencer(influencer.id)
+                                    handleAcceptApplication(application.id, application.influencer.id)
                                   }
                                   disabled={spotsRemaining === 0}
                                 >
@@ -511,7 +603,7 @@ export default function BrandCampaignDetailPage() {
                                   Accept
                                 </Button>
                                 <Link
-                                  href={`/brand/discover/${influencer.id}`}
+                                  href={`/brand/discover/${application.influencer.id}`}
                                   className="flex-1"
                                 >
                                   <Button
@@ -537,7 +629,7 @@ export default function BrandCampaignDetailPage() {
             {/* Accepted Tab */}
             {activeTab === "accepted" && (
               <motion.div variants={staggerItem}>
-                {acceptedInfluencers.length === 0 ? (
+                {acceptedCollaborations.length === 0 ? (
                   <Card className="text-center py-16">
                     <CardContent>
                       <CheckCircle2 className="h-16 w-16 text-[rgb(var(--muted))] mx-auto mb-4" />
@@ -551,46 +643,70 @@ export default function BrandCampaignDetailPage() {
                   </Card>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-                    {acceptedInfluencers.map((influencer) => (
+                    {acceptedCollaborations.map((collab) => (
                       <Card
-                        key={influencer.id}
+                        key={collab.id}
                         className="border-2 border-green-500/20 bg-green-500/5"
                       >
                         <CardContent className="p-4 md:p-6">
                           <div className="flex flex-col items-center text-center">
                             <Avatar className="h-20 w-20 mb-4">
-                              <img
-                                src={influencer.avatar}
-                                alt={influencer.fullName}
-                              />
+                              {collab.influencer.avatar ? (
+                                <img
+                                  src={collab.influencer.avatar}
+                                  alt={collab.influencer.fullName}
+                                />
+                              ) : (
+                                <Users className="h-10 w-10" />
+                              )}
                             </Avatar>
 
                             <h3 className="text-lg font-bold mb-1">
-                              {influencer.fullName}
+                              {collab.influencer.fullName}
                             </h3>
-                            <div className="flex items-center gap-1 mb-3">
-                              <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                              <span className="text-sm font-medium">
-                                {influencer.rating}
-                              </span>
-                            </div>
+                            {collab.influencer.rating && (
+                              <div className="flex items-center gap-1 mb-3">
+                                <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                                <span className="text-sm font-medium">
+                                  {Number(collab.influencer.rating).toFixed(1)}
+                                </span>
+                              </div>
+                            )}
 
                             <div className="w-full space-y-2 mb-4">
-                              {influencer.platforms
-                                .slice(0, 2)
+                              {collab.influencer.platforms
+                                ?.slice(0, 2)
                                 .map((platform) => (
                                   <div
-                                    key={platform?.platform}
+                                    key={platform.platform}
                                     className="flex justify-between text-sm"
                                   >
                                     <span className="text-[rgb(var(--muted))]">
-                                      {platform.platform}
+                                      {platform.platform.charAt(0) + platform.platform.slice(1).toLowerCase()}
                                     </span>
                                     <span className="font-semibold">
                                       {formatCompactNumber(platform.followers)}
                                     </span>
                                   </div>
                                 ))}
+                            </div>
+
+                            <div className="text-sm mb-3">
+                              <Badge
+                                variant={
+                                  collab.status === "IN_PROGRESS"
+                                    ? "success"
+                                    : collab.status === "COMPLETED"
+                                      ? "outline"
+                                      : "default"
+                                }
+                              >
+                                {collab.status === "IN_PROGRESS"
+                                  ? "In Progress"
+                                  : collab.status === "COMPLETED"
+                                    ? "Completed"
+                                    : "Accepted"}
+                              </Badge>
                             </div>
 
                             <div className="flex gap-2 w-full">
@@ -602,7 +718,7 @@ export default function BrandCampaignDetailPage() {
                                 <Mail className="h-4 w-4" />
                               </Button>
                               <Link
-                                href={`/brand/discover/${influencer.id}`}
+                                href={`/brand/discover/${collab.influencer.id}`}
                                 className="flex-1"
                               >
                                 <Button
@@ -626,76 +742,18 @@ export default function BrandCampaignDetailPage() {
             {/* Performance Tab */}
             {activeTab === "performance" && (
               <motion.div variants={staggerItem}>
-                {campaign.performance ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                    <Card className="border-2">
-                      <CardContent className="p-4 sm:p-6">
-                        <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 mb-3 sm:mb-4" />
-                        <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
-                          {formatCompactNumber(
-                            campaign.performance.total_reach,
-                          )}
-                        </div>
-                        <div className="text-sm text-[rgb(var(--muted))]">
-                          Total Reach
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-2">
-                      <CardContent className="p-4 sm:p-6">
-                        <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 mb-3 sm:mb-4" />
-                        <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
-                          {formatCompactNumber(
-                            campaign.performance.total_engagement,
-                          )}
-                        </div>
-                        <div className="text-sm text-[rgb(var(--muted))]">
-                          Total Engagement
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-2">
-                      <CardContent className="p-4 sm:p-6">
-                        <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 mb-3 sm:mb-4" />
-                        <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
-                          {formatCompactNumber(
-                            campaign.performance.total_conversions,
-                          )}
-                        </div>
-                        <div className="text-sm text-[rgb(var(--muted))]">
-                          Conversions
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-2 border-green-500/20 bg-green-500/5">
-                      <CardContent className="p-4 sm:p-6">
-                        <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 mb-3 sm:mb-4" />
-                        <div className="text-2xl sm:text-3xl font-bold text-green-500 mb-2">
-                          {campaign.performance.roi}%
-                        </div>
-                        <div className="text-sm text-[rgb(var(--muted))]">
-                          ROI
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ) : (
-                  <Card className="text-center py-16">
-                    <CardContent>
-                      <TrendingUp className="h-16 w-16 text-[rgb(var(--muted))] mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold mb-2">
-                        No performance data yet
-                      </h3>
-                      <p className="text-[rgb(var(--muted))]">
-                        Performance metrics will appear once the campaign is
-                        active
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card className="text-center py-16">
+                  <CardContent>
+                    <TrendingUp className="h-16 w-16 text-[rgb(var(--muted))] mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">
+                      No performance data yet
+                    </h3>
+                    <p className="text-[rgb(var(--muted))]">
+                      Performance metrics will appear once the campaign is
+                      active and influencers start delivering content
+                    </p>
+                  </CardContent>
+                </Card>
               </motion.div>
             )}
           </div>

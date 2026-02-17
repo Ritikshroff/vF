@@ -4,49 +4,80 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
-  Filter,
   CheckCircle2,
   XCircle,
   Clock,
   Eye,
   MessageCircle,
-  ThumbsUp,
-  ThumbsDown,
-  Download,
   ExternalLink,
   Calendar,
   User,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
-import { fetchInfluencerContent } from "@/services/content";
-import { fetchBrandCampaigns } from "@/services/campaigns";
-import { getBrandByUserId, getAllBrands } from "@/mock-data/brands";
-import { getAllInfluencers } from "@/mock-data/influencers";
-import type { ContentItem } from "@/mock-data/content";
-import { formatCompactNumber } from "@/lib/utils";
+import { api } from "@/lib/api-client";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
-// Extended content type with approval status
-type ReviewableContent = ContentItem & {
-  influencer_name?: string;
-  influencer_avatar?: string;
-  review_status?: "pending" | "approved" | "rejected" | "revision_requested";
+type DeliverableVersion = {
+  id: string;
+  version: number;
+  contentUrl: string | null;
+  notes: string | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  reviewNotes: string | null;
+};
+
+type Deliverable = {
+  id: string;
+  type: string;
+  platform: string;
+  description: string | null;
+  status: string;
+  quantity: number;
+  dueDate: string | null;
+  versions: DeliverableVersion[];
+  milestone: { id: string; title: string } | null;
+};
+
+type Collaboration = {
+  id: string;
+  status: string;
+  campaign: {
+    id: string;
+    title: string;
+    category: string;
+  };
+  influencer: {
+    id: string;
+    fullName: string;
+    avatar: string | null;
+  };
+};
+
+type ReviewableContent = Deliverable & {
+  collaborationId: string;
+  campaignTitle: string;
+  campaignId: string;
+  influencerName: string;
+  influencerAvatar: string | null;
 };
 
 export default function BrandContentReviewPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState<ReviewableContent[]>([]);
-  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCampaign, setFilterCampaign] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("pending");
+  const [filterStatus, setFilterStatus] = useState<string>("SUBMITTED");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadContent();
@@ -56,137 +87,135 @@ export default function BrandContentReviewPage() {
     if (!user) return;
 
     try {
-      let brand = getBrandByUserId(user.id);
+      // Get all brand collaborations
+      const collabRes = await api.get<{ data: Collaboration[]; total: number }>("/collaborations");
+      if (collabRes.error) throw new Error(collabRes.error);
 
-      // Fallback: use first brand for demo
-      if (!brand) {
-        console.warn(
-          `No brand found for user ID: ${user.id}, using fallback brand`,
-        );
-        brand = getAllBrands()[0];
-      }
+      const collaborations: Collaboration[] = collabRes.data?.data || [];
 
-      if (brand) {
-        // Get brand's campaigns
-        const campaignsData = await fetchBrandCampaigns(brand.id);
-        setCampaigns(campaignsData);
+      // Extract unique campaigns
+      const campaignMap = new Map<string, string>();
+      collaborations.forEach((c) => {
+        campaignMap.set(c.campaign.id, c.campaign.title);
+      });
+      setCampaigns(
+        Array.from(campaignMap.entries()).map(([id, title]) => ({ id, title }))
+      );
 
-        // Get all influencers
-        const allInfluencers = getAllInfluencers();
+      // Fetch deliverables for each collaboration
+      const allContent: ReviewableContent[] = [];
 
-        // Get content from all accepted influencers across all campaigns
-        const allContent: ReviewableContent[] = [];
+      const deliverableResults = await Promise.allSettled(
+        collaborations.map((collab) =>
+          api.get<any>(`/collaborations/${collab.id}/deliverables`)
+        )
+      );
 
-        for (const campaign of campaignsData) {
-          for (const infId of campaign.accepted_influencers) {
-            const influencer = allInfluencers.find((i) => i.id === infId);
-            if (influencer) {
-              const infContent = await fetchInfluencerContent(infId, {
-                campaign_id: campaign.id,
-                status: "published",
+      collaborations.forEach((collab, index) => {
+        const result = deliverableResults[index];
+        if (result.status === "fulfilled" && !result.value.error) {
+          const deliverables: Deliverable[] = result.value.data?.data || result.value.data || [];
+          if (Array.isArray(deliverables)) {
+            deliverables.forEach((del) => {
+              allContent.push({
+                ...del,
+                collaborationId: collab.id,
+                campaignTitle: collab.campaign.title,
+                campaignId: collab.campaign.id,
+                influencerName: collab.influencer.fullName,
+                influencerAvatar: collab.influencer.avatar,
               });
-
-              // Add influencer info and mock review status
-              const enrichedContent = infContent.map((c) => ({
-                ...c,
-                influencer_name: influencer.fullName,
-                influencer_avatar: influencer.avatar,
-                review_status: (Math.random() > 0.7
-                  ? "pending"
-                  : Math.random() > 0.5
-                    ? "approved"
-                    : "revision_requested") as any,
-              }));
-
-              allContent.push(...enrichedContent);
-            }
+            });
           }
         }
+      });
 
-        setContent(allContent);
-      }
-    } catch (error) {
-      console.error("Error loading content:", error);
+      setContent(allContent);
+    } catch (err) {
+      console.error("Error loading content:", err);
+      setError("Failed to load content. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApprove = (contentId: string) => {
-    setContent(
-      content.map((c) =>
-        c.id === contentId ? { ...c, review_status: "approved" as const } : c,
-      ),
-    );
-  };
+  const handleReview = async (
+    collaborationId: string,
+    deliverableId: string,
+    action: "APPROVED" | "REJECTED" | "REVISION_REQUESTED"
+  ) => {
+    try {
+      const res = await api.post<any>(
+        `/collaborations/${collaborationId}/deliverables/${deliverableId}/review`,
+        { status: action }
+      );
+      if (res.error) throw new Error(res.error);
 
-  const handleReject = (contentId: string) => {
-    setContent(
-      content.map((c) =>
-        c.id === contentId ? { ...c, review_status: "rejected" as const } : c,
-      ),
-    );
-  };
-
-  const handleRequestRevision = (contentId: string) => {
-    setContent(
-      content.map((c) =>
-        c.id === contentId
-          ? { ...c, review_status: "revision_requested" as const }
-          : c,
-      ),
-    );
+      setContent((prev) =>
+        prev.map((c) =>
+          c.id === deliverableId ? { ...c, status: action } : c
+        )
+      );
+    } catch (err) {
+      console.error("Error reviewing deliverable:", err);
+      setContent((prev) =>
+        prev.map((c) =>
+          c.id === deliverableId ? { ...c, status: action } : c
+        )
+      );
+    }
   };
 
   const filteredContent = content.filter((item) => {
     const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.influencer_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      (item.type?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (item.influencerName?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (item.description?.toLowerCase() || "").includes(searchQuery.toLowerCase());
 
     const matchesCampaign =
-      filterCampaign === "all" || item.campaign_id === filterCampaign;
+      filterCampaign === "all" || item.campaignId === filterCampaign;
 
     const matchesStatus =
-      filterStatus === "all" || item.review_status === filterStatus;
+      filterStatus === "all" || item.status === filterStatus;
 
     return matchesSearch && matchesCampaign && matchesStatus;
   });
 
   const stats = {
     total: content.length,
-    pending: content.filter((c) => c.review_status === "pending").length,
-    approved: content.filter((c) => c.review_status === "approved").length,
-    revision: content.filter((c) => c.review_status === "revision_requested")
-      .length,
+    pending: content.filter((c) => c.status === "SUBMITTED").length,
+    approved: content.filter((c) => c.status === "APPROVED").length,
+    revision: content.filter((c) => c.status === "REVISION_REQUESTED").length,
   };
 
-  const getStatusColor = (status?: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "approved":
+      case "APPROVED":
         return "success";
-      case "rejected":
+      case "REJECTED":
         return "destructive";
-      case "revision_requested":
+      case "REVISION_REQUESTED":
         return "warning";
-      case "pending":
+      case "SUBMITTED":
         return "default";
       default:
         return "default";
     }
   };
 
-  const getStatusIcon = (status?: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case "approved":
+      case "APPROVED":
         return CheckCircle2;
-      case "rejected":
+      case "REJECTED":
         return XCircle;
-      case "revision_requested":
-      case "pending":
-        return Clock;
       default:
         return Clock;
     }
+  };
+
+  const formatStatus = (status: string) => {
+    return status.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
   };
 
   if (loading) {
@@ -200,6 +229,21 @@ export default function BrandContentReviewPage() {
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-8">
+        <Card className="text-center py-16">
+          <CardContent>
+            <AlertCircle className="h-16 w-16 mx-auto mb-4 text-red-500" />
+            <h3 className="text-xl font-semibold mb-2">Error</h3>
+            <p className="text-[rgb(var(--muted))] mb-4">{error}</p>
+            <Button onClick={loadContent}>Try Again</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -222,7 +266,7 @@ export default function BrandContentReviewPage() {
             </p>
           </motion.div>
 
-          {/* Stats Grid - Mobile 2 cols */}
+          {/* Stats Grid */}
           <motion.div
             variants={staggerItem}
             className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8"
@@ -233,7 +277,7 @@ export default function BrandContentReviewPage() {
                   {stats.total}
                 </div>
                 <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
-                  Total Submissions
+                  Total Deliverables
                 </div>
               </CardContent>
             </Card>
@@ -286,13 +330,12 @@ export default function BrandContentReviewPage() {
               </div>
             </div>
 
-            {/* Filter Tabs - Mobile Scrollable */}
+            {/* Filter Tabs */}
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
-              {/* Status Filters */}
               {[
-                { value: "pending", label: "Pending Review" },
-                { value: "approved", label: "Approved" },
-                { value: "revision_requested", label: "Needs Revision" },
+                { value: "SUBMITTED", label: "Pending Review" },
+                { value: "APPROVED", label: "Approved" },
+                { value: "REVISION_REQUESTED", label: "Needs Revision" },
                 { value: "all", label: "All" },
               ].map((status) => (
                 <button
@@ -310,7 +353,6 @@ export default function BrandContentReviewPage() {
 
               <div className="h-8 w-px bg-[rgb(var(--border))]" />
 
-              {/* Campaign Filters */}
               <button
                 onClick={() => setFilterCampaign("all")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
@@ -331,7 +373,9 @@ export default function BrandContentReviewPage() {
                       : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
                   }`}
                 >
-                  {campaign.title.slice(0, 20)}...
+                  {campaign.title.length > 20
+                    ? campaign.title.slice(0, 20) + "..."
+                    : campaign.title}
                 </button>
               ))}
             </div>
@@ -357,7 +401,8 @@ export default function BrandContentReviewPage() {
           ) : (
             <div className="space-y-3 sm:space-y-4 lg:space-y-6">
               {filteredContent.map((item) => {
-                const StatusIcon = getStatusIcon(item.review_status);
+                const StatusIcon = getStatusIcon(item.status);
+                const latestVersion = item.versions?.[0];
 
                 return (
                   <motion.div
@@ -368,35 +413,41 @@ export default function BrandContentReviewPage() {
                     <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all">
                       <CardContent className="p-3 sm:p-4 lg:p-6">
                         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-                          {/* Thumbnail */}
-                          <div className="relative w-full lg:w-80 aspect-video lg:aspect-square shrink-0 rounded-lg overflow-hidden bg-[rgb(var(--surface))]">
-                            <img
-                              src={item.thumbnail}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                            />
+                          {/* Thumbnail / Preview */}
+                          <div className="relative w-full lg:w-80 aspect-video lg:aspect-square shrink-0 rounded-lg overflow-hidden bg-[rgb(var(--surface))] flex items-center justify-center">
+                            {latestVersion?.contentUrl ? (
+                              <img
+                                src={latestVersion.contentUrl}
+                                alt={item.type}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="text-center p-4">
+                                <Eye className="h-8 w-8 mx-auto mb-2 text-[rgb(var(--muted))]" />
+                                <p className="text-sm text-[rgb(var(--muted))]">
+                                  {item.status === "PENDING"
+                                    ? "Awaiting submission"
+                                    : "No preview available"}
+                                </p>
+                              </div>
+                            )}
                           </div>
 
                           {/* Content Info */}
                           <div className="flex-1 min-w-0">
-                            {/* Header */}
                             <div className="flex items-start justify-between gap-3 mb-4">
                               <div className="flex-1 min-w-0">
                                 <h3 className="text-lg md:text-xl font-bold mb-2 line-clamp-2">
-                                  {item.title}
+                                  {item.type} - {item.platform}
                                 </h3>
                                 <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-3">
-                                  {item.description}
+                                  {item.description || `${item.type} deliverable for ${item.campaignTitle}`}
                                 </p>
                               </div>
 
-                              <Badge
-                                variant={
-                                  getStatusColor(item.review_status) as any
-                                }
-                              >
+                              <Badge variant={getStatusColor(item.status) as any}>
                                 <StatusIcon className="h-3 w-3 mr-1" />
-                                {item.review_status?.replace("_", " ")}
+                                {formatStatus(item.status)}
                               </Badge>
                             </div>
 
@@ -404,36 +455,38 @@ export default function BrandContentReviewPage() {
                             <div className="flex flex-wrap gap-4 mb-4 pb-4 border-b border-[rgb(var(--border))]">
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
-                                  <img
-                                    src={item.influencer_avatar}
-                                    alt={item.influencer_name}
-                                  />
+                                  {item.influencerAvatar ? (
+                                    <img
+                                      src={item.influencerAvatar}
+                                      alt={item.influencerName}
+                                    />
+                                  ) : (
+                                    <User className="h-4 w-4" />
+                                  )}
                                 </Avatar>
                                 <div>
                                   <div className="text-xs text-[rgb(var(--muted))]">
                                     Influencer
                                   </div>
                                   <div className="text-sm font-semibold">
-                                    {item.influencer_name}
+                                    {item.influencerName}
                                   </div>
                                 </div>
                               </div>
 
-                              {item.campaign_name && (
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 rounded-lg bg-[rgb(var(--surface))]">
-                                    <Calendar className="h-4 w-4" />
+                              <div className="flex items-center gap-2">
+                                <div className="p-2 rounded-lg bg-[rgb(var(--surface))]">
+                                  <Calendar className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <div className="text-xs text-[rgb(var(--muted))]">
+                                    Campaign
                                   </div>
-                                  <div>
-                                    <div className="text-xs text-[rgb(var(--muted))]">
-                                      Campaign
-                                    </div>
-                                    <div className="text-sm font-semibold">
-                                      {item.campaign_name}
-                                    </div>
+                                  <div className="text-sm font-semibold">
+                                    {item.campaignTitle}
                                   </div>
                                 </div>
-                              )}
+                              </div>
 
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline">{item.platform}</Badge>
@@ -441,57 +494,62 @@ export default function BrandContentReviewPage() {
                               </div>
                             </div>
 
-                            {/* Metrics */}
-                            {item.metrics && (
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                            {/* Version Info */}
+                            {item.versions.length > 0 && (
+                              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
                                 <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                                  <Eye className="h-5 w-5 mx-auto mb-2 text-[rgb(var(--muted))]" />
                                   <div className="text-lg font-bold">
-                                    {formatCompactNumber(item.metrics.views)}
+                                    v{item.versions[0]?.version || 1}
                                   </div>
                                   <div className="text-xs text-[rgb(var(--muted))]">
-                                    Views
+                                    Latest Version
                                   </div>
                                 </div>
                                 <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                                  <ThumbsUp className="h-5 w-5 mx-auto mb-2 text-[rgb(var(--muted))]" />
                                   <div className="text-lg font-bold">
-                                    {formatCompactNumber(item.metrics.likes)}
+                                    {item.versions.length}
                                   </div>
                                   <div className="text-xs text-[rgb(var(--muted))]">
-                                    Likes
+                                    Total Versions
                                   </div>
                                 </div>
-                                <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                                  <MessageCircle className="h-5 w-5 mx-auto mb-2 text-[rgb(var(--muted))]" />
-                                  <div className="text-lg font-bold">
-                                    {formatCompactNumber(item.metrics.comments)}
+                                {item.dueDate && (
+                                  <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
+                                    <div className="text-lg font-bold">
+                                      {new Date(item.dueDate).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </div>
+                                    <div className="text-xs text-[rgb(var(--muted))]">
+                                      Due Date
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-[rgb(var(--muted))]">
-                                    Comments
-                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Submission notes */}
+                            {latestVersion?.notes && (
+                              <div className="mb-3 p-3 rounded-lg bg-[rgb(var(--surface))]">
+                                <div className="text-xs text-[rgb(var(--muted))] mb-1">
+                                  Submission Notes
                                 </div>
-                                <div className="text-center p-3 rounded-lg bg-[rgb(var(--surface))]">
-                                  <CheckCircle2 className="h-5 w-5 mx-auto mb-2 text-[rgb(var(--muted))]" />
-                                  <div className="text-lg font-bold">
-                                    {item.metrics.engagement_rate.toFixed(1)}%
-                                  </div>
-                                  <div className="text-xs text-[rgb(var(--muted))]">
-                                    Engagement
-                                  </div>
-                                </div>
+                                <p className="text-sm">{latestVersion.notes}</p>
                               </div>
                             )}
 
                             {/* Actions */}
                             <div className="flex flex-wrap gap-2">
-                              {item.review_status === "pending" && (
+                              {item.status === "SUBMITTED" && (
                                 <>
                                   <Button
                                     variant="secondary"
                                     size="sm"
                                     className="bg-green-500 hover:bg-green-600"
-                                    onClick={() => handleApprove(item.id)}
+                                    onClick={() =>
+                                      handleReview(item.collaborationId, item.id, "APPROVED")
+                                    }
                                   >
                                     <CheckCircle2 className="h-4 w-4 mr-1" />
                                     Approve
@@ -500,7 +558,7 @@ export default function BrandContentReviewPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
-                                      handleRequestRevision(item.id)
+                                      handleReview(item.collaborationId, item.id, "REVISION_REQUESTED")
                                     }
                                   >
                                     Request Revision
@@ -508,7 +566,9 @@ export default function BrandContentReviewPage() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleReject(item.id)}
+                                    onClick={() =>
+                                      handleReview(item.collaborationId, item.id, "REJECTED")
+                                    }
                                   >
                                     <XCircle className="h-4 w-4 mr-1" />
                                     Reject
@@ -516,23 +576,18 @@ export default function BrandContentReviewPage() {
                                 </>
                               )}
 
-                              {item.url && (
-                                <Button variant="outline" size="sm">
-                                  <a
-                                    href={item.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
+                              {latestVersion?.contentUrl && (
+                                <a
+                                  href={latestVersion.contentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button variant="outline" size="sm">
                                     <ExternalLink className="h-4 w-4 mr-1" />
                                     View Original
-                                  </a>
-                                </Button>
+                                  </Button>
+                                </a>
                               )}
-
-                              <Button variant="ghost" size="sm">
-                                <Download className="h-4 w-4 mr-1" />
-                                Download
-                              </Button>
 
                               <Link href="/brand/messages">
                                 <Button variant="ghost" size="sm">

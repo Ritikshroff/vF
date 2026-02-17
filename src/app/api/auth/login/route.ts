@@ -5,6 +5,7 @@ import { generateTokenPair } from '@/lib/auth/jwt';
 import { loginSchema } from '@/validators/auth.schema';
 import { errorHandler, AuthenticationError } from '@/middleware/error.middleware';
 import { setAuthCookies } from '@/lib/api/with-middleware';
+import { audit, getClientInfo } from '@/lib/audit';
 
 /**
  * POST /api/auth/login
@@ -25,12 +26,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    const clientInfo = getClientInfo(request);
+
     if (!user) {
+      audit({ action: 'auth.failed_login', ...clientInfo, metadata: { email, reason: 'user_not_found' } });
       throw new AuthenticationError('Invalid email or password');
     }
 
     // Check if account is active
     if (!user.isActive) {
+      audit({ action: 'auth.failed_login', userId: user.id, ...clientInfo, metadata: { reason: 'deactivated' } });
       throw new AuthenticationError('This account has been deactivated');
     }
 
@@ -38,6 +43,7 @@ export async function POST(request: NextRequest) {
     const isPasswordValid = await comparePassword(password, user.passwordHash);
 
     if (!isPasswordValid) {
+      audit({ action: 'auth.failed_login', userId: user.id, ...clientInfo, metadata: { reason: 'wrong_password' } });
       throw new AuthenticationError('Invalid email or password');
     }
 
@@ -89,6 +95,8 @@ export async function POST(request: NextRequest) {
 
     // Set HTTP-only cookies for tokens
     setAuthCookies(response, accessToken, refreshToken, rememberMe);
+
+    audit({ action: 'auth.login', userId: user.id, ...clientInfo });
 
     return response;
   } catch (error) {

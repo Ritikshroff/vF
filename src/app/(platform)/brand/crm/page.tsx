@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import {
   Users,
   Search,
@@ -10,190 +10,97 @@ import {
   MoreHorizontal,
   Star,
   Mail,
-  Phone,
-  Calendar,
   Tag,
   TrendingUp,
   MessageCircle,
   UserPlus,
-  Clock,
   CheckCircle2,
-  XCircle,
   BarChart3,
   List,
   Grid3X3,
-  ArrowUpDown,
   Activity,
   FileText,
+  Loader2,
 } from 'lucide-react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
-import { useAuth } from '@/contexts/auth-context'
-import { formatCompactNumber, formatDate, formatRelativeTime, getInitials } from '@/lib/utils'
+import { formatRelativeTime, getInitials } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-
-interface CRMContact {
-  id: string
-  name: string
-  username: string
-  email: string
-  avatar?: string
-  verified: boolean
-  status: 'active' | 'potential' | 'past' | 'blacklisted'
-  platforms: { name: string; followers: number; engagement: number }[]
-  totalFollowers: number
-  avgEngagement: number
-  categories: string[]
-  lastActivity: string
-  campaigns: number
-  rating: number
-  notes: number
-  tags: string[]
-}
-
-const MOCK_CONTACTS: CRMContact[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    username: 'sarahcreates',
-    email: 'sarah@email.com',
-    verified: true,
-    status: 'active',
-    platforms: [
-      { name: 'Instagram', followers: 245000, engagement: 4.8 },
-      { name: 'TikTok', followers: 180000, engagement: 6.2 },
-    ],
-    totalFollowers: 425000,
-    avgEngagement: 5.5,
-    categories: ['Fashion', 'Lifestyle'],
-    lastActivity: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    campaigns: 5,
-    rating: 5,
-    notes: 12,
-    tags: ['VIP', 'Long-term'],
-  },
-  {
-    id: '2',
-    name: 'Alex Rivera',
-    username: 'alexfitness',
-    email: 'alex@email.com',
-    verified: false,
-    status: 'active',
-    platforms: [
-      { name: 'Instagram', followers: 89000, engagement: 7.1 },
-      { name: 'YouTube', followers: 156000, engagement: 3.4 },
-    ],
-    totalFollowers: 245000,
-    avgEngagement: 5.25,
-    categories: ['Fitness', 'Health'],
-    lastActivity: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    campaigns: 3,
-    rating: 4,
-    notes: 8,
-    tags: ['Reliable'],
-  },
-  {
-    id: '3',
-    name: 'Mia Johnson',
-    username: 'miastyle',
-    email: 'mia@email.com',
-    verified: true,
-    status: 'potential',
-    platforms: [
-      { name: 'Instagram', followers: 520000, engagement: 3.9 },
-      { name: 'TikTok', followers: 890000, engagement: 5.8 },
-    ],
-    totalFollowers: 1410000,
-    avgEngagement: 4.85,
-    categories: ['Beauty', 'Fashion'],
-    lastActivity: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    campaigns: 0,
-    rating: 0,
-    notes: 3,
-    tags: ['High-priority', 'Outreach pending'],
-  },
-  {
-    id: '4',
-    name: 'James Park',
-    username: 'jamestech',
-    email: 'james@email.com',
-    verified: true,
-    status: 'past',
-    platforms: [
-      { name: 'YouTube', followers: 340000, engagement: 4.2 },
-      { name: 'Twitter', followers: 120000, engagement: 2.8 },
-    ],
-    totalFollowers: 460000,
-    avgEngagement: 3.5,
-    categories: ['Tech', 'Gaming'],
-    lastActivity: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    campaigns: 2,
-    rating: 3,
-    notes: 5,
-    tags: ['Re-engage'],
-  },
-  {
-    id: '5',
-    name: 'Emma Davis',
-    username: 'emmafoodie',
-    email: 'emma@email.com',
-    verified: false,
-    status: 'active',
-    platforms: [
-      { name: 'Instagram', followers: 67000, engagement: 8.3 },
-      { name: 'TikTok', followers: 145000, engagement: 9.1 },
-    ],
-    totalFollowers: 212000,
-    avgEngagement: 8.7,
-    categories: ['Food', 'Lifestyle'],
-    lastActivity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    campaigns: 4,
-    rating: 5,
-    notes: 15,
-    tags: ['Top performer', 'VIP'],
-  },
-]
-
-const RECENT_ACTIVITIES = [
-  { id: '1', contact: 'Sarah Chen', action: 'Completed campaign deliverables', time: '2h ago', type: 'success' },
-  { id: '2', contact: 'Emma Davis', action: 'Submitted content for review', time: '5h ago', type: 'info' },
-  { id: '3', contact: 'Alex Rivera', action: 'Contract signed', time: '1d ago', type: 'success' },
-  { id: '4', contact: 'Mia Johnson', action: 'Outreach email sent', time: '2d ago', type: 'default' },
-  { id: '5', contact: 'James Park', action: 'Campaign ended', time: '1w ago', type: 'warning' },
-]
+import { getCRMContacts, getCRMDashboard } from '@/services/api/crm'
 
 export default function CRMDashboardPage() {
+  const [contacts, setContacts] = useState<any[]>([])
+  const [activities, setActivities] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
-  const filteredContacts = MOCK_CONTACTS.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.categories.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))
-    const matchesStatus = statusFilter === 'all' || c.status === statusFilter
-    return matchesSearch && matchesStatus
+  useEffect(() => {
+    loadCRM()
+  }, [statusFilter])
+
+  const loadCRM = async () => {
+    try {
+      setLoading(true)
+      const params: Record<string, string> = {}
+      if (statusFilter !== 'all') params.status = statusFilter.toUpperCase()
+
+      const [contactsRes, dashboardRes] = await Promise.allSettled([
+        getCRMContacts(params),
+        getCRMDashboard(),
+      ])
+
+      if (contactsRes.status === 'fulfilled') {
+        const data = contactsRes.value
+        setContacts(Array.isArray(data) ? data : data?.data ?? [])
+      }
+      if (dashboardRes.status === 'fulfilled' && dashboardRes.value) {
+        setActivities(dashboardRes.value.recentActivities ?? [])
+      }
+    } catch (err) {
+      console.error('Failed to load CRM:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredContacts = contacts.filter(c => {
+    if (!searchQuery) return true
+    const name = c.influencer?.fullName || ''
+    const categories = c.influencer?.categories || []
+    return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      categories.some((cat: string) => cat.toLowerCase().includes(searchQuery.toLowerCase()))
   })
 
   const stats = {
-    total: MOCK_CONTACTS.length,
-    active: MOCK_CONTACTS.filter(c => c.status === 'active').length,
-    potential: MOCK_CONTACTS.filter(c => c.status === 'potential').length,
-    avgEngagement: (MOCK_CONTACTS.reduce((sum, c) => sum + c.avgEngagement, 0) / MOCK_CONTACTS.length).toFixed(1),
+    total: contacts.length,
+    active: contacts.filter(c => c.status === 'ACTIVE').length,
+    potential: contacts.filter(c => c.status === 'POTENTIAL').length,
+    avgRating: contacts.length > 0
+      ? (contacts.reduce((sum, c) => sum + (c.influencer?.rating || 0), 0) / contacts.length).toFixed(1)
+      : '0',
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'success'
-      case 'potential': return 'info'
-      case 'past': return 'warning'
-      case 'blacklisted': return 'error'
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE': return 'success'
+      case 'POTENTIAL': return 'info'
+      case 'PAST': return 'warning'
+      case 'BLACKLISTED': return 'error'
       default: return 'default'
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
+      </div>
+    )
   }
 
   return (
@@ -220,7 +127,7 @@ export default function CRMDashboardPage() {
               { label: 'Total Contacts', value: stats.total, icon: Users, color: 'text-[rgb(var(--brand-primary))]' },
               { label: 'Active Partners', value: stats.active, icon: CheckCircle2, color: 'text-[rgb(var(--success))]' },
               { label: 'In Pipeline', value: stats.potential, icon: TrendingUp, color: 'text-[rgb(var(--info))]' },
-              { label: 'Avg Engagement', value: `${stats.avgEngagement}%`, icon: BarChart3, color: 'text-[rgb(var(--warning))]' },
+              { label: 'Avg Rating', value: `${stats.avgRating}/5`, icon: BarChart3, color: 'text-[rgb(var(--warning))]' },
             ].map((stat, i) => (
               <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
                 <Card>
@@ -289,7 +196,9 @@ export default function CRMDashboardPage() {
               </motion.div>
 
               {/* Contacts List */}
-              {viewMode === 'list' ? (
+              {filteredContacts.length === 0 ? (
+                <div className="text-center py-12 text-[rgb(var(--muted))]">No contacts found.</div>
+              ) : viewMode === 'list' ? (
                 <motion.div variants={staggerItem} className="space-y-2 sm:space-y-3">
                   {filteredContacts.map((contact, index) => (
                     <motion.div
@@ -301,39 +210,39 @@ export default function CRMDashboardPage() {
                       <Card className="hover:border-[rgb(var(--brand-primary))]/30 transition-all cursor-pointer">
                         <CardContent className="p-3 sm:p-4">
                           <div className="flex items-center gap-4">
-                            <Avatar size="lg" fallback={getInitials(contact.name)} />
+                            <Avatar size="lg" src={contact.influencer?.avatar} fallback={getInitials(contact.influencer?.fullName || 'C')} />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-semibold truncate">{contact.name}</span>
-                                {contact.verified && (
-                                  <svg className="h-4 w-4 text-[rgb(var(--brand-primary))] shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                  </svg>
-                                )}
+                                <span className="font-semibold truncate">{contact.influencer?.fullName || 'Contact'}</span>
                                 <Badge variant={getStatusColor(contact.status) as any} className="text-[10px]">
-                                  {contact.status}
+                                  {(contact.status || 'unknown').toLowerCase()}
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-3 text-sm text-[rgb(var(--muted))]">
-                                <span>@{contact.username}</span>
-                                <span>{formatCompactNumber(contact.totalFollowers)} followers</span>
-                                <span>{contact.avgEngagement}% eng.</span>
-                              </div>
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {contact.tags.map(tag => (
-                                  <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-[rgb(var(--brand-primary))]/10 text-[rgb(var(--brand-primary))]">
-                                    {tag}
-                                  </span>
+                                {contact.influencer?.categories?.slice(0, 2).map((cat: string) => (
+                                  <span key={cat}>{cat}</span>
                                 ))}
+                                {contact.influencer?.rating > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <Star className="h-3 w-3 text-[rgb(var(--brand-primary))]" />
+                                    {contact.influencer.rating}/5
+                                  </span>
+                                )}
                               </div>
+                              {contact.customLabels?.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {contact.customLabels.map((tag: string) => (
+                                    <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-[rgb(var(--brand-primary))]/10 text-[rgb(var(--brand-primary))]">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                             <div className="hidden md:flex flex-col items-end gap-1 text-sm text-[rgb(var(--muted))]">
-                              <div className="flex items-center gap-1">
-                                <Star className="h-3 w-3 text-[rgb(var(--brand-primary))]" />
-                                {contact.rating > 0 ? contact.rating : '-'}/5
-                              </div>
-                              <div>{contact.campaigns} campaigns</div>
-                              <div className="text-xs">{formatRelativeTime(contact.lastActivity)}</div>
+                              <div>{contact._count?.notes || 0} notes</div>
+                              <div>{contact._count?.activities || 0} activities</div>
+                              <div className="text-xs">{formatRelativeTime(contact.updatedAt)}</div>
                             </div>
                             <div className="flex gap-1">
                               <button className="p-2 rounded-lg hover:bg-[rgb(var(--surface))] text-[rgb(var(--muted))] transition-colors">
@@ -364,35 +273,30 @@ export default function CRMDashboardPage() {
                       <Card className="hover:border-[rgb(var(--brand-primary))]/30 transition-all cursor-pointer">
                         <CardContent className="p-3 sm:p-4">
                           <div className="flex items-center gap-3 mb-3">
-                            <Avatar size="lg" fallback={getInitials(contact.name)} />
+                            <Avatar size="lg" src={contact.influencer?.avatar} fallback={getInitials(contact.influencer?.fullName || 'C')} />
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <span className="font-semibold">{contact.name}</span>
-                                {contact.verified && (
-                                  <svg className="h-3.5 w-3.5 text-[rgb(var(--brand-primary))]" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                  </svg>
-                                )}
+                                <span className="font-semibold">{contact.influencer?.fullName || 'Contact'}</span>
                               </div>
-                              <Badge variant={getStatusColor(contact.status) as any} className="text-[10px]">{contact.status}</Badge>
+                              <Badge variant={getStatusColor(contact.status) as any} className="text-[10px]">{(contact.status || 'unknown').toLowerCase()}</Badge>
                             </div>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-center mb-3">
                             <div className="p-2 rounded-lg bg-[rgb(var(--surface))]">
-                              <div className="font-bold text-sm">{formatCompactNumber(contact.totalFollowers)}</div>
-                              <div className="text-[10px] text-[rgb(var(--muted))]">Followers</div>
+                              <div className="font-bold text-sm">{contact.influencer?.rating || '-'}</div>
+                              <div className="text-[10px] text-[rgb(var(--muted))]">Rating</div>
                             </div>
                             <div className="p-2 rounded-lg bg-[rgb(var(--surface))]">
-                              <div className="font-bold text-sm">{contact.avgEngagement}%</div>
-                              <div className="text-[10px] text-[rgb(var(--muted))]">Engagement</div>
+                              <div className="font-bold text-sm">{contact._count?.notes || 0}</div>
+                              <div className="text-[10px] text-[rgb(var(--muted))]">Notes</div>
                             </div>
                             <div className="p-2 rounded-lg bg-[rgb(var(--surface))]">
-                              <div className="font-bold text-sm">{contact.campaigns}</div>
-                              <div className="text-[10px] text-[rgb(var(--muted))]">Campaigns</div>
+                              <div className="font-bold text-sm">{contact._count?.activities || 0}</div>
+                              <div className="text-[10px] text-[rgb(var(--muted))]">Activities</div>
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-1">
-                            {contact.categories.map(cat => (
+                            {(contact.influencer?.categories || []).map((cat: string) => (
                               <Badge key={cat} variant="outline" className="text-[10px]">{cat}</Badge>
                             ))}
                           </div>
@@ -416,23 +320,23 @@ export default function CRMDashboardPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {RECENT_ACTIVITIES.map(activity => (
-                      <div key={activity.id} className="flex items-start gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
-                          activity.type === 'success' ? 'bg-[rgb(var(--success))]' :
-                          activity.type === 'info' ? 'bg-[rgb(var(--info))]' :
-                          activity.type === 'warning' ? 'bg-[rgb(var(--warning))]' :
-                          'bg-[rgb(var(--muted))]'
-                        }`} />
-                        <div>
-                          <p className="text-sm">
-                            <span className="font-medium">{activity.contact}</span>
-                            {' '}{activity.action}
-                          </p>
-                          <span className="text-xs text-[rgb(var(--muted))]">{activity.time}</span>
+                    {activities.length === 0 ? (
+                      <p className="text-sm text-[rgb(var(--muted))]">No recent activity.</p>
+                    ) : (
+                      activities.slice(0, 5).map((activity: any) => (
+                        <div key={activity.id} className="flex items-start gap-3">
+                          <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
+                            activity.type === 'STATUS_CHANGE' ? 'bg-[rgb(var(--success))]' :
+                            activity.type === 'NOTE_ADDED' ? 'bg-[rgb(var(--info))]' :
+                            'bg-[rgb(var(--muted))]'
+                          }`} />
+                          <div>
+                            <p className="text-sm">{activity.description || activity.type?.replace(/_/g, ' ')}</p>
+                            <span className="text-xs text-[rgb(var(--muted))]">{formatRelativeTime(activity.createdAt)}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -460,33 +364,6 @@ export default function CRMDashboardPage() {
                       <Tag className="h-4 w-4 mr-2" />
                       Manage Tags
                     </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Lists */}
-              <motion.div variants={staggerItem}>
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">My Lists</CardTitle>
-                      <Button variant="ghost" size="sm">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {[
-                      { name: 'VIP Creators', count: 12 },
-                      { name: 'Summer Campaign', count: 8 },
-                      { name: 'Tech Reviewers', count: 15 },
-                      { name: 'New Leads', count: 23 },
-                    ].map(list => (
-                      <div key={list.name} className="flex items-center justify-between p-2 rounded-lg hover:bg-[rgb(var(--surface))] cursor-pointer transition-colors">
-                        <span className="text-sm">{list.name}</span>
-                        <Badge variant="outline" className="text-[10px]">{list.count}</Badge>
-                      </div>
-                    ))}
                   </CardContent>
                 </Card>
               </motion.div>

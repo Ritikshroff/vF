@@ -10,20 +10,18 @@ import {
   Target,
   BarChart3,
   PieChart,
-  Calendar,
   ArrowUp,
-  ArrowDown,
+  Loader2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
-import { fetchBrandAnalytics } from '@/services/brands'
-import { getBrandByUserId, getAllBrands } from '@/mock-data/brands'
+import { getWallet } from '@/services/api/wallet'
+import { fetchBrandCampaigns } from '@/services/api/campaigns'
+import { getCollaborations } from '@/services/api/collaborations'
 import { formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,
@@ -44,8 +42,9 @@ const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'
 export default function BrandAnalyticsPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [analytics, setAnalytics] = useState<any>(null)
-  const [brand, setBrand] = useState<any>(null)
+  const [listings, setListings] = useState<any[]>([])
+  const [collaborations, setCollaborations] = useState<any[]>([])
+  const [walletData, setWalletData] = useState<any>(null)
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
 
   useEffect(() => {
@@ -56,22 +55,15 @@ export default function BrandAnalyticsPage() {
     if (!user) return
 
     try {
-      let br = getBrandByUserId(user.id)
+      const [walletRes, listingsRes, collabRes] = await Promise.allSettled([
+        getWallet(),
+        fetchBrandCampaigns(),
+        getCollaborations(),
+      ])
 
-      // Fallback: If no brand found for this user, use the first brand (for testing)
-      if (!br) {
-        console.warn(`No brand found for user ID: ${user.id}, using fallback brand for demo`)
-        const allBrands = getAllBrands()
-        br = allBrands[0]
-      }
-
-      if (br) {
-        setBrand(br)
-        const data = await fetchBrandAnalytics(br.id)
-        setAnalytics(data)
-      } else {
-        console.error('No brand data available')
-      }
+      if (walletRes.status === 'fulfilled') setWalletData(walletRes.value)
+      if (listingsRes.status === 'fulfilled') setListings(listingsRes.value ?? [])
+      if (collabRes.status === 'fulfilled') setCollaborations(collabRes.value?.data ?? [])
     } catch (error) {
       console.error('Error loading analytics:', error)
     } finally {
@@ -79,82 +71,101 @@ export default function BrandAnalyticsPage() {
     }
   }
 
-  if (loading || !analytics || !brand) {
+  if (loading) {
     return (
       <div className="container py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
-          <div className="grid md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-[rgb(var(--surface))] rounded" />
-            ))}
-          </div>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--brand-primary))]" />
         </div>
       </div>
     )
   }
 
+  // Compute stats from real data
+  const activeListings = listings.filter((l: any) => l.status === 'ACTIVE')
+  const totalBudget = listings.reduce((sum: number, l: any) => sum + Number(l.budgetMax || 0), 0)
+  const totalCollabs = collaborations.length
+  const completedCollabs = collaborations.filter((c: any) => c.status === 'COMPLETED')
+  const totalSpent = completedCollabs.reduce((sum: number, c: any) => sum + Number(c.agreedAmount || 0), 0)
+  const walletBalance = Number(walletData?.balance ?? 0)
+
   const stats = [
     {
-      title: 'Total Spend',
-      value: formatCurrency(analytics.overview.total_spend),
-      change: '+12.5%',
+      title: 'Total Spent',
+      value: formatCurrency(totalSpent),
+      change: `${formatCurrency(walletBalance)} balance`,
       trend: 'up' as const,
       icon: DollarSign,
       color: 'from-green-500 to-emerald-500',
     },
     {
-      title: 'Total Reach',
-      value: formatCompactNumber(analytics.overview.total_reach),
-      change: '+18.2%',
+      title: 'Total Budget',
+      value: formatCurrency(totalBudget),
+      change: `${listings.length} listings`,
       trend: 'up' as const,
       icon: Eye,
       color: 'from-blue-500 to-cyan-500',
     },
     {
-      title: 'Active Campaigns',
-      value: analytics.overview.active_campaigns,
-      change: '+3',
+      title: 'Active Listings',
+      value: String(activeListings.length),
+      change: `${listings.length} total`,
       trend: 'up' as const,
       icon: Target,
       color: 'from-purple-500 to-pink-500',
     },
     {
-      title: 'Avg ROI',
-      value: `${analytics.overview.avg_roi}%`,
-      change: '+5.3%',
+      title: 'Collaborations',
+      value: String(totalCollabs),
+      change: `${completedCollabs.length} completed`,
       trend: 'up' as const,
       icon: TrendingUp,
       color: 'from-orange-500 to-red-500',
     },
   ]
 
-  // Mock spending trend data
-  const spendingTrend = [
-    { month: 'Jan', spend: 45000, roi: 320 },
-    { month: 'Feb', spend: 52000, roi: 385 },
-    { month: 'Mar', spend: 48000, roi: 410 },
-    { month: 'Apr', spend: 61000, roi: 445 },
-    { month: 'May', spend: 55000, roi: 425 },
-    { month: 'Jun', spend: 67000, roi: 480 },
-  ]
+  // Build spending trend from collaborations (group by month)
+  const spendingByMonth: Record<string, { spend: number; count: number }> = {}
+  collaborations.forEach((c: any) => {
+    const date = new Date(c.createdAt)
+    const key = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+    if (!spendingByMonth[key]) spendingByMonth[key] = { spend: 0, count: 0 }
+    spendingByMonth[key].spend += Number(c.agreedAmount || 0)
+    spendingByMonth[key].count += 1
+  })
+  const spendingTrend = Object.entries(spendingByMonth).map(([month, data]) => ({
+    month,
+    spend: Math.round(data.spend),
+    collaborations: data.count,
+  }))
 
-  // Campaign performance data
-  const campaignPerformance = [
-    { name: 'Fashion Launch', reach: 850000, engagement: 68000, conversions: 3200, spend: 12000 },
-    { name: 'Tech Review', reach: 620000, engagement: 52000, conversions: 2800, spend: 8000 },
-    { name: 'Fitness Challenge', reach: 1200000, engagement: 96000, conversions: 5400, spend: 15000 },
-    { name: 'Beauty Collab', reach: 540000, engagement: 43000, conversions: 2100, spend: 7000 },
-  ]
+  // Campaign performance from listings (with application counts)
+  const campaignPerformance = listings.slice(0, 6).map((l: any) => ({
+    name: l.title?.length > 20 ? l.title.substring(0, 20) + '...' : l.title,
+    applications: l._count?.applications ?? 0,
+    budget: Number(l.budgetMax || 0),
+    slots: l.totalSlots || 1,
+  }))
 
-  // Category spend distribution
-  const categorySpend = [
-    { name: 'Fashion', value: 35 },
-    { name: 'Technology', value: 25 },
-    { name: 'Fitness', value: 20 },
-    { name: 'Beauty', value: 15 },
-    { name: 'Other', value: 5 },
-  ]
+  // Category distribution from listing niches
+  const nicheCounts: Record<string, number> = {}
+  listings.forEach((l: any) => {
+    const niches = l.targetNiches || []
+    niches.forEach((n: string) => {
+      nicheCounts[n] = (nicheCounts[n] || 0) + 1
+    })
+  })
+  const categorySpend = Object.entries(nicheCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([name, value]) => ({ name, value }))
+
+  // Collaboration status breakdown
+  const statusCounts: Record<string, number> = {}
+  collaborations.forEach((c: any) => {
+    const status = c.status || 'UNKNOWN'
+    statusCounts[status] = (statusCounts[status] || 0) + 1
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
@@ -174,7 +185,7 @@ export default function BrandAnalyticsPage() {
             </p>
           </motion.div>
 
-          {/* Time Range Selector - Mobile Scrollable */}
+          {/* Time Range Selector */}
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
               {[
@@ -198,12 +209,12 @@ export default function BrandAnalyticsPage() {
             </div>
           </motion.div>
 
-          {/* Stats Grid - Mobile 2 cols */}
+          {/* Stats Grid */}
           <motion.div
             variants={staggerContainer}
             className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8"
           >
-            {stats.map((stat, index) => (
+            {stats.map((stat) => (
               <motion.div key={stat.title} variants={staggerItem}>
                 <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all">
                   <CardContent className="p-3 sm:p-4 lg:p-6">
@@ -213,16 +224,8 @@ export default function BrandAnalyticsPage() {
                       >
                         <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
                       </div>
-                      <div
-                        className={`flex items-center gap-1 text-xs ${
-                          stat.trend === 'up' ? 'text-green-500' : 'text-red-500'
-                        }`}
-                      >
-                        {stat.trend === 'up' ? (
-                          <ArrowUp className="h-3 w-3" />
-                        ) : (
-                          <ArrowDown className="h-3 w-3" />
-                        )}
+                      <div className="flex items-center gap-1 text-xs text-green-500">
+                        <ArrowUp className="h-3 w-3" />
                         {stat.change}
                       </div>
                     </div>
@@ -238,88 +241,28 @@ export default function BrandAnalyticsPage() {
             ))}
           </motion.div>
 
-          {/* Spending Trend Chart - Full Width */}
-          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
-                  <TrendingUp className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
-                  Spending & ROI Trend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-48 sm:h-64 lg:h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={spendingTrend}>
-                      <defs>
-                        <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="colorROI" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
-                      <XAxis dataKey="month" stroke="#6B7280" />
-                      <YAxis stroke="#6B7280" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgb(var(--surface-elevated))',
-                          border: '1px solid rgb(var(--border))',
-                          borderRadius: '8px',
-                        }}
-                      />
-                      <Legend />
-                      <Area
-                        type="monotone"
-                        dataKey="spend"
-                        stroke="#8B5CF6"
-                        strokeWidth={3}
-                        fillOpacity={1}
-                        fill="url(#colorSpend)"
-                        name="Spend ($)"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="roi"
-                        stroke="#10B981"
-                        strokeWidth={3}
-                        fillOpacity={1}
-                        fill="url(#colorROI)"
-                        name="ROI (%)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 lg:mb-8">
-            {/* Campaign Performance Chart */}
-            <motion.div variants={staggerItem}>
-              <Card className="h-full">
+          {/* Spending Trend Chart */}
+          {spendingTrend.length > 0 && (
+            <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
-                    <BarChart3 className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
-                    Campaign Performance
+                    <TrendingUp className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
+                    Spending Trend
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-48 sm:h-64 lg:h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={campaignPerformance}>
+                      <AreaChart data={spendingTrend}>
+                        <defs>
+                          <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
-                        <XAxis
-                          dataKey="name"
-                          stroke="#6B7280"
-                          tick={{ fontSize: 12 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={80}
-                        />
+                        <XAxis dataKey="month" stroke="#6B7280" />
                         <YAxis stroke="#6B7280" />
                         <Tooltip
                           contentStyle={{
@@ -328,119 +271,193 @@ export default function BrandAnalyticsPage() {
                             borderRadius: '8px',
                           }}
                         />
-                        <Legend wrapperStyle={{ fontSize: '12px' }} />
-                        <Bar
-                          dataKey="conversions"
-                          fill="#8B5CF6"
-                          radius={[8, 8, 0, 0]}
-                          name="Conversions"
-                        />
-                        <Bar
+                        <Legend />
+                        <Area
+                          type="monotone"
                           dataKey="spend"
-                          fill="#10B981"
-                          radius={[8, 8, 0, 0]}
+                          stroke="#8B5CF6"
+                          strokeWidth={3}
+                          fillOpacity={1}
+                          fill="url(#colorSpend)"
                           name="Spend ($)"
                         />
-                      </BarChart>
+                      </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
+          )}
 
-            {/* Category Spend Distribution */}
-            <motion.div variants={staggerItem}>
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
-                    <PieChart className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
-                    Spend by Category
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-48 sm:h-64 lg:h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsPie>
-                        <Pie
-                          data={categorySpend}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, value }) => `${name}: ${value}%`}
-                          outerRadius={window.innerWidth < 768 ? 60 : 80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {categorySpend.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </RechartsPie>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 lg:mb-8">
+            {/* Campaign Performance Chart */}
+            {campaignPerformance.length > 0 && (
+              <motion.div variants={staggerItem}>
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
+                      <BarChart3 className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
+                      Listing Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-48 sm:h-64 lg:h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={campaignPerformance}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
+                          <XAxis
+                            dataKey="name"
+                            stroke="#6B7280"
+                            tick={{ fontSize: 12 }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                          />
+                          <YAxis stroke="#6B7280" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'rgb(var(--surface-elevated))',
+                              border: '1px solid rgb(var(--border))',
+                              borderRadius: '8px',
+                            }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: '12px' }} />
+                          <Bar
+                            dataKey="applications"
+                            fill="#8B5CF6"
+                            radius={[8, 8, 0, 0]}
+                            name="Applications"
+                          />
+                          <Bar
+                            dataKey="budget"
+                            fill="#10B981"
+                            radius={[8, 8, 0, 0]}
+                            name="Budget ($)"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Category Distribution */}
+            {categorySpend.length > 0 && (
+              <motion.div variants={staggerItem}>
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
+                      <PieChart className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
+                      Listings by Niche
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-48 sm:h-64 lg:h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsPie>
+                          <Pie
+                            data={categorySpend}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, value }) => `${name}: ${value}`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {categorySpend.map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </RechartsPie>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
           </div>
 
-          {/* Top Performing Influencers */}
+          {/* Collaboration Overview */}
           <motion.div variants={staggerItem}>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
                   <Users className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
-                  Top Performing Influencers
+                  Collaboration Overview
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 sm:space-y-4">
-                  {analytics.top_influencers.map((influencer: any, index: number) => (
-                    <div
-                      key={index}
-                      className="flex flex-col md:flex-row md:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white font-bold">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold mb-1">{influencer.name}</h4>
-                          <div className="flex flex-wrap gap-2 text-xs text-[rgb(var(--muted))]">
-                            <span>{influencer.campaigns_completed} campaigns</span>
-                            <span>•</span>
-                            <span>{formatCompactNumber(influencer.total_reach)} reach</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 md:gap-6">
-                        <div className="text-center">
-                          <div className="text-xs text-[rgb(var(--muted))] mb-1">
-                            Engagement
-                          </div>
-                          <div className="font-bold text-sm md:text-base">
-                            {formatCompactNumber(influencer.total_engagement)}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xs text-[rgb(var(--muted))] mb-1">
-                            Conversions
-                          </div>
-                          <div className="font-bold text-sm md:text-base">
-                            {formatCompactNumber(influencer.conversions)}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xs text-[rgb(var(--muted))] mb-1">ROI</div>
-                          <div className="font-bold text-green-500 text-sm md:text-base">
-                            {influencer.avg_roi}%
-                          </div>
-                        </div>
-                      </div>
+                {collaborations.length === 0 ? (
+                  <p className="text-center py-8 text-[rgb(var(--muted))]">
+                    No collaborations yet. Create a campaign to get started!
+                  </p>
+                ) : (
+                  <div className="space-y-3 sm:space-y-4">
+                    {/* Status Summary */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {Object.entries(statusCounts).map(([status, count]) => (
+                        <Badge key={status} variant="outline" className="text-sm">
+                          {status.replace(/_/g, ' ')}: {count}
+                        </Badge>
+                      ))}
                     </div>
-                  ))}
-                </div>
+
+                    {/* Recent Collaborations */}
+                    {collaborations.slice(0, 5).map((collab: any, index: number) => (
+                      <div
+                        key={collab.id}
+                        className="flex flex-col md:flex-row md:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center text-white font-bold">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold mb-1">
+                              {collab.influencer?.fullName || collab.influencer?.username || 'Influencer'}
+                            </h4>
+                            <div className="flex flex-wrap gap-2 text-xs text-[rgb(var(--muted))]">
+                              <span>{collab.campaign?.title || 'Campaign'}</span>
+                              <span>•</span>
+                              <span>{collab.campaign?.category || 'General'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 md:gap-6">
+                          <div className="text-center">
+                            <div className="text-xs text-[rgb(var(--muted))] mb-1">Amount</div>
+                            <div className="font-bold text-sm md:text-base">
+                              {formatCurrency(Number(collab.agreedAmount || 0))}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-[rgb(var(--muted))] mb-1">Status</div>
+                            <Badge
+                              variant={
+                                collab.status === 'COMPLETED' ? 'success' :
+                                collab.status === 'IN_PROGRESS' || collab.status === 'CONTENT_CREATION' ? 'warning' :
+                                'default'
+                              }
+                              className="text-xs"
+                            >
+                              {collab.status?.replace(/_/g, ' ')}
+                            </Badge>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-[rgb(var(--muted))] mb-1">Date</div>
+                            <div className="font-bold text-sm md:text-base">
+                              {new Date(collab.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

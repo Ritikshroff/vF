@@ -1,6 +1,7 @@
 /**
  * API Client utility for frontend-to-backend communication
  */
+import { getAccessToken } from '@/lib/auth'
 
 const API_BASE = '/api'
 
@@ -17,6 +18,11 @@ class ApiClient {
     this.baseUrl = baseUrl
   }
 
+  private getAuthHeaders(): Record<string, string> {
+    const token = getAccessToken()
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -24,8 +30,10 @@ class ApiClient {
     try {
       const url = `${this.baseUrl}${endpoint}`
       const response = await fetch(url, {
+        credentials: 'include', // send cookies (access_token, refresh_token)
         headers: {
           'Content-Type': 'application/json',
+          ...this.getAuthHeaders(),
           ...options.headers,
         },
         ...options,
@@ -58,6 +66,13 @@ class ApiClient {
   async put<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    })
+  }
+
+  async patch<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
       body: body ? JSON.stringify(body) : undefined,
     })
   }

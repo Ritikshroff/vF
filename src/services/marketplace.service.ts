@@ -71,6 +71,7 @@ export async function getListingById(listingId: string) {
 export async function searchListings(filters: ListingFilters) {
   const {
     status,
+    brandId,
     compensationType,
     niches,
     platforms,
@@ -87,7 +88,8 @@ export async function searchListings(filters: ListingFilters) {
   const skip = (page - 1) * pageSize
 
   const where: Prisma.MarketplaceListingWhereInput = {
-    status: status || 'ACTIVE',
+    ...(brandId ? { brandId } : { status: status || 'ACTIVE' }),
+    ...(brandId && status && { status }),
     ...(compensationType && { compensationType }),
     ...(niches && niches.length > 0 && { targetNiches: { hasSome: niches } }),
     ...(platforms && platforms.length > 0 && { targetPlatforms: { hasSome: platforms } }),

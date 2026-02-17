@@ -92,7 +92,7 @@ export default function MarketplaceListingPage() {
   const [showApplication, setShowApplication] = useState(false)
   const [applicationNote, setApplicationNote] = useState('')
 
-  const isInfluencer = user?.role === 'influencer'
+  const isInfluencer = user?.role === 'INFLUENCER'
   const listing = MOCK_LISTING
   const daysLeft = Math.ceil((new Date(listing.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 

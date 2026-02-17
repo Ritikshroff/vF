@@ -37,6 +37,7 @@ export interface UpdateListingInput {
 
 export interface ListingFilters {
   status?: MarketplaceListingStatus
+  brandId?: string
   compensationType?: CompensationType
   niches?: string[]
   platforms?: string[]

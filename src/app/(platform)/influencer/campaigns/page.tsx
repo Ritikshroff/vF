@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -25,15 +25,63 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth-context";
-import { fetchInfluencerCampaigns } from "@/services/campaigns";
-import {
-  getInfluencerByUserId,
-  getAllInfluencers,
-  type InfluencerProfile,
-} from "@/mock-data/influencers";
-import type { Campaign } from "@/mock-data/campaigns";
+import { api } from "@/lib/api-client";
 import { formatCurrency, formatCompactNumber } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+
+// --- Types matching real API responses ---
+
+type MarketplaceListing = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  targetPlatforms: string[];
+  targetNiches: string[];
+  requirements: string | null;
+  totalSlots: number;
+  filledSlots: number;
+  applicationDeadline: string | null;
+  campaign: {
+    id: string;
+    startDate: string;
+    endDate: string;
+    maxInfluencers: number;
+    category: string;
+  };
+};
+
+type Collaboration = {
+  id: string;
+  status: string;
+  agreedAmount: number;
+  startDate: string | null;
+  endDate: string | null;
+  campaign: {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+  };
+  brand: { companyName: string };
+};
+
+type MyApplication = {
+  id: string;
+  status: string;
+  proposedRate: number | null;
+  listing: {
+    id: string;
+    title: string;
+    description: string;
+    budgetMin: number | null;
+    budgetMax: number | null;
+    targetPlatforms: string[];
+    campaign: { category: string; startDate: string };
+  };
+};
 
 type CampaignStatus =
   | "available"
@@ -44,11 +92,12 @@ type CampaignStatus =
 
 export default function InfluencerCampaignsPage() {
   const { user } = useAuth();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [listings, setListings] = useState<MarketplaceListing[]>([]);
+  const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
+  const [myApplications, setMyApplications] = useState<MyApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<CampaignStatus>("available");
   const [searchQuery, setSearchQuery] = useState("");
-  const [influencer, setInfluencer] = useState<InfluencerProfile | null>(null);
 
   useEffect(() => {
     loadCampaigns();
@@ -58,11 +107,25 @@ export default function InfluencerCampaignsPage() {
     if (!user) return;
 
     try {
-      const inf = getInfluencerByUserId(user.id);
-      if (inf) {
-        setInfluencer(inf);
-        const data = await fetchInfluencerCampaigns(inf.id);
-        setCampaigns(data);
+      const [listingsRes, collabRes, appsRes] = await Promise.allSettled([
+        api.get<{ data: MarketplaceListing[]; total: number }>(
+          "/marketplace/listings",
+          { pageSize: "50" }
+        ),
+        api.get<{ data: Collaboration[]; total: number }>("/collaborations"),
+        api.get<{ data: MyApplication[]; total: number }>(
+          "/marketplace/my-applications"
+        ),
+      ]);
+
+      if (listingsRes.status === "fulfilled" && !listingsRes.value.error) {
+        setListings(listingsRes.value.data?.data || []);
+      }
+      if (collabRes.status === "fulfilled" && !collabRes.value.error) {
+        setCollaborations(collabRes.value.data?.data || []);
+      }
+      if (appsRes.status === "fulfilled" && !appsRes.value.error) {
+        setMyApplications(appsRes.value.data?.data || []);
       }
     } catch (error) {
       console.error("Error loading campaigns:", error);
@@ -71,62 +134,80 @@ export default function InfluencerCampaignsPage() {
     }
   };
 
-  const getFilteredCampaigns = () => {
-    if (!influencer) return [];
+  // Filter data by tab + search query
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.toLowerCase();
 
-    let filtered = campaigns.filter((campaign) => {
-      const matchesSearch =
-        campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        campaign.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-      switch (filter) {
-        case "available":
-          return (
-            campaign.status === "active" &&
-            !campaign.invited_influencers.includes(influencer.id) &&
-            !campaign.applied_influencers.includes(influencer.id) &&
-            !campaign.accepted_influencers.find((a) => a === influencer.id)
-          );
-        case "invited":
-          return campaign.invited_influencers.includes(influencer.id);
-        case "applied":
-          return campaign.applied_influencers.includes(influencer.id);
-        case "active":
-          return campaign.accepted_influencers.includes(influencer.id);
-        case "completed":
-          return (
-            campaign.status === "completed" &&
-            campaign.accepted_influencers.includes(influencer.id)
-          );
-        default:
-          return false;
+    switch (filter) {
+      case "available": {
+        const openListings = listings.filter((l) => l.status === "OPEN");
+        if (!q) return openListings;
+        return openListings.filter(
+          (l) =>
+            l.title.toLowerCase().includes(q) ||
+            l.description.toLowerCase().includes(q)
+        );
       }
-    });
+      case "invited": {
+        const invited = collaborations.filter((c) => c.status === "INVITED");
+        if (!q) return invited;
+        return invited.filter(
+          (c) =>
+            c.campaign.title.toLowerCase().includes(q) ||
+            c.campaign.description.toLowerCase().includes(q)
+        );
+      }
+      case "applied": {
+        const pending = myApplications.filter(
+          (a) => a.status === "PENDING" || a.status === "SUBMITTED"
+        );
+        if (!q) return pending;
+        return pending.filter(
+          (a) =>
+            a.listing.title.toLowerCase().includes(q) ||
+            a.listing.description.toLowerCase().includes(q)
+        );
+      }
+      case "active": {
+        const active = collaborations.filter(
+          (c) => c.status === "IN_PROGRESS" || c.status === "ACCEPTED"
+        );
+        if (!q) return active;
+        return active.filter(
+          (c) =>
+            c.campaign.title.toLowerCase().includes(q) ||
+            c.campaign.description.toLowerCase().includes(q)
+        );
+      }
+      case "completed": {
+        const completed = collaborations.filter(
+          (c) => c.status === "COMPLETED"
+        );
+        if (!q) return completed;
+        return completed.filter(
+          (c) =>
+            c.campaign.title.toLowerCase().includes(q) ||
+            c.campaign.description.toLowerCase().includes(q)
+        );
+      }
+      default:
+        return [];
+    }
+  }, [filter, searchQuery, listings, collaborations, myApplications]);
 
-    return filtered.filter((c) => c && c.status === "active");
-  };
-
-  const filteredCampaigns = getFilteredCampaigns();
-
-  const stats = {
-    available: campaigns.filter(
-      (c) =>
-        c.status === "active" &&
-        influencer &&
-        !c.invited_influencers.includes(influencer.id) &&
-        !c.applied_influencers.includes(influencer.id) &&
-        !c.accepted_influencers.includes(influencer.id),
-    ).length,
-    invited: campaigns.filter(
-      (c) => influencer && c.invited_influencers.includes(influencer.id),
-    ).length,
-    applied: campaigns.filter(
-      (c) => influencer && c.applied_influencers.includes(influencer.id),
-    ).length,
-    active: campaigns.filter(
-      (c) => influencer && c.accepted_influencers.includes(influencer.id),
-    ).length,
-  };
+  const stats = useMemo(
+    () => ({
+      available: listings.filter((l) => l.status === "OPEN").length,
+      invited: collaborations.filter((c) => c.status === "INVITED").length,
+      applied: myApplications.filter(
+        (a) => a.status === "PENDING" || a.status === "SUBMITTED"
+      ).length,
+      active: collaborations.filter(
+        (c) => c.status === "IN_PROGRESS" || c.status === "ACCEPTED"
+      ).length,
+    }),
+    [listings, collaborations, myApplications]
+  );
 
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -140,6 +221,335 @@ export default function InfluencerCampaignsPage() {
         return Users;
     }
   };
+
+  // --- Render helpers for each card type ---
+
+  const renderListingCard = (listing: MarketplaceListing) => (
+    <motion.div
+      key={`listing-${listing.id}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full flex flex-col">
+        <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col h-full">
+          {/* Header */}
+          <div className="mb-3 sm:mb-4">
+            <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
+                {listing.title}
+              </h3>
+              <Badge variant="outline" className="shrink-0">
+                {listing.campaign.category}
+              </Badge>
+            </div>
+            <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-2 sm:mb-3">
+              {listing.description}
+            </p>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 text-sm">
+              <DollarSign className="h-4 w-4 text-[rgb(var(--muted))]" />
+              <span className="text-[rgb(var(--muted))] truncate">
+                {formatCurrency(listing.budgetMin || 0)}-
+                {formatCurrency(listing.budgetMax || 0)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4 text-[rgb(var(--muted))]" />
+              <span className="text-[rgb(var(--muted))]">
+                {listing.filledSlots}/{listing.totalSlots}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-[rgb(var(--muted))]" />
+              <span className="text-[rgb(var(--muted))] truncate">
+                {new Date(listing.campaign.startDate).toLocaleDateString(
+                  "en-US",
+                  {
+                    month: "short",
+                    day: "numeric",
+                  }
+                )}
+              </span>
+            </div>
+            {listing.applicationDeadline && (
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="h-4 w-4 text-[rgb(var(--muted))]" />
+                <span className="text-[rgb(var(--muted))] truncate">
+                  Due{" "}
+                  {new Date(listing.applicationDeadline).toLocaleDateString(
+                    "en-US",
+                    { month: "short", day: "numeric" }
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Platforms */}
+          {listing.targetPlatforms.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {listing.targetPlatforms.slice(0, 3).map((platform) => {
+                const Icon = getPlatformIcon(platform);
+                return (
+                  <Badge key={platform} variant="outline" className="gap-1">
+                    <Icon className="h-3 w-3" />
+                    {platform.charAt(0) + platform.slice(1).toLowerCase()}
+                  </Badge>
+                );
+              })}
+              {listing.targetPlatforms.length > 3 && (
+                <Badge variant="outline">
+                  +{listing.targetPlatforms.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Niches */}
+          {listing.targetNiches.length > 0 && (
+            <div className="mb-4 pb-4 border-b border-border">
+              <div className="text-xs text-muted mb-2 font-medium">
+                Niches:
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {listing.targetNiches.slice(0, 3).map((niche, idx) => (
+                  <span
+                    key={idx}
+                    className="text-xs px-2 py-1 bg-surface rounded"
+                  >
+                    {niche}
+                  </span>
+                ))}
+                {listing.targetNiches.length > 3 && (
+                  <span className="text-xs px-2 py-1 bg-surface rounded">
+                    +{listing.targetNiches.length - 3}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="mt-auto flex flex-col gap-2">
+            <Link
+              href={`/marketplace/${listing.id}`}
+              className="w-full"
+            >
+              <Button variant="outline" size="sm" className="w-full">
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </Button>
+            </Link>
+            <Link
+              href={`/marketplace/${listing.id}`}
+              className="w-full"
+            >
+              <Button variant="gradient" size="sm" className="w-full">
+                <Send className="h-4 w-4 mr-2" />
+                Apply Now
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+
+  const renderCollaborationCard = (collab: Collaboration) => (
+    <motion.div
+      key={`collab-${collab.id}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full flex flex-col">
+        <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col h-full">
+          {/* Header */}
+          <div className="mb-3 sm:mb-4">
+            <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
+                {collab.campaign.title}
+              </h3>
+              <Badge variant="outline" className="shrink-0">
+                {collab.campaign.category}
+              </Badge>
+            </div>
+            <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-2 sm:mb-3">
+              {collab.campaign.description}
+            </p>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 text-sm">
+              <DollarSign className="h-4 w-4 text-[rgb(var(--muted))]" />
+              <span className="text-[rgb(var(--muted))] truncate">
+                {formatCurrency(collab.agreedAmount)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4 text-[rgb(var(--muted))]" />
+              <span className="text-[rgb(var(--muted))]">
+                {collab.brand.companyName}
+              </span>
+            </div>
+            {collab.startDate && (
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-[rgb(var(--muted))]" />
+                <span className="text-[rgb(var(--muted))] truncate">
+                  {new Date(collab.startDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-sm">
+              <TrendingUp className="h-4 w-4 text-[rgb(var(--muted))]" />
+              <span className="text-[rgb(var(--muted))]">
+                {collab.status === "INVITED"
+                  ? "Invited"
+                  : collab.status === "ACCEPTED"
+                    ? "Accepted"
+                    : collab.status === "IN_PROGRESS"
+                      ? "In Progress"
+                      : collab.status === "COMPLETED"
+                        ? "Completed"
+                        : collab.status}
+              </span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="mt-auto flex flex-col gap-2">
+            <Link
+              href={`/influencer/campaigns/${collab.id}`}
+              className="w-full"
+            >
+              <Button variant="outline" size="sm" className="w-full">
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </Button>
+            </Link>
+            {collab.status === "INVITED" && (
+              <Button variant="gradient" size="sm" className="w-full">
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Accept Invite
+              </Button>
+            )}
+            {(collab.status === "IN_PROGRESS" ||
+              collab.status === "ACCEPTED") && (
+              <Badge variant="success" className="w-full justify-center py-2">
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                In Progress
+              </Badge>
+            )}
+            {collab.status === "COMPLETED" && (
+              <Badge variant="outline" className="w-full justify-center py-2">
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                Completed
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+
+  const renderApplicationCard = (app: MyApplication) => (
+    <motion.div
+      key={`app-${app.id}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full flex flex-col">
+        <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col h-full">
+          {/* Header */}
+          <div className="mb-3 sm:mb-4">
+            <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
+                {app.listing.title}
+              </h3>
+              <Badge variant="outline" className="shrink-0">
+                {app.listing.campaign.category}
+              </Badge>
+            </div>
+            <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-2 sm:mb-3">
+              {app.listing.description}
+            </p>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 text-sm">
+              <DollarSign className="h-4 w-4 text-[rgb(var(--muted))]" />
+              <span className="text-[rgb(var(--muted))] truncate">
+                {app.proposedRate
+                  ? formatCurrency(app.proposedRate)
+                  : `${formatCurrency(app.listing.budgetMin || 0)}-${formatCurrency(app.listing.budgetMax || 0)}`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-[rgb(var(--muted))]" />
+              <span className="text-[rgb(var(--muted))] truncate">
+                {new Date(
+                  app.listing.campaign.startDate
+                ).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+          </div>
+
+          {/* Platforms */}
+          {app.listing.targetPlatforms.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {app.listing.targetPlatforms.slice(0, 3).map((platform) => {
+                const Icon = getPlatformIcon(platform);
+                return (
+                  <Badge key={platform} variant="outline" className="gap-1">
+                    <Icon className="h-3 w-3" />
+                    {platform.charAt(0) + platform.slice(1).toLowerCase()}
+                  </Badge>
+                );
+              })}
+              {app.listing.targetPlatforms.length > 3 && (
+                <Badge variant="outline">
+                  +{app.listing.targetPlatforms.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="mt-auto flex flex-col gap-2">
+            <Link
+              href={`/marketplace/${app.listing.id}`}
+              className="w-full"
+            >
+              <Button variant="outline" size="sm" className="w-full">
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </Button>
+            </Link>
+            <Badge variant="warning" className="w-full justify-center py-2">
+              <Clock className="h-4 w-4 mr-1" />
+              Application Pending
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-surface">
@@ -253,7 +663,7 @@ export default function InfluencerCampaignsPage() {
                 </Card>
               ))}
             </div>
-          ) : filteredCampaigns.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <Card className="text-center py-8 sm:py-12 lg:py-16">
               <CardContent>
                 <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
@@ -271,170 +681,14 @@ export default function InfluencerCampaignsPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-              {filteredCampaigns.map((campaign) => (
-                <motion.div
-                  key={campaign.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -4 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all h-full flex flex-col">
-                    <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col h-full">
-                      {/* Header */}
-                      <div className="mb-3 sm:mb-4">
-                        <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
-                          <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
-                            {campaign.title}
-                          </h3>
-                          <Badge variant="outline" className="shrink-0">
-                            {campaign.category}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-2 sm:mb-3">
-                          {campaign.description}
-                        </p>
-                      </div>
-
-                      {/* Stats Grid - Mobile 2 cols */}
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <DollarSign className="h-4 w-4 text-[rgb(var(--muted))]" />
-                          <span className="text-[rgb(var(--muted))] truncate">
-                            {formatCurrency(campaign.budget.min)}-
-                            {formatCurrency(campaign.budget.max)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="h-4 w-4 text-[rgb(var(--muted))]" />
-                          <span className="text-[rgb(var(--muted))]">
-                            {campaign.accepted_influencers.length}/
-                            {campaign.max_influencers}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-[rgb(var(--muted))]" />
-                          <span className="text-[rgb(var(--muted))] truncate">
-                            {new Date(
-                              campaign.campaign_start_date,
-                            ).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <TrendingUp className="h-4 w-4 text-[rgb(var(--muted))]" />
-                          <span className="text-[rgb(var(--muted))]">
-                            {campaign.applied_influencers.length} applied
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Platforms */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {campaign.platforms.slice(0, 3).map((platform) => {
-                          const Icon = getPlatformIcon(platform);
-                          return (
-                            <Badge
-                              key={platform}
-                              variant="outline"
-                              className="gap-1"
-                            >
-                              <Icon className="h-3 w-3" />
-                              {platform}
-                            </Badge>
-                          );
-                        })}
-                        {campaign.platforms.length > 3 && (
-                          <Badge variant="outline">
-                            +{campaign.platforms.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Deliverables Preview */}
-                      <div className="mb-4 pb-4 border-b border-border">
-                        <div className="text-xs text-muted mb-2 font-medium">
-                          Deliverables:
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {campaign.requirements.deliverables
-                            .slice(0, 3)
-                            .map((del, idx) => (
-                              <span
-                                key={idx}
-                                className="text-xs px-2 py-1 bg-surface rounded"
-                              >
-                                {del.type}
-                              </span>
-                            ))}
-                          {campaign.requirements.deliverables.length > 3 && (
-                            <span className="text-xs px-2 py-1 bg-surface rounded">
-                              +{campaign.requirements.deliverables.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Actions - at bottom */}
-                      <div className="mt-auto flex flex-col gap-2">
-                        <Link
-                          href={`/influencer/campaigns/${campaign.id}`}
-                          className="w-full"
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        </Link>
-                        {filter === "available" && (
-                          <Button
-                            variant="gradient"
-                            size="sm"
-                            className="w-full"
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            Apply Now
-                          </Button>
-                        )}
-                        {filter === "invited" && (
-                          <Button
-                            variant="gradient"
-                            size="sm"
-                            className="w-full"
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Accept Invite
-                          </Button>
-                        )}
-                        {filter === "applied" && (
-                          <Badge
-                            variant="warning"
-                            className="w-full justify-center py-2"
-                          >
-                            <Clock className="h-4 w-4 mr-1" />
-                            Application Pending
-                          </Badge>
-                        )}
-                        {filter === "active" && (
-                          <Badge
-                            variant="success"
-                            className="w-full justify-center py-2"
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            In Progress
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+              {filter === "available" &&
+                (filteredItems as MarketplaceListing[]).map(renderListingCard)}
+              {(filter === "invited" ||
+                filter === "active" ||
+                filter === "completed") &&
+                (filteredItems as Collaboration[]).map(renderCollaborationCard)}
+              {filter === "applied" &&
+                (filteredItems as MyApplication[]).map(renderApplicationCard)}
             </div>
           )}
         </motion.div>

@@ -2,15 +2,17 @@ export interface User {
   id: string
   email: string
   name: string
-  role: 'brand' | 'influencer' | null
-  avatar?: string
+  role: 'BRAND' | 'INFLUENCER' | 'ADMIN' | null
+  avatar?: string | null
   emailVerified: boolean
   onboardingCompleted: boolean
-  createdAt: string
+  brandId?: string
+  influencerId?: string
+  createdAt?: string
 }
 
 export interface Brand extends User {
-  role: 'brand'
+  role: 'BRAND'
   companyName: string
   industry: string
   companySize: string
@@ -20,7 +22,7 @@ export interface Brand extends User {
 }
 
 export interface Influencer extends User {
-  role: 'influencer'
+  role: 'INFLUENCER'
   username: string
   bio: string
   categories: string[]
@@ -45,6 +47,7 @@ export interface SignUpData {
   email: string
   password: string
   confirmPassword: string
+  role?: 'BRAND' | 'INFLUENCER'
 }
 
 export interface LoginData {

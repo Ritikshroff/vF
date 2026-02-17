@@ -5,6 +5,7 @@ import { errorHandler, NotFoundError, AuthorizationError, ValidationError } from
 import { AuthenticatedUser } from '@/middleware/auth.middleware'
 import { prisma } from '@/lib/db/prisma'
 import { releaseEscrow } from '@/services/payment.service'
+import { audit, getClientInfo } from '@/lib/audit'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -62,6 +63,15 @@ export const POST = withBrand(async (
       milestoneId: body.milestoneId,
       amount: body.amount,
       reason: 'Release approved by brand',
+    })
+
+    audit({
+      action: 'escrow.release',
+      userId: user.id,
+      targetId: id,
+      targetType: 'EscrowAccount',
+      ...getClientInfo(request),
+      metadata: { amount: body.amount, milestoneId: body.milestoneId },
     })
 
     return successResponse(release)

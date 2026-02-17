@@ -25,17 +25,59 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  searchInfluencers,
-  type InfluencerSearchFilters,
-} from "@/services/influencers";
-import type { InfluencerProfile } from "@/mock-data/influencers";
+import { api } from "@/lib/api-client";
 import { INFLUENCER_CATEGORIES, SOCIAL_PLATFORMS } from "@/lib/constants";
 import { formatCompactNumber, formatCurrency } from "@/lib/utils";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/animations";
 
+type DiscoveryInfluencer = {
+  id: string;
+  fullName: string;
+  username?: string;
+  bio?: string;
+  avatar?: string;
+  location?: string;
+  verified: boolean;
+  categories: string[];
+  rating: any; // Decimal
+  totalReviews: number;
+  availability: string;
+  platforms: Array<{
+    platform: string; // UPPERCASE: INSTAGRAM, YOUTUBE, etc.
+    handle: string;
+    followers: number;
+    engagementRate: any; // Decimal
+  }>;
+  pricing?: {
+    instagramPost?: any;
+    instagramStory?: any;
+    instagramReel?: any;
+    youtubeVideo?: any;
+    youtubeShort?: any;
+    tiktokVideo?: any;
+    twitterPost?: any;
+  } | null;
+  metrics?: {
+    totalReach: any; // BigInt
+    avgEngagementRate: any; // Decimal
+  } | null;
+};
+
+type SearchFilters = {
+  categories: string[];
+  platforms: string[];
+  min_followers?: number;
+  max_followers?: number;
+  min_engagement?: number;
+  max_engagement?: number;
+  availability: string;
+  verified_only: boolean;
+  sort_by: string;
+  sort_order: string;
+};
+
 export default function InfluencerDiscoveryPage() {
-  const [influencers, setInfluencers] = useState<InfluencerProfile[]>([]);
+  const [influencers, setInfluencers] = useState<DiscoveryInfluencer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -43,7 +85,7 @@ export default function InfluencerDiscoveryPage() {
     new Set(),
   );
 
-  const [filters, setFilters] = useState<InfluencerSearchFilters>({
+  const [filters, setFilters] = useState<SearchFilters>({
     categories: [],
     platforms: [],
     min_followers: undefined,
@@ -62,14 +104,24 @@ export default function InfluencerDiscoveryPage() {
   // Fetch influencers
   useEffect(() => {
     loadInfluencers();
-  }, [filters, currentPage]);
+  }, [filters, currentPage, searchQuery]);
 
   const loadInfluencers = async () => {
     setLoading(true);
     try {
-      const result = await searchInfluencers(filters, currentPage, 12);
-      setInfluencers(result.influencers);
-      setTotalResults(result.total);
+      const params: Record<string, string> = { page: String(currentPage), pageSize: '12' };
+      if (searchQuery) params.query = searchQuery;
+      if (filters.categories.length > 0) params.niches = filters.categories.join(',');
+      if (filters.platforms.length > 0) params.platforms = filters.platforms.join(',');
+      if (filters.min_followers) params.minFollowers = String(filters.min_followers);
+      if (filters.max_followers) params.maxFollowers = String(filters.max_followers);
+      if (filters.verified_only) params.verified = 'true';
+
+      const res = await api.get<any>('/discovery/search', params);
+      if (res.error) throw new Error(res.error);
+      const result = res.data;
+      setInfluencers(result.data || []);
+      setTotalResults(result.total || 0);
     } catch (error) {
       console.error("Error loading influencers:", error);
     } finally {
@@ -567,7 +619,7 @@ export default function InfluencerDiscoveryPage() {
                           Engagement
                         </div>
                         <div className="font-bold">
-                          {influencer.metrics.avg_engagement_rate.toFixed(1)}%
+                          {Number(influencer.metrics?.avgEngagementRate || 0).toFixed(1)}%
                         </div>
                       </div>
                     </div>
@@ -580,10 +632,10 @@ export default function InfluencerDiscoveryPage() {
                           className="w-8 h-8 rounded-full bg-[rgb(var(--surface))] flex items-center justify-center"
                           title={`${platform.platform}: ${formatCompactNumber(platform.followers)}`}
                         >
-                          {platform.platform === "Instagram" && (
+                          {platform.platform === "INSTAGRAM" && (
                             <Instagram className="h-4 w-4" />
                           )}
-                          {platform.platform === "YouTube" && (
+                          {platform.platform === "YOUTUBE" && (
                             <Youtube className="h-4 w-4" />
                           )}
                         </div>
@@ -597,7 +649,7 @@ export default function InfluencerDiscoveryPage() {
                           Starting from
                         </div>
                         <div className="text-lg font-bold gradient-text">
-                          {formatCurrency(influencer.pricing.instagram_post)}
+                          {formatCurrency(Number(influencer.pricing?.instagramPost || 0))}
                         </div>
                       </div>
                       <Button

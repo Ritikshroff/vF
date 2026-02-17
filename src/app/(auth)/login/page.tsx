@@ -43,14 +43,15 @@ export default function LoginPage() {
       const user = await login(formData)
 
       // Redirect based on user state
+      const rolePath = user.role?.toLowerCase()
       if (!user.emailVerified) {
         router.push('/verify-email')
       } else if (!user.role) {
         router.push('/role-selector')
       } else if (!user.onboardingCompleted) {
-        router.push(`/onboarding/${user.role}`)
+        router.push(`/onboarding/${rolePath}`)
       } else {
-        router.push(`/${user.role}/dashboard`)
+        router.push(`/${rolePath}/dashboard`)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to log in')

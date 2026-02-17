@@ -1,204 +1,190 @@
 import { User, Brand, Influencer, SignUpData, LoginData } from '@/types/auth'
-import { delay, generateId } from './utils'
 
 const AUTH_STORAGE_KEY = 'viralfluencer_auth'
-const USERS_STORAGE_KEY = 'viralfluencer_users'
 
-// Mock user database (in localStorage)
-export const getStoredUsers = (): Record<string, User | Brand | Influencer> => {
-  if (typeof window === 'undefined') return {}
-  const stored = localStorage.getItem(USERS_STORAGE_KEY)
-  return stored ? JSON.parse(stored) : {}
+// --- Token / User persistence ---
+
+interface StoredAuth {
+  user: User | Brand | Influencer
+  accessToken: string
+  expiresAt: string
 }
 
-export const saveUser = (user: User | Brand | Influencer): void => {
-  const users = getStoredUsers()
-  users[user.id] = user
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users))
-}
-
-export const getCurrentUser = (): (User | Brand | Influencer) | null => {
+export const getStoredAuth = (): StoredAuth | null => {
   if (typeof window === 'undefined') return null
   const stored = localStorage.getItem(AUTH_STORAGE_KEY)
   if (!stored) return null
-
   try {
-    const { userId } = JSON.parse(stored)
-    const users = getStoredUsers()
-    return users[userId] || null
+    return JSON.parse(stored)
   } catch {
     return null
   }
 }
 
-export const setCurrentUser = (user: User | Brand | Influencer): void => {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ userId: user.id }))
-  saveUser(user)
+export const getCurrentUser = (): (User | Brand | Influencer) | null => {
+  return getStoredAuth()?.user ?? null
 }
 
-export const clearCurrentUser = (): void => {
+export const getAccessToken = (): string | null => {
+  return getStoredAuth()?.accessToken ?? null
+}
+
+const setStoredAuth = (auth: StoredAuth): void => {
+  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth))
+}
+
+const clearStoredAuth = (): void => {
   localStorage.removeItem(AUTH_STORAGE_KEY)
 }
 
-// Mock authentication functions
+// --- API helpers ---
+
+async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    credentials: 'include', // send cookies
+    ...options,
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.error || data.message || `Request failed (${res.status})`)
+  }
+  return data
+}
+
+// --- Auth functions ---
+
 export const signUp = async (data: SignUpData): Promise<User> => {
-  await delay(800) // Simulate network delay
+  const res = await apiRequest<{
+    user: User
+    verificationToken?: string
+  }>('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      confirmPassword: data.confirmPassword || data.password,
+      role: data.role || 'BRAND',
+    }),
+  })
 
-  // Check if user already exists
-  const users = getStoredUsers()
-  const existingUser = Object.values(users).find(u => u.email === data.email)
-
-  if (existingUser) {
-    throw new Error('An account with this email already exists')
-  }
-
-  // Validate password match
-  if (data.password !== data.confirmPassword) {
-    throw new Error('Passwords do not match')
-  }
-
-  // Validate password strength
-  if (data.password.length < 8) {
-    throw new Error('Password must be at least 8 characters long')
-  }
-
-  // Create new user
-  const user: User = {
-    id: generateId(),
-    email: data.email,
-    name: data.name,
-    role: null,
-    emailVerified: false,
-    onboardingCompleted: false,
-    createdAt: new Date().toISOString(),
-  }
-
-  saveUser(user)
-  setCurrentUser(user)
-
+  // Store user info (not yet authenticated, but track for verify-email page)
+  const user = res.user
+  setStoredAuth({ user, accessToken: '', expiresAt: '' })
   return user
 }
 
 export const login = async (data: LoginData): Promise<User | Brand | Influencer> => {
-  await delay(800) // Simulate network delay
+  const res = await apiRequest<{
+    user: User
+    accessToken: string
+    expiresAt: string
+  }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      email: data.email,
+      password: data.password,
+      rememberMe: data.rememberMe,
+    }),
+  })
 
-  const users = getStoredUsers()
-  const user = Object.values(users).find(u => u.email === data.email)
-
-  if (!user) {
-    throw new Error('Invalid email or password')
-  }
-
-  // In a real app, we'd verify the password hash
-  // For now, we just simulate successful login
-
-  setCurrentUser(user)
-
+  const { user, accessToken, expiresAt } = res
+  setStoredAuth({ user, accessToken, expiresAt })
   return user
 }
 
 export const logout = async (): Promise<void> => {
-  await delay(300)
-  clearCurrentUser()
+  try {
+    await apiRequest('/api/auth/logout', { method: 'POST' })
+  } catch {
+    // Ignore logout API errors — always clear local state
+  }
+  clearStoredAuth()
 }
 
 export const sendVerificationEmail = async (email: string): Promise<void> => {
-  await delay(1000)
-  console.log(`Verification email sent to ${email}`)
+  await apiRequest('/api/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
 }
 
 export const verifyEmail = async (token: string): Promise<void> => {
-  await delay(800)
+  await apiRequest('/api/auth/verify-email', {
+    method: 'PUT',
+    body: JSON.stringify({ token }),
+  })
 
-  const user = getCurrentUser()
-  if (!user) throw new Error('User not found')
-
-  user.emailVerified = true
-  saveUser(user)
-  setCurrentUser(user)
+  // Update stored user
+  const auth = getStoredAuth()
+  if (auth) {
+    auth.user.emailVerified = true
+    setStoredAuth(auth)
+  }
 }
 
 export const sendPasswordResetEmail = async (email: string): Promise<void> => {
-  await delay(1000)
-
-  const users = getStoredUsers()
-  const user = Object.values(users).find(u => u.email === email)
-
-  if (!user) {
-    throw new Error('No account found with this email address')
-  }
-
-  console.log(`Password reset email sent to ${email}`)
+  await apiRequest('/api/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
 }
 
 export const resetPassword = async (token: string, newPassword: string): Promise<void> => {
-  await delay(800)
-
-  if (newPassword.length < 8) {
-    throw new Error('Password must be at least 8 characters long')
-  }
-
-  // In a real app, we'd verify the token and update the password
-  console.log('Password reset successful')
+  await apiRequest('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password: newPassword }),
+  })
 }
 
 export const updateUser = async (updates: Partial<User | Brand | Influencer>): Promise<User | Brand | Influencer> => {
-  await delay(500)
+  const auth = getStoredAuth()
+  if (!auth?.user) throw new Error('Not authenticated')
 
-  const user = getCurrentUser()
-  if (!user) throw new Error('User not found')
-
-  const updatedUser = { ...user, ...updates }
-  saveUser(updatedUser)
-  setCurrentUser(updatedUser)
-
+  // Update locally for now (server update happens via specific API endpoints)
+  const updatedUser = { ...auth.user, ...updates }
+  setStoredAuth({ ...auth, user: updatedUser })
   return updatedUser
 }
 
 export const completeBrandOnboarding = async (data: Partial<Brand>): Promise<Brand> => {
-  await delay(800)
+  const auth = getStoredAuth()
+  if (!auth?.user) throw new Error('Not authenticated')
 
-  const user = getCurrentUser()
-  if (!user) throw new Error('User not found')
+  // Call onboarding API
+  const res = await apiRequest<{ brand: Brand }>('/api/onboarding/brand', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
+  })
 
   const brandUser: Brand = {
-    ...user,
-    role: 'brand',
-    companyName: data.companyName || '',
-    industry: data.industry || '',
-    companySize: data.companySize || '',
-    website: data.website,
-    goals: data.goals || [],
-    budget: data.budget,
+    ...auth.user,
+    ...res.brand,
+    role: 'BRAND',
     onboardingCompleted: true,
   }
-
-  saveUser(brandUser)
-  setCurrentUser(brandUser)
-
+  setStoredAuth({ ...auth, user: brandUser })
   return brandUser
 }
 
 export const completeInfluencerOnboarding = async (data: Partial<Influencer>): Promise<Influencer> => {
-  await delay(800)
+  const auth = getStoredAuth()
+  if (!auth?.user) throw new Error('Not authenticated')
 
-  const user = getCurrentUser()
-  if (!user) throw new Error('User not found')
+  const res = await apiRequest<{ influencer: Influencer }>('/api/onboarding/influencer', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
+  })
 
   const influencerUser: Influencer = {
-    ...user,
-    role: 'influencer',
-    username: data.username || '',
-    bio: data.bio || '',
-    categories: data.categories || [],
-    platforms: data.platforms || [],
-    contentTypes: data.contentTypes || [],
-    location: data.location,
+    ...auth.user,
+    ...res.influencer,
+    role: 'INFLUENCER',
     onboardingCompleted: true,
   }
-
-  saveUser(influencerUser)
-  setCurrentUser(influencerUser)
-
+  setStoredAuth({ ...auth, user: influencerUser })
   return influencerUser
 }
