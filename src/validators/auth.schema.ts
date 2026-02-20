@@ -33,7 +33,7 @@ export const registerSchema = z
     password: passwordSchema,
     confirmPassword: z.string(),
     name: z.string().min(2, 'Name must be at least 2 characters').max(100),
-    role: z.nativeEnum(UserRole).optional(), // Can be set during onboarding
+    // role: z.nativeEnum(UserRole).optional(), // Can be set during onboarding
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',

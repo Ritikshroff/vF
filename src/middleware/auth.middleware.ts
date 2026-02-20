@@ -108,6 +108,87 @@ export async function authMiddleware(
 }
 
 /**
+ * Authenticate request and return the user directly
+ * Returns { user } on success or { error: NextResponse } on failure
+ */
+export async function authenticateRequest(
+  request: NextRequest
+): Promise<{ user: AuthenticatedUser } | { error: NextResponse }> {
+  try {
+    const authHeader = request.headers.get('authorization');
+    const cookieToken = request.cookies.get('access_token')?.value;
+    const token = extractBearerToken(authHeader) || cookieToken;
+
+    if (!token) {
+      return {
+        error: NextResponse.json(
+          { error: 'Authentication required', code: 'UNAUTHORIZED' },
+          { status: 401 }
+        ),
+      };
+    }
+
+    const payload = verifyAccessToken(token);
+    if (!payload) {
+      return {
+        error: NextResponse.json(
+          { error: 'Invalid or expired token', code: 'INVALID_TOKEN' },
+          { status: 401 }
+        ),
+      };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+        brand: { select: { id: true } },
+        influencer: { select: { id: true } },
+      },
+    });
+
+    if (!user) {
+      return {
+        error: NextResponse.json(
+          { error: 'User not found', code: 'USER_NOT_FOUND' },
+          { status: 401 }
+        ),
+      };
+    }
+
+    if (!user.isActive) {
+      return {
+        error: NextResponse.json(
+          { error: 'Account is deactivated', code: 'ACCOUNT_DEACTIVATED' },
+          { status: 401 }
+        ),
+      };
+    }
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        brandId: user.brand?.id,
+        influencerId: user.influencer?.id,
+      },
+    };
+  } catch (error) {
+    console.error('Auth error:', error);
+    return {
+      error: NextResponse.json(
+        { error: 'Authentication failed', code: 'AUTH_ERROR' },
+        { status: 401 }
+      ),
+    };
+  }
+}
+
+/**
  * Extract authenticated user from request headers
  * Use this in API route handlers after auth middleware
  */

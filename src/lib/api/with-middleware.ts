@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRole } from '@prisma/client';
-import { authMiddleware, getAuthUser, AuthenticatedUser } from '@/middleware/auth.middleware';
-import { roleMiddleware } from '@/middleware/role.middleware';
+import { authenticateRequest, AuthenticatedUser } from '@/middleware/auth.middleware';
 import { errorHandler } from '@/middleware/error.middleware';
 import { ZodSchema } from 'zod';
 
@@ -62,16 +61,23 @@ export function withMiddleware(
     context?: RouteContext
   ): Promise<NextResponse> => {
     try {
-      // Run authentication middleware if required
+      let user: AuthenticatedUser | null = null;
+
+      // Run authentication if required
       if (auth) {
-        const authResult = await authMiddleware(request);
-        if (authResult) return authResult;
+        const authResult = await authenticateRequest(request);
+        if ('error' in authResult) return authResult.error;
+        user = authResult.user;
       }
 
       // Run role middleware if roles specified
-      if (roles.length > 0) {
-        const roleResult = roleMiddleware(...roles)(request);
-        if (roleResult) return roleResult;
+      if (roles.length > 0 && user) {
+        if (!roles.includes(user.role)) {
+          return NextResponse.json(
+            { error: 'Insufficient permissions', code: 'FORBIDDEN' },
+            { status: 403 }
+          );
+        }
       }
 
       // Run custom middlewares
@@ -79,9 +85,6 @@ export function withMiddleware(
         const result = await middleware(request);
         if (result) return result;
       }
-
-      // Get authenticated user if auth is enabled
-      const user = auth ? getAuthUser(request) : null;
 
       // Call the handler
       if (auth && user) {

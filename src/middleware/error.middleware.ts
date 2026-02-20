@@ -132,6 +132,9 @@ export function errorHandler(error: unknown): NextResponse<ErrorResponse> {
       {
         error: 'Invalid data provided',
         code: 'VALIDATION_ERROR',
+        ...(process.env.NODE_ENV === 'development' && {
+          details: error.message,
+        }),
       },
       { status: 400 }
     );
