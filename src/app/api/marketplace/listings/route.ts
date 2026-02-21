@@ -50,6 +50,7 @@ export const POST = withBrand(async (request: NextRequest, user: AuthenticatedUs
           budgetMin: body.budgetMin || 0,
           budgetMax: body.budgetMax || 0,
           compensationType: body.compensationType || 'FIXED',
+          status: 'ACTIVE',
           startDate: body.campaignStartDate ? new Date(body.campaignStartDate) : new Date(),
           endDate: body.campaignEndDate ? new Date(body.campaignEndDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           applicationDeadline: body.applicationDeadline ? new Date(body.applicationDeadline) : undefined,

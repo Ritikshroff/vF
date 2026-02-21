@@ -151,7 +151,7 @@ export default function BrandCampaignDetailPage() {
   );
   const rejectedApplications = applications.filter((a) => a.status === "REJECTED");
   const acceptedCollaborations = collaborations.filter(
-    (c) => c.status === "ACCEPTED" || c.status === "IN_PROGRESS" || c.status === "COMPLETED"
+    (c) => c.status === "PROPOSAL_SENT" || c.status === "ACCEPTED" || c.status === "IN_PROGRESS" || c.status === "COMPLETED" || c.status === "CONTRACT_SENT" || c.status === "CONTRACT_SIGNED"
   );
 
   const spotsRemaining = (listingData.totalSlots || 1) - (listingData.filledSlots || 0);
@@ -206,9 +206,11 @@ export default function BrandCampaignDetailPage() {
                     </p>
 
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {listingData.campaign?.category}
-                      </Badge>
+                      {listingData.campaign?.category && (
+                        <Badge variant="outline" className="text-xs">
+                          {listingData.campaign.category}
+                        </Badge>
+                      )}
                       {(listingData.targetPlatforms || []).map((platform: string) => (
                         <Badge key={platform} variant="outline" className="text-xs">
                           {platform.charAt(0) + platform.slice(1).toLowerCase()}
@@ -307,7 +309,8 @@ export default function BrandCampaignDetailPage() {
             {/* Overview Tab */}
             {activeTab === "overview" && (
               <motion.div
-                variants={staggerItem}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 className="grid lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6"
               >
                 {/* Campaign Details */}
@@ -442,7 +445,7 @@ export default function BrandCampaignDetailPage() {
 
             {/* Applicants Tab */}
             {activeTab === "applicants" && (
-              <motion.div variants={staggerItem}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {pendingApplications.length === 0 ? (
                   <Card className="text-center py-8 sm:py-16">
                     <CardContent>
@@ -604,7 +607,7 @@ export default function BrandCampaignDetailPage() {
 
             {/* Accepted Tab */}
             {activeTab === "accepted" && (
-              <motion.div variants={staggerItem}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {acceptedCollaborations.length === 0 ? (
                   <Card className="text-center py-8 sm:py-16">
                     <CardContent>
@@ -671,7 +674,9 @@ export default function BrandCampaignDetailPage() {
                                 ? "In Progress"
                                 : collab.status === "COMPLETED"
                                   ? "Completed"
-                                  : "Accepted"}
+                                  : collab.status === "PROPOSAL_SENT"
+                                    ? "Accepted"
+                                    : collab.status.charAt(0) + collab.status.slice(1).toLowerCase().replace(/_/g, " ")}
                             </Badge>
 
                             <div className="flex gap-2 w-full">
@@ -695,7 +700,7 @@ export default function BrandCampaignDetailPage() {
 
             {/* Rejected Tab */}
             {activeTab === "rejected" && (
-              <motion.div variants={staggerItem}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {rejectedApplications.length === 0 ? (
                   <Card className="text-center py-8 sm:py-16">
                     <CardContent>
@@ -751,7 +756,7 @@ export default function BrandCampaignDetailPage() {
 
             {/* Performance Tab */}
             {activeTab === "performance" && (
-              <motion.div variants={staggerItem}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <Card className="text-center py-8 sm:py-16">
                   <CardContent>
                     <TrendingUp className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />

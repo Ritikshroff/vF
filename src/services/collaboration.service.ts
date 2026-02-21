@@ -627,7 +627,16 @@ function getCollaborationIncludes() {
       select: { id: true, title: true, category: true },
     },
     influencer: {
-      select: { id: true, username: true, fullName: true, avatar: true },
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        avatar: true,
+        rating: true,
+        platforms: {
+          select: { platform: true, followers: true },
+        },
+      },
     },
     brand: {
       select: { id: true, companyName: true, logo: true },

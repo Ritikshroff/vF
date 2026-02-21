@@ -18,6 +18,7 @@ export async function createListing(brandId: string, input: CreateListingInput) 
     data: {
       brandId,
       campaignId: input.campaignId,
+      status: 'ACTIVE',
       title: input.title,
       description: input.description,
       requirements: input.requirements,
@@ -55,7 +56,7 @@ export async function getListingById(listingId: string) {
     where: { id: listingId },
     include: {
       campaign: {
-        select: { id: true, title: true, description: true, status: true },
+        select: { id: true, title: true, description: true, status: true, category: true },
       },
       brand: {
         select: { id: true, companyName: true, logo: true, industry: true, verified: true },
@@ -212,6 +213,7 @@ export async function getListingApplications(
             id: true,
             fullName: true,
             avatar: true,
+            bio: true,
             categories: true,
             rating: true,
             totalCampaigns: true,
@@ -321,6 +323,9 @@ export async function getInfluencerApplications(
           include: {
             brand: {
               select: { id: true, companyName: true, logo: true },
+            },
+            campaign: {
+              select: { id: true, title: true, category: true, status: true },
             },
           },
         },

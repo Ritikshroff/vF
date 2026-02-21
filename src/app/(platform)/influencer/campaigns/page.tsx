@@ -81,8 +81,10 @@ type MyApplication = {
     budgetMin: number | null;
     budgetMax: number | null;
     targetPlatforms: string[];
-    campaign: { category: string; startDate: string };
+    campaign?: { category: string; startDate: string } | null;
+    campaignStartDate?: string | null;
   };
+  createdAt?: string;
 };
 
 type CampaignStatus =
@@ -445,9 +447,11 @@ export default function InfluencerCampaignsPage() {
               <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
                 {app.listing.title}
               </h3>
-              <Badge variant="outline" className="shrink-0">
-                {app.listing.campaign.category}
-              </Badge>
+              {app.listing.campaign?.category && (
+                <Badge variant="outline" className="shrink-0">
+                  {app.listing.campaign.category}
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-2 sm:mb-3">
               {app.listing.description}
@@ -468,7 +472,7 @@ export default function InfluencerCampaignsPage() {
               <Calendar className="h-4 w-4 text-[rgb(var(--muted))]" />
               <span className="text-[rgb(var(--muted))] truncate">
                 {new Date(
-                  app.listing.campaign.startDate
+                  app.listing.campaign?.startDate || app.listing.campaignStartDate || app.createdAt || new Date()
                 ).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",

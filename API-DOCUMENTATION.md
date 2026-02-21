@@ -36,24 +36,26 @@
 ## Authentication
 
 All protected routes require a valid JWT token sent as:
+
 - **Cookie:** `access_token` (set automatically on login)
 - **Header:** `Authorization: Bearer <token>`
 
 ### Auth Middleware Types
 
-| Middleware | Who Can Access |
-|-----------|---------------|
-| `withAuth` | Any authenticated user |
-| `withBrand` | Brand users only |
-| `withInfluencer` | Influencer users only |
-| `withAdmin` | Admin users only |
-| `withPublic` | Anyone (no auth required) |
+| Middleware       | Who Can Access            |
+| ---------------- | ------------------------- |
+| `withAuth`       | Any authenticated user    |
+| `withBrand`      | Brand users only          |
+| `withInfluencer` | Influencer users only     |
+| `withAdmin`      | Admin users only          |
+| `withPublic`     | Anyone (no auth required) |
 
 ---
 
 ## 1. Authentication
 
 ### POST /api/auth/register
+
 Create a new user account.
 
 **Auth:** None (public)
@@ -84,6 +86,7 @@ Create a new user account.
 ```
 
 ### POST /api/auth/login
+
 Authenticate user and receive tokens.
 
 **Auth:** None (public)
@@ -116,6 +119,7 @@ Authenticate user and receive tokens.
 ```
 
 ### POST /api/auth/logout
+
 Logout and invalidate session.
 
 **Auth:** None
@@ -126,6 +130,7 @@ Logout and invalidate session.
 ```
 
 ### POST /api/auth/refresh
+
 Refresh access token using refresh token cookie.
 
 **Auth:** None (uses refresh_token cookie)
@@ -140,6 +145,7 @@ Refresh access token using refresh token cookie.
 ```
 
 ### GET /api/auth/me
+
 Get current user profile.
 
 **Auth:** `withAuth`
@@ -161,6 +167,7 @@ Get current user profile.
 ```
 
 ### PUT /api/auth/me
+
 Update current user profile.
 
 **Auth:** `withAuth`
@@ -171,11 +178,13 @@ Update current user profile.
 ```
 
 ### DELETE /api/auth/me
+
 Soft-delete current user account.
 
 **Auth:** `withAuth`
 
 ### POST /api/auth/verify-email
+
 Verify email with token.
 
 **Auth:** None
@@ -186,6 +195,7 @@ Verify email with token.
 ```
 
 ### POST /api/auth/forgot-password
+
 Request password reset email.
 
 **Auth:** None
@@ -199,6 +209,7 @@ Request password reset email.
 ```
 
 ### POST /api/auth/reset-password
+
 Reset password using token.
 
 **Auth:** None
@@ -213,6 +224,7 @@ Reset password using token.
 ## 2. Collaborations
 
 ### POST /api/collaborations
+
 Create a new collaboration.
 
 **Auth:** `withAuth` (BRAND/ADMIN only)
@@ -231,6 +243,7 @@ Create a new collaboration.
 ```
 
 ### GET /api/collaborations
+
 List collaborations with filters.
 
 **Auth:** `withAuth`
@@ -238,11 +251,13 @@ List collaborations with filters.
 **Query params:** `page`, `limit`, `status`, `campaignId`, `influencerId`, `brandId`
 
 ### GET /api/collaborations/:id
+
 Get collaboration details with history.
 
 **Auth:** `withAuth`
 
 ### POST /api/collaborations/:id/transition
+
 Transition collaboration state.
 
 **Auth:** `withAuth`
@@ -250,13 +265,14 @@ Transition collaboration state.
 ```json
 // Request
 {
-  "action": "accept",  // accept, reject, cancel, complete, etc.
+  "action": "accept", // accept, reject, cancel, complete, etc.
   "reason": "Looking forward to working together",
   "metadata": {}
 }
 ```
 
 ### GET /api/collaborations/:id/transition
+
 Get available actions for current state.
 
 **Auth:** `withAuth`
@@ -272,6 +288,7 @@ Get available actions for current state.
 ```
 
 ### POST /api/collaborations/:id/contract
+
 Generate contract for collaboration.
 
 **Auth:** `withAuth` (BRAND/ADMIN)
@@ -282,11 +299,13 @@ Generate contract for collaboration.
 ```
 
 ### GET /api/collaborations/:id/contract
+
 Get collaboration contract.
 
 **Auth:** `withAuth`
 
 ### PUT /api/collaborations/:id/contract
+
 Sign the contract.
 
 **Auth:** `withAuth`
@@ -297,6 +316,7 @@ Sign the contract.
 ```
 
 ### POST /api/collaborations/:id/milestones
+
 Create milestones.
 
 **Auth:** `withAuth` (BRAND/ADMIN)
@@ -305,18 +325,30 @@ Create milestones.
 // Request
 {
   "milestones": [
-    { "title": "Content Draft", "order": 1, "amount": 2500, "dueDate": "2026-03-10" },
-    { "title": "Final Delivery", "order": 2, "amount": 2500, "dueDate": "2026-03-20" }
+    {
+      "title": "Content Draft",
+      "order": 1,
+      "amount": 2500,
+      "dueDate": "2026-03-10"
+    },
+    {
+      "title": "Final Delivery",
+      "order": 2,
+      "amount": 2500,
+      "dueDate": "2026-03-20"
+    }
   ]
 }
 ```
 
 ### GET /api/collaborations/:id/milestones
+
 Get milestones with deliverables and payments.
 
 **Auth:** `withAuth`
 
 ### POST /api/collaborations/:id/deliverables
+
 Create deliverables.
 
 **Auth:** `withAuth` (BRAND/ADMIN)
@@ -325,17 +357,25 @@ Create deliverables.
 // Request
 {
   "deliverables": [
-    { "type": "POST", "platform": "INSTAGRAM", "description": "Product showcase", "quantity": 1, "dueDate": "2026-03-15" }
+    {
+      "type": "POST",
+      "platform": "INSTAGRAM",
+      "description": "Product showcase",
+      "quantity": 1,
+      "dueDate": "2026-03-15"
+    }
   ]
 }
 ```
 
 ### GET /api/collaborations/:id/deliverables
+
 Get all deliverables.
 
 **Auth:** `withAuth`
 
 ### POST /api/collaborations/:id/deliverables/:deliverableId/submit
+
 Submit deliverable (Influencer).
 
 **Auth:** `withAuth` (INFLUENCER/ADMIN)
@@ -350,6 +390,7 @@ Submit deliverable (Influencer).
 ```
 
 ### POST /api/collaborations/:id/deliverables/:deliverableId/review
+
 Review deliverable (Brand).
 
 **Auth:** `withAuth` (BRAND/ADMIN)
@@ -357,12 +398,13 @@ Review deliverable (Brand).
 ```json
 // Request
 {
-  "status": "APPROVED",  // APPROVED | REVISION_NEEDED | REJECTED
+  "status": "APPROVED", // APPROVED | REVISION_NEEDED | REJECTED
   "feedback": "Looks great!"
 }
 ```
 
 ### POST /api/collaborations/:id/messages
+
 Send message in collaboration thread.
 
 **Auth:** `withAuth`
@@ -373,6 +415,7 @@ Send message in collaboration thread.
 ```
 
 ### GET /api/collaborations/:id/messages
+
 Get collaboration messages.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`
@@ -382,6 +425,7 @@ Get collaboration messages.
 ## 3. Wallet & Payments
 
 ### GET /api/wallet
+
 Get wallet balance and transactions.
 
 **Auth:** `withAuth`
@@ -399,6 +443,7 @@ Get wallet balance and transactions.
 ```
 
 ### POST /api/wallet/deposit
+
 Deposit funds to wallet (Brand only).
 
 **Auth:** `withAuth` (BRAND/ADMIN)
@@ -409,6 +454,7 @@ Deposit funds to wallet (Brand only).
 ```
 
 ### POST /api/wallet/withdraw
+
 Withdraw funds from wallet (Influencer only).
 
 **Auth:** `withAuth` (INFLUENCER/ADMIN)
@@ -432,6 +478,7 @@ Withdraw funds from wallet (Influencer only).
 ## 4. Escrow
 
 ### POST /api/escrow
+
 Create escrow account for collaboration.
 
 **Auth:** `withBrand`
@@ -442,16 +489,19 @@ Create escrow account for collaboration.
 ```
 
 ### GET /api/escrow/:id
+
 Get escrow account details.
 
 **Auth:** `withAuth`
 
 ### POST /api/escrow/:id/fund
+
 Fund escrow from brand wallet.
 
 **Auth:** `withBrand`
 
 ### POST /api/escrow/:id/release
+
 Release escrow funds to influencer.
 
 **Auth:** `withBrand`
@@ -462,6 +512,7 @@ Release escrow funds to influencer.
 ```
 
 ### POST /api/escrow/:id/refund
+
 Refund escrow to brand.
 
 **Auth:** `withAuth`
@@ -476,6 +527,7 @@ Refund escrow to brand.
 ## 5. Invoices
 
 ### POST /api/invoices
+
 Create an invoice.
 
 **Auth:** `withAuth`
@@ -486,7 +538,12 @@ Create an invoice.
   "type": "BRAND_DEPOSIT",
   "collaborationId": "clx...",
   "lineItems": [
-    { "description": "Instagram post", "quantity": 1, "unitPrice": 2500, "amount": 2500 }
+    {
+      "description": "Instagram post",
+      "quantity": 1,
+      "unitPrice": 2500,
+      "amount": 2500
+    }
   ],
   "taxRate": 18,
   "dueDate": "2026-03-01"
@@ -494,21 +551,25 @@ Create an invoice.
 ```
 
 ### GET /api/invoices
+
 List invoices.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`, `status`
 
 ### GET /api/invoices/:id
+
 Get invoice details.
 
 **Auth:** `withAuth`
 
 ### POST /api/invoices/:id/send
+
 Send invoice to recipient.
 
 **Auth:** `withAuth`
 
 ### POST /api/invoices/:id/pay
+
 Mark invoice as paid.
 
 **Auth:** `withAuth`
@@ -523,6 +584,7 @@ Mark invoice as paid.
 ## 6. Payout Methods
 
 ### POST /api/payout-methods
+
 Add payout method.
 
 **Auth:** `withInfluencer`
@@ -541,21 +603,25 @@ Add payout method.
 ```
 
 ### GET /api/payout-methods
+
 List payout methods.
 
 **Auth:** `withInfluencer`
 
 ### GET /api/payout-methods/:id
+
 Get specific payout method.
 
 **Auth:** `withInfluencer`
 
 ### DELETE /api/payout-methods/:id
+
 Delete payout method.
 
 **Auth:** `withInfluencer`
 
 ### POST /api/payout-methods/:id/default
+
 Set as default payout method.
 
 **Auth:** `withInfluencer`
@@ -565,6 +631,7 @@ Set as default payout method.
 ## 7. Reputation & Reviews
 
 ### GET /api/reputation/:userId
+
 Get reputation breakdown.
 
 **Auth:** `withAuth`
@@ -575,12 +642,17 @@ Get reputation breakdown.
   "data": {
     "overallScore": 4.7,
     "totalReviews": 15,
-    "breakdown": { "communication": 4.8, "quality": 4.6, "professionalism": 4.9 }
+    "breakdown": {
+      "communication": 4.8,
+      "quality": 4.6,
+      "professionalism": 4.9
+    }
   }
 }
 ```
 
 ### POST /api/reviews/influencer
+
 Review an influencer (Brand only).
 
 **Auth:** `withBrand`
@@ -601,11 +673,13 @@ Review an influencer (Brand only).
 ```
 
 ### GET /api/reviews/influencer
+
 Get influencer reviews.
 
 **Auth:** `withAuth` | **Query:** `influencerId` (required), `page`, `limit`
 
 ### POST /api/reviews/influencer/:id/respond
+
 Respond to review (Influencer).
 
 **Auth:** `withInfluencer`
@@ -616,6 +690,7 @@ Respond to review (Influencer).
 ```
 
 ### POST /api/reviews/brand
+
 Review a brand (Influencer only).
 
 **Auth:** `withInfluencer`
@@ -634,11 +709,13 @@ Review a brand (Influencer only).
 ```
 
 ### GET /api/reviews/brand
+
 Get brand reviews.
 
 **Auth:** `withAuth` | **Query:** `brandId` (required), `page`, `limit`
 
 ### POST /api/reviews/brand/:id/respond
+
 Respond to review (Brand).
 
 **Auth:** `withBrand`
@@ -648,6 +725,7 @@ Respond to review (Brand).
 ## 8. Verification & Disputes
 
 ### POST /api/verification
+
 Submit verification request.
 
 **Auth:** `withAuth`
@@ -655,22 +733,25 @@ Submit verification request.
 ```json
 // Request
 {
-  "verificationType": "IDENTITY",  // IDENTITY | BUSINESS | PORTFOLIO | SOCIAL_ACCOUNT
+  "verificationType": "IDENTITY", // IDENTITY | BUSINESS | PORTFOLIO | SOCIAL_ACCOUNT
   "documents": ["https://..."]
 }
 ```
 
 ### GET /api/verification
+
 Get user's verification requests.
 
 **Auth:** `withAuth`
 
 ### GET /api/verification/admin
+
 List all pending verifications.
 
 **Auth:** `withAdmin`
 
 ### POST /api/verification/:id/review
+
 Review verification (Admin).
 
 **Auth:** `withAdmin`
@@ -681,6 +762,7 @@ Review verification (Admin).
 ```
 
 ### POST /api/disputes
+
 Create a dispute.
 
 **Auth:** `withAuth`
@@ -697,16 +779,19 @@ Create a dispute.
 ```
 
 ### GET /api/disputes
+
 List disputes.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`, `status`, `type`
 
 ### GET /api/disputes/:id
+
 Get dispute details.
 
 **Auth:** `withAuth`
 
 ### POST /api/disputes/:id/resolve
+
 Resolve dispute (Admin).
 
 **Auth:** `withAdmin`
@@ -725,6 +810,7 @@ Resolve dispute (Admin).
 ## 9. Social Feed
 
 ### POST /api/feed
+
 Create a feed post.
 
 **Auth:** `withAuth`
@@ -742,46 +828,54 @@ Create a feed post.
 ```
 
 ### GET /api/feed
+
 Get personalized feed.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`, `followingOnly`, `authorId`, `hashtag`, `type`
 
 ### GET /api/feed/:id
+
 Get single post.
 
 **Auth:** `withAuth`
 
 ### PUT /api/feed/:id
+
 Update post.
 
 **Auth:** `withAuth`
 
 ### DELETE /api/feed/:id
+
 Delete post (soft delete).
 
 **Auth:** `withAuth`
 
 ### POST /api/feed/:id/like
+
 Toggle like on post.
 
 **Auth:** `withAuth`
 
 ### POST /api/feed/:id/comments
+
 Add comment.
 
 **Auth:** `withAuth`
 
 ```json
 // Request
-{ "content": "Great work!", "parentId": "clx..." }  // parentId for replies
+{ "content": "Great work!", "parentId": "clx..." } // parentId for replies
 ```
 
 ### GET /api/feed/:id/comments
+
 Get post comments.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`
 
 ### POST /api/feed/:id/share
+
 Share post.
 
 **Auth:** `withAuth`
@@ -796,11 +890,13 @@ Share post.
 ## 10. Follow System
 
 ### POST /api/follow/:userId
+
 Toggle follow/unfollow user.
 
 **Auth:** `withAuth`
 
 ### GET /api/follow/:userId
+
 Get followers or following list.
 
 **Auth:** `withAuth` | **Query:** `type` (`followers` | `following`), `page`, `limit`
@@ -810,6 +906,7 @@ Get followers or following list.
 ## 11. CRM (Brand)
 
 ### POST /api/crm/contacts
+
 Add influencer as CRM contact.
 
 **Auth:** `withBrand`
@@ -826,26 +923,31 @@ Add influencer as CRM contact.
 ```
 
 ### GET /api/crm/contacts
+
 List contacts.
 
 **Auth:** `withBrand` | **Query:** `page`, `limit`, `status`, `search`, `labels`
 
 ### GET /api/crm/contacts/:id
+
 Get contact details.
 
 **Auth:** `withBrand`
 
 ### PUT /api/crm/contacts/:id
+
 Update contact.
 
 **Auth:** `withBrand`
 
 ### DELETE /api/crm/contacts/:id
+
 Delete contact.
 
 **Auth:** `withBrand`
 
 ### POST /api/crm/contacts/:id/notes
+
 Add note to contact.
 
 **Auth:** `withBrand`
@@ -856,26 +958,34 @@ Add note to contact.
 ```
 
 ### GET /api/crm/contacts/:id/notes
+
 Get contact notes.
 
 **Auth:** `withBrand` | **Query:** `page`, `limit`
 
 ### GET /api/crm/dashboard
+
 Get CRM dashboard summary.
 
 **Auth:** `withBrand`
 
 ### POST /api/crm/lists
+
 Create contact list.
 
 **Auth:** `withBrand`
 
 ```json
 // Request
-{ "name": "Summer Campaign Shortlist", "description": "Top picks for summer", "isSmartList": false }
+{
+  "name": "Summer Campaign Shortlist",
+  "description": "Top picks for summer",
+  "isSmartList": false
+}
 ```
 
 ### GET /api/crm/lists
+
 Get all contact lists.
 
 **Auth:** `withBrand`
@@ -885,6 +995,7 @@ Get all contact lists.
 ## 12. Marketplace
 
 ### POST /api/marketplace/listings
+
 Create marketplace listing.
 
 **Auth:** `withBrand`
@@ -907,21 +1018,25 @@ Create marketplace listing.
 ```
 
 ### GET /api/marketplace/listings
+
 Search listings.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`, `search`, `status`, `compensationType`, `niches`, `platforms`, `minBudget`, `maxBudget`, `isFeatured`
 
 ### GET /api/marketplace/listings/:id
+
 Get listing details.
 
 **Auth:** `withAuth`
 
 ### PUT /api/marketplace/listings/:id
+
 Update listing.
 
 **Auth:** `withBrand`
 
 ### POST /api/marketplace/listings/:id/applications
+
 Apply to listing (Influencer).
 
 **Auth:** `withInfluencer`
@@ -937,11 +1052,13 @@ Apply to listing (Influencer).
 ```
 
 ### GET /api/marketplace/listings/:id/applications
+
 Get applications for listing (Brand).
 
 **Auth:** `withBrand` | **Query:** `page`, `limit`, `status`
 
 ### POST /api/marketplace/applications/:id/review
+
 Review application (Brand).
 
 **Auth:** `withBrand`
@@ -952,6 +1069,7 @@ Review application (Brand).
 ```
 
 ### GET /api/marketplace/my-applications
+
 Get influencer's own applications.
 
 **Auth:** `withInfluencer` | **Query:** `page`, `limit`, `status`
@@ -961,16 +1079,19 @@ Get influencer's own applications.
 ## 13. Analytics
 
 ### GET /api/analytics/campaign/:campaignId
+
 Get campaign analytics.
 
 **Auth:** `withBrand`
 
 ### GET /api/analytics/influencer/:influencerId
+
 Get influencer analytics.
 
 **Auth:** `withAuth`
 
 ### GET /api/analytics/platform
+
 Get platform overview (Admin).
 
 **Auth:** `withAdmin` | **Query:** `startDate`, `endDate`, `period`
@@ -980,6 +1101,7 @@ Get platform overview (Admin).
 ## 14. AI Intelligence
 
 ### POST /api/ai/match
+
 Find matching influencers for a campaign.
 
 **Auth:** `withBrand`
@@ -1000,11 +1122,13 @@ Find matching influencers for a campaign.
 ```
 
 ### GET /api/ai/match
+
 Get cached match scores.
 
 **Auth:** `withBrand` | **Query:** `campaignId`
 
 ### POST /api/ai/content-suggestions
+
 Generate AI content suggestions.
 
 **Auth:** `withBrand`
@@ -1021,11 +1145,13 @@ Generate AI content suggestions.
 ```
 
 ### GET /api/ai/pricing/:influencerId
+
 Get AI pricing recommendations.
 
 **Auth:** `withAuth`
 
 ### GET /api/ai/fraud-detection/:influencerId
+
 Run fraud detection analysis.
 
 **Auth:** `withBrand`
@@ -1035,36 +1161,45 @@ Run fraud detection analysis.
 ## 15. Subscriptions
 
 ### GET /api/subscriptions/plans
+
 Get available plans.
 
 **Auth:** None (public)
 
 ### POST /api/subscriptions
+
 Create subscription.
 
 **Auth:** `withAuth`
 
 ```json
 // Request
-{ "planId": "clx...", "billingInterval": "MONTHLY", "paymentMethodId": "pm_..." }
+{
+  "planId": "clx...",
+  "billingInterval": "MONTHLY",
+  "paymentMethodId": "pm_..."
+}
 ```
 
 ### GET /api/subscriptions
+
 Get current subscription.
 
 **Auth:** `withAuth`
 
 ### POST /api/subscriptions/:id/cancel
+
 Cancel subscription.
 
 **Auth:** `withAuth`
 
 ```json
 // Request
-{ "immediate": false }  // false = cancel at period end
+{ "immediate": false } // false = cancel at period end
 ```
 
 ### POST /api/subscriptions/change-plan
+
 Upgrade/downgrade plan.
 
 **Auth:** `withAuth`
@@ -1075,11 +1210,13 @@ Upgrade/downgrade plan.
 ```
 
 ### GET /api/subscriptions/usage
+
 Get usage summary.
 
 **Auth:** `withAuth`
 
 ### GET /api/subscriptions/features
+
 Get feature access gates.
 
 **Auth:** `withAuth`
@@ -1089,11 +1226,13 @@ Get feature access gates.
 ## 16. Messaging
 
 ### GET /api/messaging/conversations
+
 List conversations.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`, `search`
 
 ### POST /api/messaging/conversations
+
 Start a conversation.
 
 **Auth:** `withAuth`
@@ -1108,11 +1247,13 @@ Start a conversation.
 ```
 
 ### GET /api/messaging/conversations/:id
+
 Get conversation messages.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`
 
 ### POST /api/messaging/conversations/:id/messages
+
 Send message.
 
 **Auth:** `withAuth`
@@ -1121,16 +1262,25 @@ Send message.
 // Request
 {
   "content": "Here are the brand guidelines",
-  "attachments": [{ "type": "document", "url": "https://...", "filename": "guidelines.pdf", "size": 1024 }]
+  "attachments": [
+    {
+      "type": "document",
+      "url": "https://...",
+      "filename": "guidelines.pdf",
+      "size": 1024
+    }
+  ]
 }
 ```
 
 ### POST /api/messaging/conversations/:id/read
+
 Mark conversation as read.
 
 **Auth:** `withAuth`
 
 ### POST /api/messaging/messages/:id/reactions
+
 Add reaction to message.
 
 **Auth:** `withAuth`
@@ -1141,6 +1291,7 @@ Add reaction to message.
 ```
 
 ### DELETE /api/messaging/messages/:id/reactions
+
 Remove reaction.
 
 **Auth:** `withAuth` | **Query:** `emoji`
@@ -1150,11 +1301,13 @@ Remove reaction.
 ## 17. Discovery
 
 ### GET /api/discovery/search
+
 Search influencers.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`, `query`, `niches`, `platforms`, `minFollowers`, `maxFollowers`, `location`, `verified`
 
 ### POST /api/discovery/compare
+
 Compare influencers (2-4).
 
 **Auth:** `withAuth`
@@ -1165,16 +1318,19 @@ Compare influencers (2-4).
 ```
 
 ### GET /api/discovery/search-history
+
 Get search history.
 
 **Auth:** `withAuth` | **Query:** `limit`
 
 ### GET /api/discovery/similar/:id
+
 Get similar influencers.
 
 **Auth:** `withAuth` | **Query:** `limit`
 
 ### GET /api/discovery/influencers/:id
+
 Get influencer profile.
 
 **Auth:** `withAuth`
@@ -1184,6 +1340,7 @@ Get influencer profile.
 ## 18. Tracking & Links
 
 ### POST /api/tracking/links
+
 Create tracking link (Influencer).
 
 **Auth:** `withAuth` (INFLUENCER)
@@ -1200,16 +1357,19 @@ Create tracking link (Influencer).
 ```
 
 ### GET /api/tracking/links
+
 List tracking links.
 
 **Auth:** `withAuth` (INFLUENCER) | **Query:** `page`, `limit`
 
 ### POST /api/tracking/links/:id/toggle
+
 Toggle link active/inactive.
 
 **Auth:** `withAuth` (INFLUENCER)
 
 ### POST /api/tracking/promo-codes
+
 Create promo code (Influencer).
 
 **Auth:** `withAuth` (INFLUENCER)
@@ -1227,21 +1387,25 @@ Create promo code (Influencer).
 ```
 
 ### GET /api/tracking/promo-codes
+
 List promo codes.
 
 **Auth:** `withAuth` (INFLUENCER) | **Query:** `page`, `limit`
 
 ### POST /api/tracking/promo-codes/:id/toggle
+
 Toggle promo code.
 
 **Auth:** `withAuth` (INFLUENCER)
 
 ### GET /api/tracking/dashboard
+
 Get tracking dashboard summary.
 
 **Auth:** `withAuth` (INFLUENCER)
 
 ### GET /api/tracking/redirect/:shortCode
+
 Redirect and record click.
 
 **Auth:** None (public)
@@ -1251,16 +1415,19 @@ Redirect and record click.
 ## 19. Reports
 
 ### GET /api/reports
+
 List reports.
 
 **Auth:** `withBrand` | **Query:** `page`, `limit`
 
 ### GET /api/reports/:id
+
 Get report details.
 
 **Auth:** `withBrand`
 
 ### POST /api/reports/generate
+
 Generate a report.
 
 **Auth:** `withBrand`
@@ -1276,36 +1443,49 @@ Generate a report.
 ```
 
 ### GET /api/reports/templates
+
 List report templates.
 
 **Auth:** `withBrand`
 
 ### POST /api/reports/templates
+
 Create report template.
 
 **Auth:** `withBrand`
 
 ```json
 // Request
-{ "name": "Monthly Summary", "sections": ["overview", "engagement", "roi"], "format": "PDF" }
+{
+  "name": "Monthly Summary",
+  "sections": ["overview", "engagement", "roi"],
+  "format": "PDF"
+}
 ```
 
 ### GET /api/reports/schedule
+
 List scheduled reports.
 
 **Auth:** `withBrand`
 
 ### POST /api/reports/schedule
+
 Schedule a report.
 
 **Auth:** `withBrand`
 
 ```json
 // Request
-{ "templateId": "clx...", "frequency": "WEEKLY", "recipients": ["team@brand.com"] }
+{
+  "templateId": "clx...",
+  "frequency": "WEEKLY",
+  "recipients": ["team@brand.com"]
+}
 ```
 
 ### POST /api/reports/schedule/:id/toggle
+
 Toggle scheduled report.
 
 **Auth:** `withBrand`
@@ -1315,11 +1495,13 @@ Toggle scheduled report.
 ## 20. Contracts
 
 ### GET /api/contracts/templates
+
 List contract templates.
 
 **Auth:** `withAuth` (BRAND)
 
 ### POST /api/contracts/:id/sign
+
 Sign a contract.
 
 **Auth:** `withAuth`
@@ -1330,11 +1512,13 @@ Sign a contract.
 ```
 
 ### GET /api/contracts/:id/audit
+
 Get contract audit trail.
 
 **Auth:** `withAuth`
 
 ### POST /api/contracts/compliance-check
+
 Check FTC compliance.
 
 **Auth:** `withAuth`
@@ -1345,6 +1529,7 @@ Check FTC compliance.
 ```
 
 ### GET /api/contracts/compliance
+
 List FTC compliance checks.
 
 **Auth:** `withAuth` (BRAND) | **Query:** `page`, `limit`
@@ -1354,6 +1539,7 @@ List FTC compliance checks.
 ## 21. Content Approval
 
 ### POST /api/content-approval/:id/submit
+
 Submit content for approval.
 
 **Auth:** `withAuth`
@@ -1364,6 +1550,7 @@ Submit content for approval.
 ```
 
 ### POST /api/content-approval/:id/review
+
 Review content.
 
 **Auth:** `withAuth`
@@ -1371,17 +1558,19 @@ Review content.
 ```json
 // Request
 {
-  "status": "APPROVED",  // APPROVED | CHANGES_REQUESTED | REJECTED
+  "status": "APPROVED", // APPROVED | CHANGES_REQUESTED | REJECTED
   "feedback": "Looks perfect!"
 }
 ```
 
 ### GET /api/content-approval/:id/timeline
+
 Get approval timeline.
 
 **Auth:** `withAuth`
 
 ### GET /api/content-approval/queue
+
 List pending approvals.
 
 **Auth:** `withAuth` | **Query:** `page`, `limit`, `status`
@@ -1391,6 +1580,7 @@ List pending approvals.
 ## 22. System
 
 ### GET /api/health
+
 Health check endpoint.
 
 **Auth:** None (public)
@@ -1410,6 +1600,7 @@ Health check endpoint.
 ```
 
 ### POST /api/uploads
+
 Get presigned upload URL.
 
 **Auth:** `withAuth`
@@ -1420,11 +1611,12 @@ Get presigned upload URL.
   "fileName": "photo.jpg",
   "contentType": "image/jpeg",
   "fileSize": 2048000,
-  "folder": "deliverables"  // avatars | logos | deliverables | documents | posts
+  "folder": "deliverables" // avatars | logos | deliverables | documents | posts
 }
 ```
 
 ### POST /api/webhooks/stripe
+
 Stripe webhook handler.
 
 **Auth:** Stripe signature verification
@@ -1445,24 +1637,25 @@ All errors follow this format:
 
 ### Error Codes
 
-| Code | HTTP Status | Description |
-|------|------------|-------------|
-| `VALIDATION_ERROR` | 400 | Invalid request body/params |
-| `AUTHENTICATION_ERROR` | 401 | Missing or invalid token |
-| `AUTHORIZATION_ERROR` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `CONFLICT` | 409 | Duplicate resource |
-| `RATE_LIMITED` | 429 | Too many requests |
-| `INTERNAL_ERROR` | 500 | Server error |
+| Code                   | HTTP Status | Description                 |
+| ---------------------- | ----------- | --------------------------- |
+| `VALIDATION_ERROR`     | 400         | Invalid request body/params |
+| `AUTHENTICATION_ERROR` | 401         | Missing or invalid token    |
+| `AUTHORIZATION_ERROR`  | 403         | Insufficient permissions    |
+| `NOT_FOUND`            | 404         | Resource not found          |
+| `CONFLICT`             | 409         | Duplicate resource          |
+| `RATE_LIMITED`         | 429         | Too many requests           |
+| `INTERNAL_ERROR`       | 500         | Server error                |
 
 ### Rate Limits
 
-| Endpoint Type | Limit |
-|--------------|-------|
-| Auth endpoints (`/api/auth/*`) | 10 requests/minute per IP |
-| All other API endpoints | 100 requests/minute per IP |
+| Endpoint Type                  | Limit                      |
+| ------------------------------ | -------------------------- |
+| Auth endpoints (`/api/auth/*`) | 10 requests/minute per IP  |
+| All other API endpoints        | 100 requests/minute per IP |
 
 Rate limit headers are included in all API responses:
+
 - `X-RateLimit-Limit`
 - `X-RateLimit-Remaining`
 - `X-RateLimit-Reset`
@@ -1473,12 +1666,13 @@ Rate limit headers are included in all API responses:
 
 All list endpoints support pagination:
 
-| Param | Default | Description |
-|-------|---------|-------------|
-| `page` | 1 | Page number |
-| `limit` | 20 | Items per page (max 100) |
+| Param   | Default | Description              |
+| ------- | ------- | ------------------------ |
+| `page`  | 1       | Page number              |
+| `limit` | 20      | Items per page (max 100) |
 
 Response includes pagination metadata:
+
 ```json
 {
   "data": [...],
@@ -1495,30 +1689,30 @@ Response includes pagination metadata:
 
 ## Summary
 
-| Module | Routes | Brand | Influencer | Admin | Public |
-|--------|--------|-------|------------|-------|--------|
-| Auth | 10 | - | - | - | 10 |
-| Collaborations | 17 | 7 | 2 | - | - |
-| Payments | 3 | 1 | 1 | - | - |
-| Escrow | 5 | 4 | - | - | - |
-| Invoices | 5 | - | - | - | - |
-| Payout Methods | 5 | - | 5 | - | - |
-| Reviews | 7 | 3 | 3 | - | - |
-| Reputation | 1 | - | - | - | - |
-| Verification | 4 | - | - | 2 | - |
-| Disputes | 4 | - | - | 1 | - |
-| Feed | 9 | - | - | - | - |
-| Follow | 2 | - | - | - | - |
-| CRM | 10 | 10 | - | - | - |
-| Marketplace | 8 | 4 | 3 | - | - |
-| Analytics | 3 | 1 | - | 1 | - |
-| AI | 5 | 4 | - | - | - |
-| Subscriptions | 7 | - | - | - | 1 |
-| Messaging | 7 | - | - | - | - |
-| Discovery | 5 | - | - | - | - |
-| Tracking | 8 | - | 7 | - | 1 |
-| Reports | 8 | 8 | - | - | - |
-| Contracts | 5 | 3 | - | - | - |
-| Content Approval | 4 | - | - | - | - |
-| System | 2 | - | - | - | 2 |
-| **Total** | **119** | | | | |
+| Module           | Routes  | Brand | Influencer | Admin | Public |
+| ---------------- | ------- | ----- | ---------- | ----- | ------ |
+| Auth             | 10      | -     | -          | -     | 10     |
+| Collaborations   | 17      | 7     | 2          | -     | -      |
+| Payments         | 3       | 1     | 1          | -     | -      |
+| Escrow           | 5       | 4     | -          | -     | -      |
+| Invoices         | 5       | -     | -          | -     | -      |
+| Payout Methods   | 5       | -     | 5          | -     | -      |
+| Reviews          | 7       | 3     | 3          | -     | -      |
+| Reputation       | 1       | -     | -          | -     | -      |
+| Verification     | 4       | -     | -          | 2     | -      |
+| Disputes         | 4       | -     | -          | 1     | -      |
+| Feed             | 9       | -     | -          | -     | -      |
+| Follow           | 2       | -     | -          | -     | -      |
+| CRM              | 10      | 10    | -          | -     | -      |
+| Marketplace      | 8       | 4     | 3          | -     | -      |
+| Analytics        | 3       | 1     | -          | 1     | -      |
+| AI               | 5       | 4     | -          | -     | -      |
+| Subscriptions    | 7       | -     | -          | -     | 1      |
+| Messaging        | 7       | -     | -          | -     | -      |
+| Discovery        | 5       | -     | -          | -     | -      |
+| Tracking         | 8       | -     | 7          | -     | 1      |
+| Reports          | 8       | 8     | -          | -     | -      |
+| Contracts        | 5       | 3     | -          | -     | -      |
+| Content Approval | 4       | -     | -          | -     | -      |
+| System           | 2       | -     | -          | -     | 2      |
+| **Total**        | **119** |       |            |       |        |
