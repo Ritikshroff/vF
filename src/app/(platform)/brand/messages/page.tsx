@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Send,
@@ -10,88 +10,133 @@ import {
   ArrowLeft,
   CheckCheck,
   Loader2,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
-import { Avatar } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { useAuth } from '@/contexts/auth-context'
-import { formatRelativeTime, getInitials } from '@/lib/utils'
-import { staggerContainer, staggerItem } from '@/lib/animations'
-import { useConversations, useMessages } from '@/hooks/queries/use-messaging'
-import { useSendMessage, useMarkAsRead } from '@/hooks/mutations/use-messaging-mutations'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/auth-context";
+import { formatRelativeTime, getInitials } from "@/lib/utils";
+import { staggerContainer, staggerItem } from "@/lib/animations";
+import { useConversations, useMessages } from "@/hooks/queries/use-messaging";
+import {
+  useSendMessage,
+  useMarkAsRead,
+} from "@/hooks/mutations/use-messaging-mutations";
+
+interface Participant {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
+interface Conversation {
+  id: string;
+  participants: Participant[];
+  campaignTitle?: string;
+  lastMessage?: {
+    content: string;
+    createdAt: string;
+  };
+  unreadCount: number;
+}
+
+interface Message {
+  id: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+}
 
 export default function BrandMessagesPage() {
-  const { user } = useAuth()
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
-  const [activeConversation, setActiveConversation] = useState<any>(null)
-  const [newMessage, setNewMessage] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showMobileList, setShowMobileList] = useState(true)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth();
+  const [activeConversationId, setActiveConversationId] = useState<
+    string | null
+  >(null);
+  const [activeConversation, setActiveConversation] =
+    useState<Conversation | null>(null);
+  const [newMessage, setNewMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showMobileList, setShowMobileList] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: conversationsRaw, isLoading: loading } = useConversations()
-  const conversations = Array.isArray(conversationsRaw) ? conversationsRaw : conversationsRaw?.data ?? []
+  const { data: conversationsRaw, isLoading: loading } = useConversations();
+  const conversations = Array.isArray(conversationsRaw)
+    ? conversationsRaw
+    : (conversationsRaw?.data ?? []);
 
-  const { data: messagesRaw, isLoading: loadingMessages } = useMessages(activeConversationId || '')
-  const messages = Array.isArray(messagesRaw) ? messagesRaw : messagesRaw?.data ?? []
+  const { data: messagesRaw, isLoading: loadingMessages } = useMessages(
+    activeConversationId || "",
+  );
+  const messages = Array.isArray(messagesRaw)
+    ? messagesRaw
+    : (messagesRaw?.data ?? []);
 
-  const sendMessageMutation = useSendMessage()
-  const markAsReadMutation = useMarkAsRead()
-  const sending = sendMessageMutation.isPending
+  const sendMessageMutation = useSendMessage();
+  const markAsReadMutation = useMarkAsRead();
+  const sending = sendMessageMutation.isPending;
 
   // Auto-select first conversation
   useEffect(() => {
     if (conversations.length > 0 && !activeConversation) {
-      selectConversation(conversations[0])
+      selectConversation(conversations[0]);
     }
-  }, [conversations])
+  }, [conversations]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  const selectConversation = (conversation: any) => {
-    setActiveConversation(conversation)
-    setActiveConversationId(conversation.id)
-    setShowMobileList(false)
-    markAsReadMutation.mutate(conversation.id)
-  }
+  const selectConversation = (conversation: Conversation) => {
+    setActiveConversation(conversation);
+    setActiveConversationId(conversation.id);
+    setShowMobileList(false);
+    markAsReadMutation.mutate(conversation.id);
+  };
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !activeConversation || sending) return
+    if (!newMessage.trim() || !activeConversation || sending) return;
     sendMessageMutation.mutate(
       { conversationId: activeConversation.id, content: newMessage },
       {
         onSuccess: () => {
-          setNewMessage('')
+          setNewMessage("");
         },
-      }
-    )
-  }
+      },
+    );
+  };
 
-  const filteredConversations = conversations.filter(conv => {
-    if (!searchQuery) return true
-    const participantNames = (conv.participants || []).map((p: any) => p.name || '').join(' ')
-    return participantNames.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (conv.campaignTitle || '').toLowerCase().includes(searchQuery.toLowerCase())
-  })
+  const filteredConversations = conversations.filter((conv: Conversation) => {
+    if (!searchQuery) return true;
+    const participantNames = (conv.participants || [])
+      .map((p: Participant) => p.name || "")
+      .join(" ");
+    return (
+      participantNames.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (conv.campaignTitle || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    );
+  });
 
-  const getConversationName = (conv: any) => {
-    return (conv.participants || []).map((p: any) => p.name).join(', ') || 'Conversation'
-  }
+  const getConversationName = (conv: Conversation) => {
+    return (
+      (conv.participants || []).map((p: Participant) => p.name).join(", ") ||
+      "Conversation"
+    );
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted" />
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
+    <div className="min-h-screen bg-linear-to-b from-background to-surface">
       <div className="container py-4 md:py-8">
         <motion.div
           initial="initial"
@@ -101,13 +146,20 @@ export default function BrandMessagesPage() {
         >
           {/* Header - Mobile Only */}
           <motion.div variants={staggerItem} className="mb-4 md:hidden">
-            <h1 className="text-xl sm:text-2xl font-bold gradient-text">Messages</h1>
+            <h1 className="text-xl sm:text-2xl font-bold gradient-text">
+              Messages
+            </h1>
           </motion.div>
 
           {/* Desktop Header */}
-          <motion.div variants={staggerItem} className="hidden md:block mb-4 lg:mb-6">
-            <h1 className="text-3xl lg:text-5xl font-bold mb-2 gradient-text">Messages</h1>
-            <p className="text-base lg:text-lg text-[rgb(var(--muted))]">
+          <motion.div
+            variants={staggerItem}
+            className="hidden md:block mb-4 lg:mb-6"
+          >
+            <h1 className="text-3xl lg:text-5xl font-bold mb-2 gradient-text">
+              Messages
+            </h1>
+            <p className="text-base lg:text-lg text-muted">
               Chat with influencers about your campaigns
             </p>
           </motion.div>
@@ -119,13 +171,13 @@ export default function BrandMessagesPage() {
                 {/* Conversations List */}
                 <div
                   className={`${
-                    showMobileList ? 'flex' : 'hidden'
-                  } md:flex flex-col w-full md:w-80 lg:w-96 border-r border-[rgb(var(--border))]`}
+                    showMobileList ? "flex" : "hidden"
+                  } md:flex flex-col w-full md:w-80 lg:w-96 border-r border-border`}
                 >
                   {/* Search */}
-                  <div className="p-4 border-b border-[rgb(var(--border))]">
+                  <div className="p-4 border-b border-border">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgb(var(--muted))]" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
                       <Input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -138,60 +190,69 @@ export default function BrandMessagesPage() {
                   {/* Conversations */}
                   <div className="flex-1 overflow-y-auto">
                     {filteredConversations.length === 0 ? (
-                      <div className="text-center py-8 text-sm text-[rgb(var(--muted))]">No conversations yet.</div>
+                      <div className="text-center py-8 text-sm text-muted">
+                        No conversations yet.
+                      </div>
                     ) : (
-                      filteredConversations.map((conversation) => (
-                        <button
-                          key={conversation.id}
-                          onClick={() => selectConversation(conversation)}
-                          className={`w-full p-4 flex gap-3 hover:bg-[rgb(var(--surface))] transition-colors border-b border-[rgb(var(--border))] ${
-                            activeConversation?.id === conversation.id
-                              ? 'bg-[rgb(var(--surface))]'
-                              : ''
-                          }`}
-                        >
-                          <div className="relative shrink-0">
-                            <Avatar
-                              className="h-12 w-12"
-                              src={conversation.participants?.[0]?.avatar}
-                              fallback={getInitials(getConversationName(conversation))}
-                            />
-                          </div>
-
-                          <div className="flex-1 min-w-0 text-left">
-                            <div className="flex items-start justify-between mb-1">
-                              <h3 className="font-semibold text-sm truncate">
-                                {getConversationName(conversation)}
-                              </h3>
-                              {conversation.lastMessage?.createdAt && (
-                                <span className="text-xs text-[rgb(var(--muted))] shrink-0 ml-2">
-                                  {formatRelativeTime(conversation.lastMessage.createdAt)}
-                                </span>
-                              )}
+                      filteredConversations.map(
+                        (conversation: Conversation) => (
+                          <button
+                            key={conversation.id}
+                            onClick={() => selectConversation(conversation)}
+                            className={`w-full p-4 flex gap-3 hover:bg-surface transition-colors border-b border-border ${
+                              activeConversation?.id === conversation.id
+                                ? "bg-surface"
+                                : ""
+                            }`}
+                          >
+                            <div className="relative shrink-0">
+                              <Avatar
+                                className="h-12 w-12"
+                                src={conversation.participants?.[0]?.avatar}
+                                fallback={getInitials(
+                                  getConversationName(conversation),
+                                )}
+                              />
                             </div>
 
-                            {conversation.campaignTitle && (
-                              <div className="text-xs text-[rgb(var(--muted))] mb-1 truncate">
-                                {conversation.campaignTitle}
+                            <div className="flex-1 min-w-0 text-left">
+                              <div className="flex items-start justify-between mb-1">
+                                <h3 className="font-semibold text-sm truncate">
+                                  {getConversationName(conversation)}
+                                </h3>
+                                {conversation.lastMessage?.createdAt && (
+                                  <span className="text-xs text-muted shrink-0 ml-2">
+                                    {formatRelativeTime(
+                                      conversation.lastMessage.createdAt,
+                                    )}
+                                  </span>
+                                )}
                               </div>
-                            )}
 
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm text-[rgb(var(--muted))] truncate">
-                                {conversation.lastMessage?.content || 'No messages yet'}
-                              </p>
-                              {conversation.unreadCount > 0 && (
-                                <Badge
-                                  variant="primary"
-                                  className="ml-2 shrink-0 h-5 min-w-[20px] p-0 flex items-center justify-center text-xs"
-                                >
-                                  {conversation.unreadCount}
-                                </Badge>
+                              {conversation.campaignTitle && (
+                                <div className="text-xs text-muted mb-1 truncate">
+                                  {conversation.campaignTitle}
+                                </div>
                               )}
+
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm text-muted truncate">
+                                  {conversation.lastMessage?.content ||
+                                    "No messages yet"}
+                                </p>
+                                {conversation.unreadCount > 0 && (
+                                  <Badge
+                                    variant="primary"
+                                    className="ml-2 shrink-0 h-5 min-w-5 p-0 flex items-center justify-center text-xs"
+                                  >
+                                    {conversation.unreadCount}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </button>
-                      ))
+                          </button>
+                        ),
+                      )
                     )}
                   </div>
                 </div>
@@ -199,13 +260,13 @@ export default function BrandMessagesPage() {
                 {/* Active Conversation */}
                 <div
                   className={`${
-                    showMobileList ? 'hidden' : 'flex'
+                    showMobileList ? "hidden" : "flex"
                   } md:flex flex-col flex-1`}
                 >
                   {activeConversation ? (
                     <>
                       {/* Chat Header */}
-                      <div className="p-4 border-b border-[rgb(var(--border))] flex items-center gap-3">
+                      <div className="p-4 border-b border-border flex items-center gap-3">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -218,13 +279,17 @@ export default function BrandMessagesPage() {
                         <Avatar
                           className="h-10 w-10"
                           src={activeConversation.participants?.[0]?.avatar}
-                          fallback={getInitials(getConversationName(activeConversation))}
+                          fallback={getInitials(
+                            getConversationName(activeConversation),
+                          )}
                         />
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold truncate">{getConversationName(activeConversation)}</h3>
+                          <h3 className="font-semibold truncate">
+                            {getConversationName(activeConversation)}
+                          </h3>
                           {activeConversation.campaignTitle && (
-                            <div className="text-xs text-[rgb(var(--muted))] truncate">
+                            <div className="text-xs text-muted truncate">
                               {activeConversation.campaignTitle}
                             </div>
                           )}
@@ -239,32 +304,42 @@ export default function BrandMessagesPage() {
                       <div className="flex-1 overflow-y-auto p-4 space-y-4">
                         {loadingMessages ? (
                           <div className="flex items-center justify-center py-8">
-                            <Loader2 className="h-6 w-6 animate-spin text-[rgb(var(--muted))]" />
+                            <Loader2 className="h-6 w-6 animate-spin text-muted" />
                           </div>
                         ) : messages.length === 0 ? (
-                          <div className="text-center py-8 text-sm text-[rgb(var(--muted))]">No messages yet. Start the conversation!</div>
+                          <div className="text-center py-8 text-sm text-muted">
+                            No messages yet. Start the conversation!
+                          </div>
                         ) : (
-                          messages.map((message) => (
+                          messages.map((message: Message) => (
                             <div
                               key={message.id}
                               className={`flex ${
-                                message.senderId === user?.id ? 'justify-end' : 'justify-start'
+                                message.senderId === user?.id
+                                  ? "justify-end"
+                                  : "justify-start"
                               }`}
                             >
                               <div
                                 className={`max-w-[80%] md:max-w-[70%] ${
                                   message.senderId === user?.id
-                                    ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white'
-                                    : 'bg-[rgb(var(--surface))]'
+                                    ? "bg-linear-to-r from-brand-primary to-brand-secondary text-white"
+                                    : "bg-surface"
                                 } rounded-2xl px-4 py-2`}
                               >
-                                <p className="text-sm mb-1">{message.content}</p>
+                                <p className="text-sm mb-1">
+                                  {message.content}
+                                </p>
                                 <div
                                   className={`flex items-center gap-1 text-xs ${
-                                    message.senderId === user?.id ? 'text-white/70' : 'text-[rgb(var(--muted))]'
+                                    message.senderId === user?.id
+                                      ? "text-white/70"
+                                      : "text-muted"
                                   }`}
                                 >
-                                  <span>{formatRelativeTime(message.createdAt)}</span>
+                                  <span>
+                                    {formatRelativeTime(message.createdAt)}
+                                  </span>
                                   {message.senderId === user?.id && (
                                     <CheckCheck className="h-3 w-3" />
                                   )}
@@ -277,16 +352,22 @@ export default function BrandMessagesPage() {
                       </div>
 
                       {/* Message Input */}
-                      <div className="p-4 border-t border-[rgb(var(--border))]">
+                      <div className="p-4 border-t border-border">
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="shrink-0"
+                          >
                             <Paperclip className="h-5 w-5" />
                           </Button>
 
                           <Input
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                            onKeyPress={(e) =>
+                              e.key === "Enter" && handleSendMessage()
+                            }
                             placeholder="Type a message..."
                             className="flex-1 h-10"
                           />
@@ -304,7 +385,7 @@ export default function BrandMessagesPage() {
                       </div>
                     </>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-[rgb(var(--muted))]">
+                    <div className="flex items-center justify-center h-full text-muted">
                       Select a conversation to start chatting
                     </div>
                   )}
@@ -315,5 +396,5 @@ export default function BrandMessagesPage() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }
