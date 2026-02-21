@@ -44,14 +44,12 @@ export default function LoginPage() {
 
       // Redirect based on user state
       const rolePath = user.role?.toLowerCase()
-      if (!user.emailVerified) {
-        router.push('/verify-email')
-      } else if (!user.role) {
-        router.push('/role-selector')
-      } else if (!user.onboardingCompleted) {
+      if (!user.onboardingCompleted && user.role) {
         router.push(`/onboarding/${rolePath}`)
-      } else {
+      } else if (user.onboardingCompleted && user.role) {
         router.push(`/${rolePath}/dashboard`)
+      } else {
+        router.push('/sign-up')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to log in')

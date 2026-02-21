@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const PROTECTED_ROUTES = ['/brand', '/influencer', '/feed', '/marketplace', '/subscriptions'];
 
 // Routes that authenticated users shouldn't access (redirect to dashboard)
-const AUTH_ROUTES = ['/login', '/sign-up', '/forgot-password', '/verify-email'];
+const AUTH_ROUTES = ['/login', '/sign-up', '/forgot-password'];
 
 // API routes that are public (no token needed)
 const PUBLIC_API_ROUTES = [

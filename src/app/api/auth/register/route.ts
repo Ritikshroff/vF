@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { hashPassword } from '@/lib/auth/password';
 import { generateSecureToken, hashToken } from '@/lib/auth/password';
-import { TOKEN_EXPIRY } from '@/lib/auth/jwt';
+import { TOKEN_EXPIRY, generateTokenPair } from '@/lib/auth/jwt';
 import { registerSchema } from '@/validators/auth.schema';
 import { errorHandler, ConflictError } from '@/middleware/error.middleware';
+import { setAuthCookies } from '@/lib/api/with-middleware';
 import { audit, getClientInfo } from '@/lib/audit';
 
 /**
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
         email: validatedData.email,
         passwordHash,
         name: validatedData.name,
-        role: validatedData.role || 'BRAND', // Default to BRAND, can be changed in onboarding
+        role: validatedData.role || 'BRAND',
         emailVerified: false,
         onboardingCompleted: false,
       },
@@ -66,11 +67,27 @@ export async function POST(request: NextRequest) {
     // In production, integrate with email service (SendGrid, AWS SES, etc.)
     console.log(`[DEV] Verification token for ${user.email}: ${verificationToken}`);
 
+    // Generate tokens for auto-login after registration
+    const { accessToken, refreshToken, accessTokenExpiresAt, refreshTokenExpiresAt } =
+      generateTokenPair(user.id, user.email, user.role, '', false);
+
+    // Create session
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        token: accessToken,
+        refreshToken,
+        userAgent: request.headers.get('user-agent') || undefined,
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        expiresAt: refreshTokenExpiresAt,
+      },
+    });
+
     audit({ action: 'auth.register', userId: user.id, ...getClientInfo(request) });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
-        message: 'Registration successful. Please check your email to verify your account.',
+        message: 'Registration successful.',
         user: {
           id: user.id,
           email: user.email,
@@ -79,13 +96,17 @@ export async function POST(request: NextRequest) {
           emailVerified: user.emailVerified,
           onboardingCompleted: user.onboardingCompleted,
         },
-        // Include token in response for development
+        accessToken,
+        expiresAt: accessTokenExpiresAt.toISOString(),
         ...(process.env.NODE_ENV === 'development' && {
           verificationToken,
         }),
       },
       { status: 201 }
     );
+
+    setAuthCookies(response, accessToken, refreshToken, false);
+    return response;
   } catch (error) {
     return errorHandler(error);
   }

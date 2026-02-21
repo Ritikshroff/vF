@@ -12,6 +12,7 @@ import { fadeInUp } from '@/lib/animations'
 import { getWallet } from '@/services/api/wallet'
 import { getCollaborations } from '@/services/api/collaborations'
 import { getMyApplications } from '@/services/api/marketplace'
+import { EmailVerificationBanner } from '@/components/shared/email-verification-banner'
 
 export default function InfluencerDashboardPage() {
   const [loading, setLoading] = useState(true)
@@ -102,6 +103,8 @@ export default function InfluencerDashboardPage() {
         animate="animate"
         variants={fadeInUp}
       >
+        <EmailVerificationBanner />
+
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 lg:mb-8">
           <div>

@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Building2, Target, Users, DollarSign, Globe, ArrowRight, ArrowLeft, Check, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Building2, Check, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
 import { completeBrandOnboarding } from '@/lib/auth'
-import { fadeInUp, slideInRight } from '@/lib/animations'
+import { fadeInUp } from '@/lib/animations'
 
 const INDUSTRIES = [
   'Fashion & Beauty',
@@ -25,107 +24,53 @@ const INDUSTRIES = [
   'Other',
 ]
 
-const COMPANY_SIZES = [
-  '1-10 employees',
-  '11-50 employees',
-  '51-200 employees',
-  '201-500 employees',
-  '501+ employees',
-]
-
-const GOALS = [
-  'Increase brand awareness',
-  'Drive website traffic',
-  'Generate leads',
-  'Boost sales',
-  'Grow social media following',
-  'Launch new product',
-  'Build brand credibility',
-  'Reach new audiences',
-]
-
-const BUDGETS = [
-  'Less than $5,000',
-  '$5,000 - $10,000',
-  '$10,000 - $25,000',
-  '$25,000 - $50,000',
-  '$50,000 - $100,000',
-  '$100,000+',
+const COMPANY_SIZE_OPTIONS = [
+  { label: '1-10 employees', value: 'STARTUP_1_10' },
+  { label: '11-50 employees', value: 'SMALL_11_50' },
+  { label: '51-200 employees', value: 'MEDIUM_51_200' },
+  { label: '201-500 employees', value: 'LARGE_201_500' },
+  { label: '501-1000 employees', value: 'ENTERPRISE_501_1000' },
+  { label: '1000+ employees', value: 'ENTERPRISE_1000_PLUS' },
 ]
 
 export default function BrandOnboardingPage() {
   const router = useRouter()
   const { user, refreshUser } = useAuth()
-  const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     companyName: '',
     industry: '',
     companySize: '',
-    website: '',
-    goals: [] as string[],
-    budget: '',
   })
 
-  const totalSteps = 4
-
-  // Check authentication
   useEffect(() => {
     if (!user) {
       router.push('/login')
     }
   }, [user, router])
 
-  const handleNext = () => {
-    if (step < totalSteps) {
-      setStep(step + 1)
-    }
-  }
-
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1)
-    }
-  }
-
-  const handleGoalToggle = (goal: string) => {
-    setFormData(prev => ({
-      ...prev,
-      goals: prev.goals.includes(goal)
-        ? prev.goals.filter(g => g !== goal)
-        : [...prev.goals, goal],
-    }))
-  }
+  const canSubmit = formData.companyName.trim().length >= 2 && formData.industry
 
   const handleSubmit = async () => {
+    if (!canSubmit) return
     setLoading(true)
+    setError('')
     try {
-      await completeBrandOnboarding(formData)
+      await completeBrandOnboarding({
+        companyName: formData.companyName.trim(),
+        industry: formData.industry,
+        ...(formData.companySize && { companySize: formData.companySize }),
+      })
       refreshUser()
       router.push('/brand/dashboard')
     } catch (err) {
-      console.error('Onboarding error:', err)
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const canProceed = () => {
-    switch (step) {
-      case 1:
-        return formData.companyName && formData.industry
-      case 2:
-        return formData.companySize
-      case 3:
-        return formData.goals.length > 0
-      case 4:
-        return formData.budget
-      default:
-        return false
-    }
-  }
-
-  // Show loading while checking auth
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -136,247 +81,120 @@ export default function BrandOnboardingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-6 sm:py-10 lg:py-12 px-4 sm:px-6">
-      <div className="w-full max-w-2xl">
-        {/* Progress bar */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Step {step} of {totalSteps}</span>
-            <span className="text-sm text-[rgb(var(--muted))]">{Math.round((step / totalSteps) * 100)}%</span>
-          </div>
-          <div className="h-2 bg-[rgb(var(--surface))] rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]"
-              initial={{ width: 0 }}
-              animate={{ width: `${(step / totalSteps) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-        </div>
+      <motion.div
+        initial="initial"
+        animate="animate"
+        variants={fadeInUp}
+        className="w-full max-w-lg"
+      >
+        <Card>
+          <CardContent className="p-4 sm:p-6 lg:p-8">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
+                <Building2 className="h-7 w-7 text-white" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold mb-1">Set up your brand</h2>
+              <p className="text-sm text-[rgb(var(--muted))]">
+                Tell us about your company to get started
+              </p>
+            </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={slideInRight}
-          >
-            <Card>
-              <CardContent className="p-4 sm:p-6 lg:p-8">
-                {/* Step 1: Company Details */}
-                {step === 1 && (
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
-                        <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Tell us about your company</h2>
-                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
-                        Help us understand your business better
-                      </p>
-                    </div>
+            {error && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 mb-4">
+                <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Company Name *</label>
-                        <Input
-                          placeholder="Acme Inc."
-                          value={formData.companyName}
-                          onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
-                        />
-                      </div>
+            <div className="space-y-4">
+              {/* Company Name */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Company Name *</label>
+                <Input
+                  placeholder="Acme Inc."
+                  value={formData.companyName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
+                  disabled={loading}
+                />
+              </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Industry *</label>
-                        <select
-                          className="w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-4 py-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary))]"
-                          value={formData.industry}
-                          onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
-                        >
-                          <option value="">Select an industry</option>
-                          {INDUSTRIES.map(industry => (
-                            <option key={industry} value={industry}>{industry}</option>
-                          ))}
-                        </select>
-                      </div>
+              {/* Industry */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Industry *</label>
+                <select
+                  className="w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-4 py-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary))]"
+                  value={formData.industry}
+                  onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
+                  disabled={loading}
+                >
+                  <option value="">Select an industry</option>
+                  {INDUSTRIES.map(industry => (
+                    <option key={industry} value={industry}>{industry}</option>
+                  ))}
+                </select>
+              </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Website (Optional)</label>
-                        <Input
-                          type="url"
-                          placeholder="https://example.com"
-                          icon={Globe}
-                          value={formData.website}
-                          onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2: Company Size */}
-                {step === 2 && (
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
-                        <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Company size</h2>
-                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
-                        How many people work at your company?
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3">
-                      {COMPANY_SIZES.map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => setFormData(prev => ({ ...prev, companySize: size }))}
-                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
-                            formData.companySize === size
-                              ? 'border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5'
-                              : 'border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm sm:text-base font-medium">{size}</span>
-                            {formData.companySize === size && (
-                              <Check className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3: Goals */}
-                {step === 3 && (
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
-                        <Target className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-2">What are your goals?</h2>
-                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
-                        Select all that apply (at least one)
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {GOALS.map((goal) => (
-                        <button
-                          key={goal}
-                          onClick={() => handleGoalToggle(goal)}
-                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
-                            formData.goals.includes(goal)
-                              ? 'border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5'
-                              : 'border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="text-sm font-medium">{goal}</span>
-                            {formData.goals.includes(goal) && (
-                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] shrink-0" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-
-                    {formData.goals.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {formData.goals.map(goal => (
-                          <Badge key={goal} variant="primary">
-                            {goal}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Step 4: Budget */}
-                {step === 4 && (
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
-                        <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Campaign budget</h2>
-                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
-                        What's your typical campaign budget?
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3">
-                      {BUDGETS.map((budget) => (
-                        <button
-                          key={budget}
-                          onClick={() => setFormData(prev => ({ ...prev, budget }))}
-                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
-                            formData.budget === budget
-                              ? 'border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5'
-                              : 'border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm sm:text-base font-medium">{budget}</span>
-                            {formData.budget === budget && (
-                              <Check className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Navigation buttons */}
-                <div className="flex items-center justify-between mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[rgb(var(--border))]">
-                  <Button
-                    variant="ghost"
-                    onClick={handleBack}
-                    disabled={step === 1 || loading}
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-
-                  {step < totalSteps ? (
-                    <Button
-                      variant="gradient"
-                      onClick={handleNext}
-                      disabled={!canProceed()}
+              {/* Company Size (Optional) */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Company Size <span className="text-[rgb(var(--muted))] font-normal">(optional)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {COMPANY_SIZE_OPTIONS.map((size) => (
+                    <button
+                      key={size.value}
+                      type="button"
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        companySize: prev.companySize === size.value ? '' : size.value,
+                      }))}
+                      disabled={loading}
+                      className={`p-3 rounded-lg border-2 transition-all text-left text-sm ${
+                        formData.companySize === size.value
+                          ? 'border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5'
+                          : 'border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50'
+                      }`}
                     >
-                      Next
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="gradient"
-                      onClick={handleSubmit}
-                      disabled={!canProceed() || loading}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Completing...
-                        </>
-                      ) : (
-                        <>
-                          Complete Setup
-                          <Check className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  )}
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{size.label}</span>
+                        {formData.companySize === size.value && (
+                          <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+              </div>
+
+              {/* Info note */}
+              <p className="text-xs text-[rgb(var(--muted))] text-center pt-2">
+                You can add goals, budget, and website from your Settings later
+              </p>
+
+              {/* Submit Button */}
+              <Button
+                variant="gradient"
+                className="w-full"
+                onClick={handleSubmit}
+                disabled={!canSubmit || loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Setting up...
+                  </>
+                ) : (
+                  <>
+                    Complete Setup
+                    <Check className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   )
 }

@@ -1,503 +1,263 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  UserCircle,
-  Hash,
-  Sparkles,
-  Share2,
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  Loader2,
-  Plus,
-  X,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/auth-context";
-import { completeInfluencerOnboarding } from "@/lib/auth";
-import { slideInRight } from "@/lib/animations";
-import { SOCIAL_PLATFORMS, INFLUENCER_CATEGORIES } from "@/lib/constants";
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { UserCircle, Hash, Check, Loader2, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/contexts/auth-context'
+import { completeInfluencerOnboarding } from '@/lib/auth'
+import { fadeInUp } from '@/lib/animations'
+import { INFLUENCER_CATEGORIES } from '@/lib/constants'
 
-const CONTENT_TYPES = [
-  "Photos",
-  "Videos",
-  "Stories",
-  "Reels/Shorts",
-  "Live Streams",
-  "Blog Posts",
-  "Podcasts",
-  "Reviews",
-];
-
-interface PlatformInput {
-  platform: string;
-  handle: string;
-  followers: string;
-}
+const PLATFORMS = [
+  { value: 'INSTAGRAM', label: 'Instagram' },
+  { value: 'TIKTOK', label: 'TikTok' },
+  { value: 'YOUTUBE', label: 'YouTube' },
+  { value: 'TWITTER', label: 'Twitter / X' },
+  { value: 'FACEBOOK', label: 'Facebook' },
+  { value: 'LINKEDIN', label: 'LinkedIn' },
+]
 
 export default function InfluencerOnboardingPage() {
-  const router = useRouter();
-  const { user, refreshUser } = useAuth();
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const { user, refreshUser } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
-    username: "",
-    bio: "",
+    username: '',
+    bio: '',
     categories: [] as string[],
-    platforms: [] as PlatformInput[],
-    contentTypes: [] as string[],
-    location: "",
-  });
+    platform: '',
+    handle: '',
+    followers: '',
+  })
 
-  const totalSteps = 4;
-
-  // Check authentication
   useEffect(() => {
     if (!user) {
-      router.push("/login");
+      router.push('/login')
     }
-  }, [user, router]);
-
-  const handleNext = () => {
-    if (step < totalSteps) {
-      setStep(step + 1);
-    }
-  };
-
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  };
+  }, [user, router])
 
   const handleCategoryToggle = (category: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       categories: prev.categories.includes(category)
-        ? prev.categories.filter((c) => c !== category)
+        ? prev.categories.filter(c => c !== category)
         : [...prev.categories, category],
-    }));
-  };
+    }))
+  }
 
-  const handleContentTypeToggle = (type: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      contentTypes: prev.contentTypes.includes(type)
-        ? prev.contentTypes.filter((t) => t !== type)
-        : [...prev.contentTypes, type],
-    }));
-  };
-
-  const addPlatform = () => {
-    setFormData((prev) => ({
-      ...prev,
-      platforms: [
-        ...prev.platforms,
-        { platform: "", handle: "", followers: "" },
-      ],
-    }));
-  };
-
-  const removePlatform = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      platforms: prev.platforms.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updatePlatform = (
-    index: number,
-    field: keyof PlatformInput,
-    value: string,
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      platforms: prev.platforms.map((p, i) =>
-        i === index ? { ...p, [field]: value } : p,
-      ),
-    }));
-  };
+  const canSubmit =
+    formData.username.trim().length >= 3 &&
+    formData.categories.length >= 1 &&
+    formData.platform &&
+    formData.handle.trim().length >= 1
 
   const handleSubmit = async () => {
-    setLoading(true);
+    if (!canSubmit) return
+    setLoading(true)
+    setError('')
     try {
-      const dataToSubmit = {
-        ...formData,
-        platforms: formData.platforms.map((p) => ({
-          platform: p.platform,
-          handle: p.handle,
-          followers: parseInt(p.followers.replace(/,/g, "")) || 0,
+      await completeInfluencerOnboarding({
+        username: formData.username.trim(),
+        fullName: user?.name || formData.username,
+        bio: formData.bio || undefined,
+        categories: formData.categories,
+        platforms: [{
+          platform: formData.platform,
+          handle: formData.handle.trim(),
+          followers: parseInt(formData.followers.replace(/,/g, '')) || 0,
           verified: false,
-        })),
-      };
-      await completeInfluencerOnboarding(dataToSubmit);
-      refreshUser();
-      router.push("/influencer/dashboard");
+        }],
+        contentTypes: [],
+      } as any)
+      refreshUser()
+      router.push('/influencer/dashboard')
     } catch (err) {
-      console.error("Onboarding error:", err);
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const canProceed = () => {
-    switch (step) {
-      case 1:
-        return formData.username && formData.bio;
-      case 2:
-        return formData.categories.length > 0;
-      case 3:
-        return (
-          formData.platforms.length > 0 &&
-          formData.platforms.every((p) => p.platform && p.handle && p.followers)
-        );
-      case 4:
-        return formData.contentTypes.length > 0;
-      default:
-        return false;
-    }
-  };
-
-  // Show loading while checking auth
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--brand-primary))]" />
       </div>
-    );
+    )
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center py-6 sm:py-10 lg:py-12 px-4 sm:px-6">
-      <div className="w-full max-w-2xl">
-        {/* Progress bar */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">
-              Step {step} of {totalSteps}
-            </span>
-            <span className="text-sm text-[rgb(var(--muted))]">
-              {Math.round((step / totalSteps) * 100)}%
-            </span>
-          </div>
-          <div className="h-2 bg-[rgb(var(--surface))] rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]"
-              initial={{ width: 0 }}
-              animate={{ width: `${(step / totalSteps) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-        </div>
+      <motion.div
+        initial="initial"
+        animate="animate"
+        variants={fadeInUp}
+        className="w-full max-w-lg"
+      >
+        <Card>
+          <CardContent className="p-4 sm:p-6 lg:p-8">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
+                <UserCircle className="h-7 w-7 text-white" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold mb-1">Set up your profile</h2>
+              <p className="text-sm text-[rgb(var(--muted))]">
+                Let brands discover you
+              </p>
+            </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={slideInRight}
-          >
-            <Card>
-              <CardContent className="p-4 sm:p-6 lg:p-8">
-                {/* Step 1: Profile */}
-                {step === 1 && (
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
-                        <UserCircle className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-2">
-                        Create your profile
-                      </h2>
-                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
-                        Tell brands about yourself
-                      </p>
-                    </div>
+            {error && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 mb-4">
+                <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Username *
-                        </label>
-                        <Input
-                          placeholder="@yourhandle"
-                          icon={Hash}
-                          value={formData.username}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              username: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
+            <div className="space-y-5">
+              {/* Username */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Username *</label>
+                <Input
+                  placeholder="yourname"
+                  icon={Hash}
+                  value={formData.username}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    username: e.target.value.replace(/[^a-zA-Z0-9_]/g, ''),
+                  }))}
+                  disabled={loading}
+                />
+                <p className="text-xs text-[rgb(var(--muted))]">
+                  3-30 characters, letters, numbers &amp; underscores only
+                </p>
+              </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Bio *</label>
-                        <textarea
-                          className="w-full min-h-[120px] rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-4 py-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary))]"
-                          placeholder="Tell brands what makes you unique..."
-                          value={formData.bio}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              bio: e.target.value,
-                            }))
-                          }
-                          maxLength={300}
-                        />
-                        <p className="text-xs text-[rgb(var(--muted))] text-right">
-                          {formData.bio.length}/300
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Location (Optional)
-                        </label>
-                        <Input
-                          placeholder="New York, USA"
-                          value={formData.location}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              location: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2: Categories */}
-                {step === 2 && (
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
-                        <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Your niche</h2>
-                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
-                        Select categories that match your content (at least one)
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {INFLUENCER_CATEGORIES.map((category) => (
-                        <button
-                          key={category}
-                          onClick={() => handleCategoryToggle(category)}
-                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
-                            formData.categories.includes(category)
-                              ? "border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5"
-                              : "border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="text-sm font-medium">
-                              {category}
-                            </span>
-                            {formData.categories.includes(category) && (
-                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] shrink-0" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-
-                    {formData.categories.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {formData.categories.map((category) => (
-                          <Badge key={category} variant="primary">
-                            {category}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Step 3: Social Platforms */}
-                {step === 3 && (
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
-                        <Share2 className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-2">
-                        Your social platforms
-                      </h2>
-                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
-                        Add your social media accounts
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      {formData.platforms.map((platform, index) => (
-                        <div
-                          key={index}
-                          className="p-3 sm:p-4 border border-[rgb(var(--border))] rounded-lg space-y-3"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">
-                              Platform {index + 1}
-                            </span>
-                            <button
-                              onClick={() => removePlatform(index)}
-                              className="text-red-500 hover:text-red-600"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-
-                          <select
-                            className="w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-4 py-2 text-sm"
-                            value={platform.platform}
-                            onChange={(e) =>
-                              updatePlatform(index, "platform", e.target.value)
-                            }
-                          >
-                            <option value="">Select platform</option>
-                            {SOCIAL_PLATFORMS.map((p) => (
-                              <option key={p.id} value={p.name}>
-                                {p.name}
-                              </option>
-                            ))}
-                          </select>
-
-                          <Input
-                            placeholder="@handle"
-                            value={platform.handle}
-                            onChange={(e) =>
-                              updatePlatform(index, "handle", e.target.value)
-                            }
-                          />
-
-                          <Input
-                            placeholder="Followers (e.g., 50000)"
-                            type="number"
-                            value={platform.followers}
-                            onChange={(e) =>
-                              updatePlatform(index, "followers", e.target.value)
-                            }
-                          />
-                        </div>
-                      ))}
-
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={addPlatform}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Platform
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 4: Content Types */}
-                {step === 4 && (
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="text-center mb-4 sm:mb-6">
-                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
-                        <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-2">
-                        Content you create
-                      </h2>
-                      <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
-                        What types of content do you produce? (Select at least
-                        one)
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {CONTENT_TYPES.map((type) => (
-                        <button
-                          key={type}
-                          onClick={() => handleContentTypeToggle(type)}
-                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-left ${
-                            formData.contentTypes.includes(type)
-                              ? "border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5"
-                              : "border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="text-sm font-medium">{type}</span>
-                            {formData.contentTypes.includes(type) && (
-                              <Check className="h-4 w-4 text-[rgb(var(--brand-primary))] shrink-0" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-
-                    {formData.contentTypes.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {formData.contentTypes.map((type) => (
-                          <Badge key={type} variant="primary">
-                            {type}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Navigation buttons */}
-                <div className="flex items-center justify-between mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[rgb(var(--border))]">
-                  <Button
-                    variant="ghost"
-                    onClick={handleBack}
-                    disabled={step === 1 || loading}
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-
-                  {step < totalSteps ? (
-                    <Button
-                      variant="gradient"
-                      onClick={handleNext}
-                      disabled={!canProceed()}
-                    >
-                      Next
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="gradient"
-                      onClick={handleSubmit}
-                      disabled={!canProceed() || loading}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Completing...
-                        </>
-                      ) : (
-                        <>
-                          Complete Setup
-                          <Check className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  )}
+              {/* Bio */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">
+                    Bio <span className="text-[rgb(var(--muted))] font-normal">(optional)</span>
+                  </label>
+                  <span className="text-xs text-[rgb(var(--muted))]">
+                    {formData.bio.length}/500
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+                <textarea
+                  className="w-full min-h-[80px] rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-4 py-3 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary))]"
+                  placeholder="Tell brands about yourself and what you create..."
+                  maxLength={500}
+                  value={formData.bio}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Categories */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Categories * <span className="text-[rgb(var(--muted))] font-normal">(pick at least 1)</span></label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                  {INFLUENCER_CATEGORIES.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => handleCategoryToggle(category)}
+                      disabled={loading}
+                      className={`px-3 py-2 rounded-lg border-2 transition-all text-xs font-medium text-left ${
+                        formData.categories.includes(category)
+                          ? 'border-[rgb(var(--brand-primary))] bg-[rgb(var(--brand-primary))]/5 text-[rgb(var(--brand-primary))]'
+                          : 'border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span>{category}</span>
+                        {formData.categories.includes(category) && (
+                          <Check className="h-3 w-3 shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {formData.categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {formData.categories.map(cat => (
+                      <Badge key={cat} variant="primary" size="sm">{cat}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Primary Platform */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Primary Platform *</label>
+                <div className="space-y-2">
+                  <select
+                    className="w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary))]"
+                    value={formData.platform}
+                    onChange={(e) => setFormData(prev => ({ ...prev, platform: e.target.value }))}
+                    disabled={loading}
+                  >
+                    <option value="">Select platform</option>
+                    {PLATFORMS.map(p => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder="@handle"
+                      value={formData.handle}
+                      onChange={(e) => setFormData(prev => ({ ...prev, handle: e.target.value }))}
+                      disabled={loading}
+                    />
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Followers"
+                      value={formData.followers}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        followers: e.target.value.replace(/[^0-9,]/g, ''),
+                      }))}
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Info note */}
+              <p className="text-xs text-[rgb(var(--muted))] text-center">
+                Connect more platforms and set content types from your Settings later
+              </p>
+
+              {/* Submit Button */}
+              <Button
+                variant="gradient"
+                className="w-full"
+                onClick={handleSubmit}
+                disabled={!canSubmit || loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Setting up...
+                  </>
+                ) : (
+                  <>
+                    Complete Setup
+                    <Check className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
-  );
+  )
 }

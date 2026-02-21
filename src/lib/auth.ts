@@ -57,6 +57,8 @@ async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
 export const signUp = async (data: SignUpData): Promise<User> => {
   const res = await apiRequest<{
     user: User
+    accessToken: string
+    expiresAt: string
     verificationToken?: string
   }>('/api/auth/register', {
     method: 'POST',
@@ -69,9 +71,8 @@ export const signUp = async (data: SignUpData): Promise<User> => {
     }),
   })
 
-  // Store user info (not yet authenticated, but track for verify-email page)
-  const user = res.user
-  setStoredAuth({ user, accessToken: '', expiresAt: '' })
+  const { user, accessToken, expiresAt } = res
+  setStoredAuth({ user, accessToken, expiresAt })
   return user
 }
 

@@ -4,16 +4,18 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react'
+import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, Building2, UserCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/contexts/auth-context'
 import { fadeInUp } from '@/lib/animations'
+import { cn } from '@/lib/utils'
 
 export default function SignUpPage() {
   const router = useRouter()
   const { signUp } = useAuth()
+  const [selectedRole, setSelectedRole] = useState<'BRAND' | 'INFLUENCER'>('BRAND')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,14 +27,13 @@ export default function SignUpPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
-    setError('') // Clear error on input change
+    setError('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    // Basic validation
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       setError('Please fill in all fields')
       return
@@ -51,8 +52,8 @@ export default function SignUpPage() {
     setLoading(true)
 
     try {
-      await signUp(formData)
-      router.push('/verify-email')
+      await signUp({ ...formData, role: selectedRole })
+      router.push(`/onboarding/${selectedRole.toLowerCase()}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account')
     } finally {
@@ -78,18 +79,42 @@ export default function SignUpPage() {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Sign up</CardTitle>
-            <CardDescription>
-              Enter your details to get started
-            </CardDescription>
-          </CardHeader>
           <CardContent className="p-4 sm:p-6">
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-4">
+            {/* Role Selector Tabs */}
+            <div className="bg-[rgb(var(--surface))] p-1.5 rounded-xl flex space-x-1 mb-6">
+              <button
+                type="button"
+                onClick={() => { setSelectedRole('BRAND'); setError('') }}
+                className={cn(
+                  'flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2',
+                  selectedRole === 'BRAND'
+                    ? 'bg-[rgb(var(--surface-elevated))] text-[rgb(var(--brand-primary))] shadow-[0_2px_8px_-2px_rgba(0,0,0,0.3)]'
+                    : 'text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                )}
+              >
+                <Building2 className="h-4 w-4" />
+                I&apos;m a Brand
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedRole('INFLUENCER'); setError('') }}
+                className={cn(
+                  'flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2',
+                  selectedRole === 'INFLUENCER'
+                    ? 'bg-[rgb(var(--surface-elevated))] text-[rgb(var(--brand-primary))] shadow-[0_2px_8px_-2px_rgba(0,0,0,0.3)]'
+                    : 'text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                )}
+              >
+                <UserCircle className="h-4 w-4" />
+                I&apos;m an Influencer
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
-                  <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
-                  <p className="text-sm text-red-600">{error}</p>
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                  <p className="text-sm text-red-500">{error}</p>
                 </div>
               )}
 
@@ -143,7 +168,7 @@ export default function SignUpPage() {
                   required
                 />
                 <p className="text-xs text-[rgb(var(--muted))]">
-                  Must be at least 8 characters long
+                  Min 8 chars with uppercase, lowercase, number &amp; special character
                 </p>
               </div>
 
@@ -177,7 +202,7 @@ export default function SignUpPage() {
                   </>
                 ) : (
                   <>
-                    Create account
+                    Get started as {selectedRole === 'BRAND' ? 'a Brand' : 'an Influencer'}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
