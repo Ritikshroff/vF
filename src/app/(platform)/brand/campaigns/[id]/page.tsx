@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -12,10 +12,13 @@ import {
   Edit,
   MoreVertical,
   CheckCircle2,
+  XCircle,
   Star,
   Mail,
   ExternalLink,
   AlertCircle,
+  Loader2,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -23,49 +26,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { api } from "@/lib/api-client";
-import { formatCurrency, formatCompactNumber } from "@/lib/utils";
+import { formatCurrency, formatCompactNumber, getInitials } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/lib/animations";
-
-type ListingDetail = {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  budgetMin: number | null;
-  budgetMax: number | null;
-  compensationType: string;
-  requirements: string | null;
-  targetNiches: string[];
-  targetPlatforms: string[];
-  targetLocations: string[];
-  targetAgeRange: string | null;
-  targetGender: string | null;
-  minFollowers: number | null;
-  maxFollowers: number | null;
-  totalSlots: number;
-  filledSlots: number;
-  applicationDeadline: string | null;
-  isFeatured: boolean;
-  campaign: {
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    startDate: string;
-    endDate: string;
-    maxInfluencers: number;
-    status: string;
-  };
-  brand: {
-    id: string;
-    companyName: string;
-    logo: string | null;
-  };
-  _count?: {
-    applications: number;
-  };
-};
+import { useListingDetail, useListingApplications } from "@/hooks/queries/use-marketplace";
+import { useCollaborations } from "@/hooks/queries/use-collaborations";
+import { useReviewApplication } from "@/hooks/mutations/use-marketplace-mutations";
+import { useCreateCollaboration } from "@/hooks/mutations/use-collaboration-mutations";
 
 type Application = {
   id: string;
@@ -104,97 +70,72 @@ type Collaboration = {
 
 export default function BrandCampaignDetailPage() {
   const params = useParams();
-  const [listing, setListing] = useState<ListingDetail | null>(null);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const listingId = params.id as string;
+
+  const { data: listing, isLoading: listingLoading } = useListingDetail(listingId);
+  const { data: appsRaw, isLoading: appsLoading } = useListingApplications(listingId);
+  const campaignId = (listing as any)?.campaign?.id;
+  const { data: collabsRaw, isLoading: collabsLoading } = useCollaborations(
+    campaignId ? { campaignId } : undefined
+  );
+
+  const reviewMutation = useReviewApplication();
+  const createCollabMutation = useCreateCollaboration();
+
   const [activeTab, setActiveTab] = useState<
-    "overview" | "applicants" | "accepted" | "performance"
+    "overview" | "applicants" | "accepted" | "rejected" | "performance"
   >("overview");
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadCampaign();
-  }, [params.id]);
+  const isLoading = listingLoading || appsLoading;
+  const applications: Application[] = Array.isArray(appsRaw) ? appsRaw : appsRaw?.data ?? [];
+  const collaborations: Collaboration[] = Array.isArray(collabsRaw) ? collabsRaw : collabsRaw?.data ?? [];
 
-  const loadCampaign = async () => {
-    try {
-      const listingId = params.id as string;
-
-      // Fetch listing details
-      const listingRes = await api.get<any>(`/marketplace/listings/${listingId}`);
-      if (listingRes.error) throw new Error(listingRes.error);
-      setListing(listingRes.data);
-
-      // Fetch applications and collaborations in parallel
-      const [appsRes, collabsRes] = await Promise.allSettled([
-        api.get<any>(`/marketplace/listings/${listingId}/applications`),
-        api.get<any>("/collaborations", { campaignId: listingRes.data?.campaign?.id }),
-      ]);
-
-      if (appsRes.status === "fulfilled" && !appsRes.value.error) {
-        setApplications(appsRes.value.data?.data || []);
-      }
-      if (collabsRes.status === "fulfilled" && !collabsRes.value.error) {
-        setCollaborations(collabsRes.value.data?.data || []);
-      }
-    } catch (err) {
-      console.error("Error loading campaign:", err);
-      setError("Failed to load campaign details.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAcceptApplication = async (applicationId: string, influencerId: string) => {
+  const handleAcceptApplication = (applicationId: string, influencerId: string) => {
     if (!listing) return;
+    const listingData = listing as any;
 
-    try {
-      // Create a collaboration for the accepted influencer
-      const res = await api.post<any>("/collaborations", {
-        campaignId: listing.campaign.id,
-        influencerId,
-        agreedAmount: listing.budgetMin || 0,
-        message: "Your application has been accepted!",
-      });
-
-      if (res.error) throw new Error(res.error);
-
-      // Update application status locally
-      setApplications((prev) =>
-        prev.map((a) =>
-          a.id === applicationId ? { ...a, status: "ACCEPTED" } : a
-        )
-      );
-
-      // Reload to get updated data
-      loadCampaign();
-    } catch (err: any) {
-      console.error("Error accepting application:", err);
-      alert(err.message || "Failed to accept application");
-    }
+    // Review application as ACCEPTED
+    reviewMutation.mutate(
+      { applicationId, data: { status: "ACCEPTED" } },
+      {
+        onSuccess: () => {
+          // Also create a collaboration
+          createCollabMutation.mutate({
+            campaignId: listingData.campaign.id,
+            influencerId,
+            agreedAmount: listingData.budgetMin || 0,
+            message: "Your application has been accepted!",
+          });
+        },
+      }
+    );
   };
 
-  if (loading) {
+  const handleRejectApplication = (applicationId: string) => {
+    reviewMutation.mutate(
+      { applicationId, data: { status: "REJECTED" } },
+      { onSuccess: () => setRejectingId(null) }
+    );
+  };
+
+  if (isLoading) {
     return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
-          <div className="h-64 bg-[rgb(var(--surface))] rounded" />
+      <div className="container py-4 sm:py-8">
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
         </div>
       </div>
     );
   }
 
-  if (error || !listing) {
+  if (!listing) {
     return (
-      <div className="container py-8">
-        <Card className="text-center py-16">
+      <div className="container py-4 sm:py-8">
+        <Card className="text-center py-8 sm:py-16">
           <CardContent>
-            <AlertCircle className="h-16 w-16 mx-auto mb-4 text-[rgb(var(--muted))]" />
-            <h3 className="text-xl font-semibold mb-2">
-              {error || "Campaign not found"}
-            </h3>
+            <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 text-muted" />
+            <h3 className="text-lg sm:text-xl font-semibold mb-2">Campaign not found</h3>
             <Link href="/brand/campaigns">
               <Button>Back to Campaigns</Button>
             </Link>
@@ -204,29 +145,33 @@ export default function BrandCampaignDetailPage() {
     );
   }
 
-  const pendingApplications = applications.filter((a) => a.status === "PENDING" || a.status === "SUBMITTED");
+  const listingData = listing as any;
+  const pendingApplications = applications.filter(
+    (a) => a.status === "PENDING" || a.status === "SUBMITTED"
+  );
+  const rejectedApplications = applications.filter((a) => a.status === "REJECTED");
   const acceptedCollaborations = collaborations.filter(
     (c) => c.status === "ACCEPTED" || c.status === "IN_PROGRESS" || c.status === "COMPLETED"
   );
 
-  const spotsRemaining = listing.totalSlots - listing.filledSlots;
+  const spotsRemaining = (listingData.totalSlots || 1) - (listingData.filledSlots || 0);
 
-  const requirementsList = listing.requirements
-    ? listing.requirements.split("\n").filter(Boolean)
+  const requirementsList = listingData.requirements
+    ? listingData.requirements.split("\n").filter(Boolean)
     : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
-      <div className="container py-4 md:py-8">
+    <div className="min-h-screen bg-linear-to-b from-background to-surface">
+      <div className="container py-3 sm:py-4 lg:py-8">
         <motion.div
           initial="initial"
           animate="animate"
           variants={staggerContainer}
         >
           {/* Back Button */}
-          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
+          <motion.div variants={staggerItem} className="mb-3 sm:mb-6">
             <Link href="/brand/campaigns">
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 min-h-[44px]">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Campaigns
               </Button>
@@ -234,36 +179,38 @@ export default function BrandCampaignDetailPage() {
           </motion.div>
 
           {/* Header Section */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <Card className="border-2">
-              <CardContent className="p-4 md:p-8">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-6">
+              <CardContent className="p-3 sm:p-4 lg:p-8">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6 mb-4 sm:mb-6">
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-start gap-3 mb-3">
-                      <h1 className="text-2xl md:text-4xl font-bold flex-1 min-w-0">
-                        {listing.title}
+                    <div className="flex flex-wrap items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                      <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-4xl font-bold flex-1 min-w-0">
+                        {listingData.title}
                       </h1>
                       <Badge
                         variant={
-                          listing.status === "OPEN"
+                          listingData.status === "OPEN"
                             ? "success"
-                            : listing.status === "DRAFT"
+                            : listingData.status === "DRAFT"
                               ? "warning"
                               : "default"
                         }
                       >
-                        {listing.status}
+                        {listingData.status}
                       </Badge>
                     </div>
 
-                    <p className="text-sm md:text-base text-[rgb(var(--muted))] mb-4">
-                      {listing.description}
+                    <p className="text-xs sm:text-sm text-muted mb-3 sm:mb-4 line-clamp-3">
+                      {listingData.description}
                     </p>
 
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">{listing.campaign.category}</Badge>
-                      {listing.targetPlatforms.map((platform) => (
-                        <Badge key={platform} variant="outline">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {listingData.campaign?.category}
+                      </Badge>
+                      {(listingData.targetPlatforms || []).map((platform: string) => (
+                        <Badge key={platform} variant="outline" className="text-xs">
                           {platform.charAt(0) + platform.slice(1).toLowerCase()}
                         </Badge>
                       ))}
@@ -272,55 +219,44 @@ export default function BrandCampaignDetailPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2 shrink-0">
-                    {listing.status === "DRAFT" && (
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4 mr-2" />
-                        <span className="hidden md:inline">Edit</span>
+                    {listingData.status === "DRAFT" && (
+                      <Button variant="outline" size="sm" className="min-h-[44px]">
+                        <Edit className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Edit</span>
                       </Button>
                     )}
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="min-h-[44px]">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-[rgb(var(--border))]">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-border">
                   <div>
-                    <div className="text-xs text-[rgb(var(--muted))] mb-1">
-                      Budget
-                    </div>
-                    <div className="text-lg md:text-xl font-bold gradient-text">
-                      {formatCurrency(listing.budgetMin || 0)}-
-                      {formatCurrency(listing.budgetMax || 0)}
+                    <div className="text-[10px] sm:text-xs text-muted mb-1">Budget</div>
+                    <div className="text-base sm:text-lg lg:text-xl font-bold gradient-text">
+                      {formatCurrency(listingData.budgetMin || 0)}-
+                      {formatCurrency(listingData.budgetMax || 0)}
                     </div>
                   </div>
-
                   <div>
-                    <div className="text-xs text-[rgb(var(--muted))] mb-1">
-                      Influencers
-                    </div>
-                    <div className="text-lg md:text-xl font-bold gradient-text">
-                      {listing.filledSlots}/{listing.totalSlots}
+                    <div className="text-[10px] sm:text-xs text-muted mb-1">Influencers</div>
+                    <div className="text-base sm:text-lg lg:text-xl font-bold gradient-text">
+                      {listingData.filledSlots || 0}/{listingData.totalSlots || 1}
                     </div>
                   </div>
-
                   <div>
-                    <div className="text-xs text-[rgb(var(--muted))] mb-1">
-                      Applicants
-                    </div>
-                    <div className="text-lg md:text-xl font-bold gradient-text">
+                    <div className="text-[10px] sm:text-xs text-muted mb-1">Applicants</div>
+                    <div className="text-base sm:text-lg lg:text-xl font-bold gradient-text">
                       {applications.length}
                     </div>
                   </div>
-
                   <div>
-                    <div className="text-xs text-[rgb(var(--muted))] mb-1">
-                      Deadline
-                    </div>
-                    <div className="text-lg md:text-xl font-bold gradient-text">
-                      {listing.applicationDeadline
-                        ? new Date(listing.applicationDeadline).toLocaleDateString("en-US", {
+                    <div className="text-[10px] sm:text-xs text-muted mb-1">Deadline</div>
+                    <div className="text-base sm:text-lg lg:text-xl font-bold gradient-text">
+                      {listingData.applicationDeadline
+                        ? new Date(listingData.applicationDeadline).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                           })
@@ -333,8 +269,8 @@ export default function BrandCampaignDetailPage() {
           </motion.div>
 
           {/* Tabs */}
-          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+          <motion.div variants={staggerItem} className="mb-3 sm:mb-4 lg:mb-6">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
               {[
                 { value: "overview" as const, label: "Overview" },
                 {
@@ -345,15 +281,19 @@ export default function BrandCampaignDetailPage() {
                   value: "accepted" as const,
                   label: `Accepted (${acceptedCollaborations.length})`,
                 },
+                {
+                  value: "rejected" as const,
+                  label: `Rejected (${rejectedApplications.length})`,
+                },
                 { value: "performance" as const, label: "Performance" },
               ].map((tab) => (
                 <button
                   key={tab.value}
                   onClick={() => setActiveTab(tab.value)}
-                  className={`px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base font-medium whitespace-nowrap transition-all ${
+                  className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm lg:text-base font-medium whitespace-nowrap transition-all min-h-[44px] ${
                     activeTab === tab.value
-                      ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg"
-                      : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
+                      ? "bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-lg"
+                      : "bg-surface text-muted hover:text-foreground"
                   }`}
                 >
                   {tab.label}
@@ -363,76 +303,63 @@ export default function BrandCampaignDetailPage() {
           </motion.div>
 
           {/* Tab Content */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
             {/* Overview Tab */}
             {activeTab === "overview" && (
               <motion.div
                 variants={staggerItem}
-                className="grid lg:grid-cols-2 gap-4 sm:gap-6"
+                className="grid lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6"
               >
                 {/* Campaign Details */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base sm:text-lg">Campaign Details</CardTitle>
+                  <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2">
+                    <CardTitle className="text-sm sm:text-base lg:text-lg">Campaign Details</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4">
+                  <CardContent className="p-3 sm:p-4 lg:p-6 pt-0 space-y-3">
                     <div>
-                      <div className="text-sm font-medium mb-2">Niches</div>
-                      <div className="flex flex-wrap gap-2">
-                        {listing.targetNiches.length > 0
-                          ? listing.targetNiches.map((niche) => (
-                              <Badge key={niche} variant="outline">
+                      <div className="text-xs sm:text-sm font-medium mb-1.5">Niches</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(listingData.targetNiches || []).length > 0
+                          ? listingData.targetNiches.map((niche: string) => (
+                              <Badge key={niche} variant="outline" className="text-xs">
                                 {niche}
                               </Badge>
                             ))
-                          : <span className="text-sm text-[rgb(var(--muted))]">No specific niches</span>}
+                          : <span className="text-xs text-muted">No specific niches</span>}
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-sm font-medium mb-2">
-                        Target Audience
-                      </div>
-                      <div className="space-y-2 text-sm text-[rgb(var(--muted))]">
-                        {listing.targetAgeRange && (
-                          <div>Age: {listing.targetAgeRange}</div>
-                        )}
-                        {listing.targetGender && (
-                          <div>Gender: {listing.targetGender}</div>
-                        )}
-                        {listing.targetLocations.length > 0 && (
-                          <div>
-                            Locations: {listing.targetLocations.slice(0, 3).join(", ")}
-                            {listing.targetLocations.length > 3 && " ..."}
-                          </div>
+                      <div className="text-xs sm:text-sm font-medium mb-1.5">Target Audience</div>
+                      <div className="space-y-1 text-xs sm:text-sm text-muted">
+                        {listingData.targetAgeRange && <div>Age: {listingData.targetAgeRange}</div>}
+                        {listingData.targetGender && <div>Gender: {listingData.targetGender}</div>}
+                        {(listingData.targetLocations || []).length > 0 && (
+                          <div>Locations: {listingData.targetLocations.slice(0, 3).join(", ")}</div>
                         )}
                       </div>
                     </div>
 
                     {requirementsList.length > 0 && (
                       <div>
-                        <div className="text-sm font-medium mb-2">
-                          Requirements
-                        </div>
-                        <div className="space-y-2 text-sm text-[rgb(var(--muted))]">
-                          {requirementsList.map((req, idx) => (
+                        <div className="text-xs sm:text-sm font-medium mb-1.5">Requirements</div>
+                        <div className="space-y-1 text-xs sm:text-sm text-muted">
+                          {requirementsList.map((req: string, idx: number) => (
                             <div key={idx}>{req}</div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {(listing.minFollowers || listing.maxFollowers) && (
+                    {(listingData.minFollowers || listingData.maxFollowers) && (
                       <div>
-                        <div className="text-sm font-medium mb-2">
-                          Follower Requirements
-                        </div>
-                        <div className="space-y-2 text-sm text-[rgb(var(--muted))]">
-                          {listing.minFollowers && (
-                            <div>Min Followers: {formatCompactNumber(listing.minFollowers)}</div>
+                        <div className="text-xs sm:text-sm font-medium mb-1.5">Follower Range</div>
+                        <div className="space-y-1 text-xs sm:text-sm text-muted">
+                          {listingData.minFollowers && (
+                            <div>Min: {formatCompactNumber(listingData.minFollowers)}</div>
                           )}
-                          {listing.maxFollowers && (
-                            <div>Max Followers: {formatCompactNumber(listing.maxFollowers)}</div>
+                          {listingData.maxFollowers && (
+                            <div>Max: {formatCompactNumber(listingData.maxFollowers)}</div>
                           )}
                         </div>
                       </div>
@@ -442,44 +369,41 @@ export default function BrandCampaignDetailPage() {
 
                 {/* Timeline */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base sm:text-lg">Timeline</CardTitle>
+                  <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2">
+                    <CardTitle className="text-sm sm:text-base lg:text-lg">Timeline</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4">
-                    {listing.applicationDeadline && (
+                  <CardContent className="p-3 sm:p-4 lg:p-6 pt-0 space-y-3">
+                    {listingData.applicationDeadline && (
                       <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-[rgb(var(--muted))]" />
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted shrink-0" />
                         <div>
-                          <div className="text-sm text-[rgb(var(--muted))]">
-                            Application Deadline
+                          <div className="text-[10px] sm:text-xs text-muted">Application Deadline</div>
+                          <div className="text-sm sm:text-base font-semibold">
+                            {new Date(listingData.applicationDeadline).toLocaleDateString()}
                           </div>
-                          <div className="font-semibold">
-                            {new Date(listing.applicationDeadline).toLocaleDateString()}
+                        </div>
+                      </div>
+                    )}
+                    {listingData.campaign?.startDate && (
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted shrink-0" />
+                        <div>
+                          <div className="text-[10px] sm:text-xs text-muted">Campaign Period</div>
+                          <div className="text-sm sm:text-base font-semibold">
+                            {new Date(listingData.campaign.startDate).toLocaleDateString()} -{" "}
+                            {new Date(listingData.campaign.endDate).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
                     )}
                     <div className="flex items-center gap-3">
-                      <Calendar className="h-5 w-5 text-[rgb(var(--muted))]" />
+                      <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-muted shrink-0" />
                       <div>
-                        <div className="text-sm text-[rgb(var(--muted))]">
-                          Campaign Period
-                        </div>
-                        <div className="font-semibold">
-                          {new Date(listing.campaign.startDate).toLocaleDateString()}{" "}
-                          -{" "}
-                          {new Date(listing.campaign.endDate).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <DollarSign className="h-5 w-5 text-[rgb(var(--muted))]" />
-                      <div>
-                        <div className="text-sm text-[rgb(var(--muted))]">
-                          Compensation
-                        </div>
-                        <div className="font-semibold">
-                          {listing.compensationType.charAt(0) + listing.compensationType.slice(1).toLowerCase()}
+                        <div className="text-[10px] sm:text-xs text-muted">Compensation</div>
+                        <div className="text-sm sm:text-base font-semibold">
+                          {listingData.compensationType
+                            ? listingData.compensationType.charAt(0) + listingData.compensationType.slice(1).toLowerCase()
+                            : "Negotiable"}
                         </div>
                       </div>
                     </div>
@@ -487,25 +411,27 @@ export default function BrandCampaignDetailPage() {
                 </Card>
 
                 {/* Spots Remaining */}
-                <Card className="border-2 border-[rgb(var(--brand-primary))]/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <Users className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
+                <Card className="border-2 border-brand-primary/20">
+                  <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm sm:text-base lg:text-lg">
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-brand-primary" />
                       Availability
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-2">
+                  <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
+                    <div className="text-xl sm:text-2xl lg:text-4xl font-bold gradient-text mb-1.5">
                       {spotsRemaining} spots
                     </div>
-                    <div className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4">
-                      remaining out of {listing.totalSlots}
+                    <div className="text-[10px] sm:text-xs text-muted mb-3">
+                      remaining out of {listingData.totalSlots || 1}
                     </div>
-                    <div className="h-2 bg-[rgb(var(--surface))] rounded-full overflow-hidden">
+                    <div className="h-2 bg-surface rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] rounded-full transition-all"
+                        className="h-full bg-gradient-to-r from-brand-primary to-brand-secondary rounded-full transition-all"
                         style={{
-                          width: `${listing.totalSlots > 0 ? (listing.filledSlots / listing.totalSlots) * 100 : 0}%`,
+                          width: `${(listingData.totalSlots || 1) > 0
+                            ? ((listingData.filledSlots || 0) / (listingData.totalSlots || 1)) * 100
+                            : 0}%`,
                         }}
                       />
                     </div>
@@ -518,104 +444,154 @@ export default function BrandCampaignDetailPage() {
             {activeTab === "applicants" && (
               <motion.div variants={staggerItem}>
                 {pendingApplications.length === 0 ? (
-                  <Card className="text-center py-16">
+                  <Card className="text-center py-8 sm:py-16">
                     <CardContent>
-                      <Users className="h-16 w-16 text-[rgb(var(--muted))] mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold mb-2">
-                        No applicants yet
-                      </h3>
-                      <p className="text-[rgb(var(--muted))]">
+                      <Users className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />
+                      <h3 className="text-base sm:text-xl font-semibold mb-2">No applicants yet</h3>
+                      <p className="text-xs sm:text-sm text-muted">
                         Check back later for influencer applications
                       </p>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {pendingApplications.map((application) => (
                       <Card
                         key={application.id}
-                        className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all"
+                        className="border-2 hover:border-brand-primary/40 transition-all"
                       >
-                        <CardContent className="p-4 md:p-6">
-                          <div className="flex flex-col md:flex-row gap-4">
-                            <Avatar className="h-16 w-16 shrink-0">
-                              {application.influencer.avatar ? (
-                                <img
-                                  src={application.influencer.avatar}
-                                  alt={application.influencer.fullName}
-                                />
-                              ) : (
-                                <Users className="h-8 w-8" />
-                              )}
-                            </Avatar>
+                        <CardContent className="p-3 sm:p-4 lg:p-6">
+                          <div className="flex gap-3 sm:gap-4">
+                            <Avatar
+                              className="h-12 w-12 sm:h-16 sm:w-16 shrink-0"
+                              src={application.influencer.avatar || undefined}
+                              fallback={getInitials(application.influencer.fullName)}
+                            />
 
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-lg font-bold mb-1">
+                              <h3 className="text-sm sm:text-base lg:text-lg font-bold mb-1 truncate">
                                 {application.influencer.fullName}
                               </h3>
-                              <p className="text-sm text-[rgb(var(--muted))] mb-3 line-clamp-2">
+                              <p className="text-xs sm:text-sm text-muted mb-2 line-clamp-2">
                                 {application.influencer.bio || "No bio available"}
                               </p>
 
-                              {/* Cover letter excerpt */}
+                              {/* Cover letter */}
                               {application.coverLetter && (
-                                <div className="mb-3 p-2 rounded bg-[rgb(var(--surface))] text-sm text-[rgb(var(--muted))] line-clamp-2">
-                                  "{application.coverLetter}"
+                                <div className="mb-2 p-2 rounded bg-surface text-xs sm:text-sm text-muted line-clamp-2">
+                                  &ldquo;{application.coverLetter}&rdquo;
                                 </div>
                               )}
 
-                              {/* Stats */}
-                              <div className="grid grid-cols-2 gap-3 mb-4">
-                                {application.influencer.platforms
-                                  ?.slice(0, 2)
-                                  .map((platform) => (
-                                    <div key={platform.platform} className="text-sm">
-                                      <div className="text-xs text-[rgb(var(--muted))]">
-                                        {platform.platform.charAt(0) + platform.platform.slice(1).toLowerCase()}
-                                      </div>
-                                      <div className="font-semibold">
-                                        {formatCompactNumber(platform.followers)}
-                                      </div>
+                              {/* Platforms */}
+                              <div className="grid grid-cols-2 gap-2 mb-2">
+                                {application.influencer.platforms?.slice(0, 2).map((p) => (
+                                  <div key={p.platform} className="text-xs sm:text-sm">
+                                    <div className="text-[10px] sm:text-xs text-muted">
+                                      {p.platform.charAt(0) + p.platform.slice(1).toLowerCase()}
                                     </div>
-                                  ))}
+                                    <div className="font-semibold">
+                                      {formatCompactNumber(p.followers)}
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
 
                               {/* Proposed rate */}
                               {application.proposedRate && (
-                                <div className="text-sm mb-3">
-                                  <span className="text-[rgb(var(--muted))]">Proposed rate: </span>
-                                  <span className="font-semibold">{formatCurrency(application.proposedRate)}</span>
+                                <div className="text-xs sm:text-sm mb-2">
+                                  <span className="text-muted">Proposed: </span>
+                                  <span className="font-semibold">
+                                    {formatCurrency(application.proposedRate)}
+                                  </span>
                                 </div>
                               )}
 
+                              {/* Applied date */}
+                              <div className="text-[10px] sm:text-xs text-muted mb-3 flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                Applied {new Date(application.createdAt).toLocaleDateString()}
+                              </div>
+
                               {/* Actions */}
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="gradient"
-                                  size="sm"
-                                  className="flex-1"
-                                  onClick={() =>
-                                    handleAcceptApplication(application.id, application.influencer.id)
-                                  }
-                                  disabled={spotsRemaining === 0}
-                                >
-                                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                                  Accept
-                                </Button>
-                                <Link
-                                  href={`/brand/discover/${application.influencer.id}`}
-                                  className="flex-1"
-                                >
+                              {rejectingId === application.id ? (
+                                <div className="space-y-2">
+                                  <p className="text-xs sm:text-sm text-muted">
+                                    Reject this application?
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="flex-1 min-h-[44px] border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                      onClick={() => handleRejectApplication(application.id)}
+                                      disabled={reviewMutation.isPending}
+                                    >
+                                      {reviewMutation.isPending ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <XCircle className="h-4 w-4 mr-1" />
+                                          Confirm
+                                        </>
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="flex-1 min-h-[44px]"
+                                      onClick={() => setRejectingId(null)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="gradient"
+                                    size="sm"
+                                    className="flex-1 min-h-[44px]"
+                                    onClick={() =>
+                                      handleAcceptApplication(
+                                        application.id,
+                                        application.influencer.id
+                                      )
+                                    }
+                                    disabled={spotsRemaining === 0 || reviewMutation.isPending}
+                                  >
+                                    {reviewMutation.isPending ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                                        Accept
+                                      </>
+                                    )}
+                                  </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="w-full"
+                                    className="flex-1 min-h-[44px] border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                    onClick={() => setRejectingId(application.id)}
                                   >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Reject
                                   </Button>
-                                </Link>
-                              </div>
+                                  <Link
+                                    href={`/brand/discover/${application.influencer.id}`}
+                                    className="shrink-0"
+                                  >
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="min-h-[44px] px-3"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </CardContent>
@@ -630,102 +606,80 @@ export default function BrandCampaignDetailPage() {
             {activeTab === "accepted" && (
               <motion.div variants={staggerItem}>
                 {acceptedCollaborations.length === 0 ? (
-                  <Card className="text-center py-16">
+                  <Card className="text-center py-8 sm:py-16">
                     <CardContent>
-                      <CheckCircle2 className="h-16 w-16 text-[rgb(var(--muted))] mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold mb-2">
+                      <CheckCircle2 className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />
+                      <h3 className="text-base sm:text-xl font-semibold mb-2">
                         No accepted influencers
                       </h3>
-                      <p className="text-[rgb(var(--muted))]">
+                      <p className="text-xs sm:text-sm text-muted">
                         Review and accept applicants to get started
                       </p>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {acceptedCollaborations.map((collab) => (
                       <Card
                         key={collab.id}
                         className="border-2 border-green-500/20 bg-green-500/5"
                       >
-                        <CardContent className="p-4 md:p-6">
+                        <CardContent className="p-3 sm:p-4 lg:p-6">
                           <div className="flex flex-col items-center text-center">
-                            <Avatar className="h-20 w-20 mb-4">
-                              {collab.influencer.avatar ? (
-                                <img
-                                  src={collab.influencer.avatar}
-                                  alt={collab.influencer.fullName}
-                                />
-                              ) : (
-                                <Users className="h-10 w-10" />
-                              )}
-                            </Avatar>
+                            <Avatar
+                              className="h-14 w-14 sm:h-20 sm:w-20 mb-3 sm:mb-4"
+                              src={collab.influencer.avatar || undefined}
+                              fallback={getInitials(collab.influencer.fullName)}
+                            />
 
-                            <h3 className="text-lg font-bold mb-1">
+                            <h3 className="text-sm sm:text-base lg:text-lg font-bold mb-1">
                               {collab.influencer.fullName}
                             </h3>
                             {collab.influencer.rating && (
-                              <div className="flex items-center gap-1 mb-3">
-                                <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                                <span className="text-sm font-medium">
+                              <div className="flex items-center gap-1 mb-2 sm:mb-3">
+                                <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-500 text-yellow-500" />
+                                <span className="text-xs sm:text-sm font-medium">
                                   {Number(collab.influencer.rating).toFixed(1)}
                                 </span>
                               </div>
                             )}
 
-                            <div className="w-full space-y-2 mb-4">
-                              {collab.influencer.platforms
-                                ?.slice(0, 2)
-                                .map((platform) => (
-                                  <div
-                                    key={platform.platform}
-                                    className="flex justify-between text-sm"
-                                  >
-                                    <span className="text-[rgb(var(--muted))]">
-                                      {platform.platform.charAt(0) + platform.platform.slice(1).toLowerCase()}
-                                    </span>
-                                    <span className="font-semibold">
-                                      {formatCompactNumber(platform.followers)}
-                                    </span>
-                                  </div>
-                                ))}
+                            <div className="w-full space-y-1.5 mb-3">
+                              {collab.influencer.platforms?.slice(0, 2).map((p) => (
+                                <div key={p.platform} className="flex justify-between text-xs sm:text-sm">
+                                  <span className="text-muted">
+                                    {p.platform.charAt(0) + p.platform.slice(1).toLowerCase()}
+                                  </span>
+                                  <span className="font-semibold">
+                                    {formatCompactNumber(p.followers)}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
 
-                            <div className="text-sm mb-3">
-                              <Badge
-                                variant={
-                                  collab.status === "IN_PROGRESS"
-                                    ? "success"
-                                    : collab.status === "COMPLETED"
-                                      ? "outline"
-                                      : "default"
-                                }
-                              >
-                                {collab.status === "IN_PROGRESS"
-                                  ? "In Progress"
+                            <Badge
+                              variant={
+                                collab.status === "IN_PROGRESS"
+                                  ? "success"
                                   : collab.status === "COMPLETED"
-                                    ? "Completed"
-                                    : "Accepted"}
-                              </Badge>
-                            </div>
+                                    ? "outline"
+                                    : "default"
+                              }
+                              className="mb-3 text-xs"
+                            >
+                              {collab.status === "IN_PROGRESS"
+                                ? "In Progress"
+                                : collab.status === "COMPLETED"
+                                  ? "Completed"
+                                  : "Accepted"}
+                            </Badge>
 
                             <div className="flex gap-2 w-full">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1"
-                              >
+                              <Button variant="outline" size="sm" className="flex-1 min-h-[44px]">
                                 <Mail className="h-4 w-4" />
                               </Button>
-                              <Link
-                                href={`/brand/discover/${collab.influencer.id}`}
-                                className="flex-1"
-                              >
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full"
-                                >
+                              <Link href={`/brand/discover/${collab.influencer.id}`} className="flex-1">
+                                <Button variant="ghost" size="sm" className="w-full min-h-[44px]">
                                   <ExternalLink className="h-4 w-4" />
                                 </Button>
                               </Link>
@@ -739,18 +693,73 @@ export default function BrandCampaignDetailPage() {
               </motion.div>
             )}
 
+            {/* Rejected Tab */}
+            {activeTab === "rejected" && (
+              <motion.div variants={staggerItem}>
+                {rejectedApplications.length === 0 ? (
+                  <Card className="text-center py-8 sm:py-16">
+                    <CardContent>
+                      <XCircle className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />
+                      <h3 className="text-base sm:text-xl font-semibold mb-2">
+                        No rejected applications
+                      </h3>
+                      <p className="text-xs sm:text-sm text-muted">
+                        Rejected applications will appear here
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {rejectedApplications.map((application) => (
+                      <Card
+                        key={application.id}
+                        className="border border-red-500/10 bg-red-500/5 opacity-75"
+                      >
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex gap-3">
+                            <Avatar
+                              className="h-10 w-10 sm:h-12 sm:w-12 shrink-0"
+                              src={application.influencer.avatar || undefined}
+                              fallback={getInitials(application.influencer.fullName)}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-sm font-semibold truncate">
+                                  {application.influencer.fullName}
+                                </h3>
+                                <Badge variant="error" className="text-[10px] shrink-0">
+                                  Rejected
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted line-clamp-1">
+                                {application.influencer.bio || "No bio"}
+                              </p>
+                              {application.proposedRate && (
+                                <div className="text-xs text-muted mt-1">
+                                  Proposed: {formatCurrency(application.proposedRate)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* Performance Tab */}
             {activeTab === "performance" && (
               <motion.div variants={staggerItem}>
-                <Card className="text-center py-16">
+                <Card className="text-center py-8 sm:py-16">
                   <CardContent>
-                    <TrendingUp className="h-16 w-16 text-[rgb(var(--muted))] mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">
+                    <TrendingUp className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />
+                    <h3 className="text-base sm:text-xl font-semibold mb-2">
                       No performance data yet
                     </h3>
-                    <p className="text-[rgb(var(--muted))]">
-                      Performance metrics will appear once the campaign is
-                      active and influencers start delivering content
+                    <p className="text-xs sm:text-sm text-muted">
+                      Performance metrics will appear once influencers start delivering content
                     </p>
                   </CardContent>
                 </Card>

@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Clock,
   Send,
+  XCircle,
   Star,
   MapPin,
   Instagram,
@@ -129,11 +130,8 @@ export default function InfluencerCampaignsPage() {
         );
       }
       case "applied": {
-        const pending = myApplications.filter(
-          (a) => a.status === "PENDING" || a.status === "SUBMITTED"
-        );
-        if (!q) return pending;
-        return pending.filter(
+        if (!q) return myApplications;
+        return myApplications.filter(
           (a) =>
             a.listing.title.toLowerCase().includes(q) ||
             a.listing.description.toLowerCase().includes(q)
@@ -170,9 +168,7 @@ export default function InfluencerCampaignsPage() {
     () => ({
       available: listings.filter((l) => l.status === "OPEN").length,
       invited: collaborations.filter((c) => c.status === "INVITED").length,
-      applied: myApplications.filter(
-        (a) => a.status === "PENDING" || a.status === "SUBMITTED"
-      ).length,
+      applied: myApplications.length,
       active: collaborations.filter(
         (c) => c.status === "IN_PROGRESS" || c.status === "ACCEPTED"
       ).length,
@@ -507,15 +503,29 @@ export default function InfluencerCampaignsPage() {
               href={`/marketplace/${app.listing.id}`}
               className="w-full"
             >
-              <Button variant="outline" size="sm" className="w-full">
+              <Button variant="outline" size="sm" className="w-full min-h-[44px]">
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </Button>
             </Link>
-            <Badge variant="warning" className="w-full justify-center py-2">
-              <Clock className="h-4 w-4 mr-1" />
-              Application Pending
-            </Badge>
+            {(app.status === "PENDING" || app.status === "SUBMITTED") && (
+              <Badge variant="warning" className="w-full justify-center py-2">
+                <Clock className="h-4 w-4 mr-1" />
+                Application Pending
+              </Badge>
+            )}
+            {app.status === "ACCEPTED" && (
+              <Badge variant="success" className="w-full justify-center py-2">
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                Accepted
+              </Badge>
+            )}
+            {app.status === "REJECTED" && (
+              <Badge variant="error" className="w-full justify-center py-2 opacity-75">
+                <XCircle className="h-4 w-4 mr-1" />
+                Not Selected
+              </Badge>
+            )}
           </div>
         </CardContent>
       </Card>

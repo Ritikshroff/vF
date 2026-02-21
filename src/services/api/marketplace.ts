@@ -29,3 +29,9 @@ export async function getListingApplications(listingId: string, params?: Record<
   if (res.error) throw new Error(res.error)
   return res.data
 }
+
+export async function reviewApplication(applicationId: string, data: { status: string; reviewNotes?: string }) {
+  const res = await api.post<any>(`/marketplace/applications/${applicationId}/review`, data)
+  if (res.error) throw new Error(res.error)
+  return res.data
+}

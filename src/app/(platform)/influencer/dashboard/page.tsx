@@ -30,7 +30,8 @@ export default function InfluencerDashboardPage() {
     )
   }
 
-  const totalEarnings = Number(walletData?.balance ?? 0) + Number(walletData?.pendingBalance ?? 0)
+  const wallet = walletData as any
+  const totalEarnings = Number(wallet?.balance ?? 0) + Number(wallet?.pendingBalance ?? 0)
   const activeCampaigns = collaborations.filter((c: any) =>
     ['PROPOSAL_SENT', 'NEGOTIATION', 'CONTRACT_SIGNED', 'IN_PRODUCTION', 'IN_REVIEW'].includes(c.status)
   )
@@ -41,7 +42,7 @@ export default function InfluencerDashboardPage() {
     {
       title: 'Total Earnings',
       value: formatCurrency(totalEarnings),
-      change: `${formatCurrency(Number(walletData?.pendingBalance ?? 0))} pending`,
+      change: `${formatCurrency(Number(wallet?.pendingBalance ?? 0))} pending`,
       icon: DollarSign,
       color: 'text-[rgb(var(--success))]',
     },

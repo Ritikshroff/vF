@@ -488,12 +488,12 @@ export default function CampaignBuilderPage() {
 
                 {/* Step 3: Deliverables */}
                 {step === 3 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Sparkles className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Content Deliverables</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Content Deliverables</h2>
                       <p className="text-[rgb(var(--muted))]">
                         What content do you need?
                       </p>
@@ -608,12 +608,12 @@ export default function CampaignBuilderPage() {
 
                 {/* Step 4: Budget */}
                 {step === 4 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <DollarSign className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Campaign Budget</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Campaign Budget</h2>
                       <p className="text-[rgb(var(--muted))]">
                         Set your budget range
                       </p>
@@ -655,12 +655,12 @@ export default function CampaignBuilderPage() {
                     </div>
 
                     {formData.minBudget && formData.maxBudget && (
-                      <div className="p-6 rounded-lg bg-[rgb(var(--surface))] border-2 border-[rgb(var(--brand-primary))]/20">
+                      <div className="p-4 sm:p-6 rounded-lg bg-[rgb(var(--surface))] border-2 border-[rgb(var(--brand-primary))]/20">
                         <div className="text-center">
-                          <div className="text-sm text-[rgb(var(--muted))] mb-2">
+                          <div className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-2">
                             Total Budget Range
                           </div>
-                          <div className="text-4xl font-bold gradient-text">
+                          <div className="text-2xl sm:text-4xl font-bold gradient-text">
                             ${parseInt(formData.minBudget).toLocaleString()} - $
                             {parseInt(formData.maxBudget).toLocaleString()}
                           </div>
@@ -672,12 +672,12 @@ export default function CampaignBuilderPage() {
 
                 {/* Step 5: Timeline */}
                 {step === 5 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-4">
-                        <Calendar className="h-8 w-8 text-white" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="text-center mb-4 sm:mb-6">
+                      <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] mb-3 sm:mb-4">
+                        <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Campaign Timeline</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Campaign Timeline</h2>
                       <p className="text-[rgb(var(--muted))]">
                         Set important dates
                       </p>
@@ -753,11 +753,12 @@ export default function CampaignBuilderPage() {
                 )}
 
                 {/* Navigation */}
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-[rgb(var(--border))]">
+                <div className="flex items-center justify-between mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[rgb(var(--border))]">
                   <Button
                     variant="ghost"
                     onClick={handleBack}
                     disabled={step === 1 || loading}
+                    className="min-h-[44px]"
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
@@ -768,6 +769,7 @@ export default function CampaignBuilderPage() {
                       variant="gradient"
                       onClick={handleNext}
                       disabled={!canProceed()}
+                      className="min-h-[44px]"
                     >
                       Next
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -777,6 +779,7 @@ export default function CampaignBuilderPage() {
                       variant="gradient"
                       onClick={handleSubmit}
                       disabled={!canProceed() || loading}
+                      className="min-h-[44px]"
                     >
                       {loading ? (
                         <>

@@ -37,7 +37,8 @@ export default function BrandWalletPage() {
   const depositMutation = useDepositFunds()
 
   const isLoading = walletLoading || escrowsLoading || invoicesLoading
-  const transactions = walletData?.transactions ?? []
+  const wallet = walletData as any
+  const transactions = wallet?.transactions ?? []
   const escrows = Array.isArray(escrowsRaw) ? escrowsRaw : escrowsRaw?.data ?? []
   const invoices = Array.isArray(invoicesRaw) ? invoicesRaw : invoicesRaw?.data ?? []
 
@@ -51,8 +52,8 @@ export default function BrandWalletPage() {
     })
   }
 
-  const balance = Number(walletData?.balance ?? 0)
-  const pendingBalance = Number(walletData?.pendingBalance ?? 0)
+  const balance = Number(wallet?.balance ?? 0)
+  const pendingBalance = Number(wallet?.pendingBalance ?? 0)
   const totalEscrowHeld = escrows.reduce((sum: number, e: any) => sum + Number(e.heldAmount || 0), 0)
   const totalSpent = transactions
     .filter((t: any) => Number(t.amount) < 0)
