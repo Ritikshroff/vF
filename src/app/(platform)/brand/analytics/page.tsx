@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   TrendingUp,
@@ -15,10 +15,9 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useAuth } from '@/contexts/auth-context'
-import { getWallet } from '@/services/api/wallet'
-import { fetchBrandCampaigns } from '@/services/api/campaigns'
-import { getCollaborations } from '@/services/api/collaborations'
+import { useWallet } from '@/hooks/queries/use-wallet'
+import { useBrandCampaigns } from '@/hooks/queries/use-campaigns'
+import { useCollaborations } from '@/hooks/queries/use-collaborations'
 import { formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import {
@@ -40,38 +39,16 @@ import {
 const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899']
 
 export default function BrandAnalyticsPage() {
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [listings, setListings] = useState<any[]>([])
-  const [collaborations, setCollaborations] = useState<any[]>([])
-  const [walletData, setWalletData] = useState<any>(null)
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
 
-  useEffect(() => {
-    loadAnalytics()
-  }, [user])
+  const { data: walletData, isLoading: walletLoading } = useWallet()
+  const { data: listings = [], isLoading: listingsLoading } = useBrandCampaigns()
+  const { data: collabsRaw, isLoading: collabsLoading } = useCollaborations()
 
-  const loadAnalytics = async () => {
-    if (!user) return
+  const isLoading = walletLoading || listingsLoading || collabsLoading
+  const collaborations = collabsRaw?.data ?? []
 
-    try {
-      const [walletRes, listingsRes, collabRes] = await Promise.allSettled([
-        getWallet(),
-        fetchBrandCampaigns(),
-        getCollaborations(),
-      ])
-
-      if (walletRes.status === 'fulfilled') setWalletData(walletRes.value)
-      if (listingsRes.status === 'fulfilled') setListings(listingsRes.value ?? [])
-      if (collabRes.status === 'fulfilled') setCollaborations(collabRes.value?.data ?? [])
-    } catch (error) {
-      console.error('Error loading analytics:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container py-8">
         <div className="flex items-center justify-center py-20">
@@ -87,7 +64,7 @@ export default function BrandAnalyticsPage() {
   const totalCollabs = collaborations.length
   const completedCollabs = collaborations.filter((c: any) => c.status === 'COMPLETED')
   const totalSpent = completedCollabs.reduce((sum: number, c: any) => sum + Number(c.agreedAmount || 0), 0)
-  const walletBalance = Number(walletData?.balance ?? 0)
+  const walletBalance = Number((walletData as any)?.balance ?? 0)
 
   const stats = [
     {

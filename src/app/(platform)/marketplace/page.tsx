@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Search,
@@ -25,14 +25,18 @@ import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
 import { formatCurrency, formatCompactNumber, formatRelativeTime } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-import { getListings, applyToListing } from '@/services/api/marketplace'
+import { useListings } from '@/hooks/queries/use-marketplace'
+import { useApplyToListing } from '@/hooks/mutations/use-marketplace-mutations'
 
 const CATEGORIES = ['All', 'Fashion', 'Technology', 'Beauty', 'Fitness', 'Food', 'Gaming', 'Travel', 'Lifestyle']
 
 export default function MarketplacePage() {
   const { user } = useAuth()
-  const [listings, setListings] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: listingsData, isLoading } = useListings()
+  const applyMutation = useApplyToListing()
+
+  const listings: any[] = listingsData?.data ?? []
+
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [sortBy, setSortBy] = useState<'newest' | 'budget' | 'deadline'>('newest')
@@ -40,29 +44,8 @@ export default function MarketplacePage() {
 
   const isInfluencer = user?.role === 'INFLUENCER'
 
-  useEffect(() => {
-    loadListings()
-  }, [])
-
-  const loadListings = async () => {
-    try {
-      setLoading(true)
-      const data = await getListings()
-      setListings(data?.data ?? [])
-    } catch (err) {
-      console.error('Failed to load listings:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleApply = async (listingId: string) => {
-    try {
-      await applyToListing(listingId, { coverLetter: 'Interested in this opportunity!' })
-      loadListings()
-    } catch (err) {
-      console.error('Failed to apply:', err)
-    }
+  const handleApply = (listingId: string) => {
+    applyMutation.mutate({ listingId, data: { coverLetter: 'Interested in this opportunity!' } })
   }
 
   const filteredListings = listings
@@ -95,7 +78,7 @@ export default function MarketplacePage() {
   const totalBudget = listings.reduce((sum, l) => sum + (Number(l.budgetMax) || 0), 0)
   const totalApplicants = listings.reduce((sum, l) => sum + (l._count?.applications || 0), 0)
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />

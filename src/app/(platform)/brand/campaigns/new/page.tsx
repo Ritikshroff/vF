@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { createCampaign } from '@/services/api/campaigns'
+import { useCreateCampaign } from '@/hooks/mutations/use-campaign-mutations'
 import { INFLUENCER_CATEGORIES, SOCIAL_PLATFORMS } from '@/lib/constants'
 import { slideInRight } from '@/lib/animations'
 
@@ -55,8 +55,8 @@ interface Deliverable {
 
 export default function CampaignBuilderPage() {
   const router = useRouter()
+  const createCampaignMutation = useCreateCampaign()
   const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -125,51 +125,49 @@ export default function CampaignBuilderPage() {
     }))
   }
 
+  const loading = createCampaignMutation.isPending
+
   const handleSubmit = async () => {
-    setLoading(true)
-    try {
-      // Build requirements string from deliverables and content types
-      const requirementsParts: string[] = []
-      if (formData.contentTypes.length > 0) {
-        requirementsParts.push(`Content types: ${formData.contentTypes.join(', ')}`)
-      }
-      if (formData.deliverables.length > 0) {
-        requirementsParts.push(
-          `Deliverables: ${formData.deliverables.map((d) => `${d.quantity}x ${d.type} - ${d.description}`).join('; ')}`
-        )
-      }
-      if (formData.minEngagement) {
-        requirementsParts.push(`Min engagement rate: ${formData.minEngagement}%`)
-      }
-
-      const listingData = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        requirements: requirementsParts.join('\n') || undefined,
-        budgetMin: parseInt(formData.minBudget) || 0,
-        budgetMax: parseInt(formData.maxBudget) || 0,
-        compensationType: 'FIXED' as const,
-        targetNiches: formData.goals.length > 0 ? formData.goals : [formData.category].filter(Boolean),
-        targetPlatforms: formData.platforms,
-        minFollowers: parseInt(formData.minFollowers) || undefined,
-        maxFollowers: formData.maxFollowers ? parseInt(formData.maxFollowers) : undefined,
-        targetLocations: formData.targetLocations.length > 0 ? formData.targetLocations : undefined,
-        targetAgeRange: formData.targetAgeRanges.length > 0 ? formData.targetAgeRanges.join(', ') : undefined,
-        targetGender: formData.targetGenders.length > 0 ? formData.targetGenders.join(', ') : undefined,
-        totalSlots: 10,
-        applicationDeadline: formData.applicationDeadline ? new Date(formData.applicationDeadline).toISOString() : undefined,
-        campaignStartDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
-        campaignEndDate: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
-      }
-
-      await createCampaign(listingData)
-      router.push('/brand/campaigns')
-    } catch (error) {
-      console.error('Error creating campaign:', error)
-    } finally {
-      setLoading(false)
+    // Build requirements string from deliverables and content types
+    const requirementsParts: string[] = []
+    if (formData.contentTypes.length > 0) {
+      requirementsParts.push(`Content types: ${formData.contentTypes.join(', ')}`)
     }
+    if (formData.deliverables.length > 0) {
+      requirementsParts.push(
+        `Deliverables: ${formData.deliverables.map((d) => `${d.quantity}x ${d.type} - ${d.description}`).join('; ')}`
+      )
+    }
+    if (formData.minEngagement) {
+      requirementsParts.push(`Min engagement rate: ${formData.minEngagement}%`)
+    }
+
+    const listingData = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      requirements: requirementsParts.join('\n') || undefined,
+      budgetMin: parseInt(formData.minBudget) || 0,
+      budgetMax: parseInt(formData.maxBudget) || 0,
+      compensationType: 'FIXED' as const,
+      targetNiches: formData.goals.length > 0 ? formData.goals : [formData.category].filter(Boolean),
+      targetPlatforms: formData.platforms,
+      minFollowers: parseInt(formData.minFollowers) || undefined,
+      maxFollowers: formData.maxFollowers ? parseInt(formData.maxFollowers) : undefined,
+      targetLocations: formData.targetLocations.length > 0 ? formData.targetLocations : undefined,
+      targetAgeRange: formData.targetAgeRanges.length > 0 ? formData.targetAgeRanges.join(', ') : undefined,
+      targetGender: formData.targetGenders.length > 0 ? formData.targetGenders.join(', ') : undefined,
+      totalSlots: 10,
+      applicationDeadline: formData.applicationDeadline ? new Date(formData.applicationDeadline).toISOString() : undefined,
+      campaignStartDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
+      campaignEndDate: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
+    }
+
+    createCampaignMutation.mutate(listingData, {
+      onSuccess: () => {
+        router.push('/brand/campaigns')
+      },
+    })
   }
 
   const canProceed = () => {

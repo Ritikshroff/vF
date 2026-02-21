@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Upload,
@@ -28,7 +28,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
-import { api } from '@/lib/api-client'
+import { useInfluencerProfile } from '@/hooks/queries/use-discovery'
 import { formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 
@@ -72,46 +72,25 @@ function formatContentType(type: string): string {
 
 export default function ContentLibraryPage() {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [content, setContent] = useState<any[]>([])
-  const [stats, setStats] = useState<any>(null)
+  const { data: profile, isLoading } = useInfluencerProfile(user?.influencerId || '')
+
+  const content: any[] = profile?.recentPosts || []
+
+  const stats = useMemo(() => {
+    if (content.length === 0) return null
+    return {
+      total_content: content.length,
+      total_views: content.reduce((sum: number, p: any) => sum + (p.views || 0), 0),
+      total_likes: content.reduce((sum: number, p: any) => sum + (p.likes || 0), 0),
+      avg_engagement: content.length > 0
+        ? content.reduce((sum: number, p: any) => sum + Number(p.engagementRate || 0), 0) / content.length
+        : 0,
+    }
+  }, [content])
+
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [filterPlatform, setFilterPlatform] = useState<string>('all')
-
-  const loadContent = useCallback(async () => {
-    if (!user?.influencerId) return
-
-    try {
-      const res = await api.get<any>(`/discovery/influencers/${user.influencerId}`)
-      if (res.error) {
-        console.error('Error loading content:', res.error)
-        return
-      }
-
-      const profile = res.data
-      const posts = profile?.recentPosts || []
-      setContent(posts)
-
-      // Compute stats from posts
-      setStats({
-        total_content: posts.length,
-        total_views: posts.reduce((sum: number, p: any) => sum + (p.views || 0), 0),
-        total_likes: posts.reduce((sum: number, p: any) => sum + (p.likes || 0), 0),
-        avg_engagement: posts.length > 0
-          ? posts.reduce((sum: number, p: any) => sum + Number(p.engagementRate || 0), 0) / posts.length
-          : 0,
-      })
-    } catch (error) {
-      console.error('Error loading content:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [user?.influencerId])
-
-  useEffect(() => {
-    loadContent()
-  }, [loadContent])
 
   const filteredContent = content.filter((item) => {
     const matchesSearch =
@@ -139,7 +118,7 @@ export default function ContentLibraryPage() {
     )
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container py-8">
         <div className="animate-pulse space-y-6">

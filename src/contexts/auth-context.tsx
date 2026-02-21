@@ -9,7 +9,7 @@ interface AuthContextType extends AuthState {
   login: (data: LoginData) => Promise<User | Brand | Influencer>
   logout: () => Promise<void>
   updateUser: (updates: Partial<User | Brand | Influencer>) => Promise<User | Brand | Influencer>
-  refreshUser: () => void
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -21,24 +21,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: true,
   })
 
-  // Load user on mount
+  // Load user on mount — instant hydration from localStorage, then validate with server
   useEffect(() => {
-    const loadUser = () => {
-      try {
-        const user = authLib.getCurrentUser()
-        setState({
-          user,
-          isAuthenticated: !!user,
-          isLoading: false,
-        })
-      } catch (error) {
-        console.error('Error loading user:', error)
-        setState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        })
+    const loadUser = async () => {
+      // Instant hydration from localStorage (avoids flash)
+      const cachedUser = authLib.getCurrentUser()
+      if (cachedUser) {
+        setState({ user: cachedUser, isAuthenticated: true, isLoading: true })
       }
+
+      // Validate session against server (uses httpOnly cookie)
+      const serverUser = await authLib.fetchCurrentUser()
+      setState({
+        user: serverUser,
+        isAuthenticated: !!serverUser,
+        isLoading: false,
+      })
     }
 
     loadUser()
@@ -46,49 +44,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (data: SignUpData): Promise<User> => {
     const user = await authLib.signUp(data)
-    setState({
-      user,
-      isAuthenticated: true, // Auto-login after registration
-      isLoading: false,
-    })
+    setState({ user, isAuthenticated: true, isLoading: false })
     return user
   }
 
   const login = async (data: LoginData): Promise<User | Brand | Influencer> => {
     const user = await authLib.login(data)
-    setState({
-      user,
-      isAuthenticated: true,
-      isLoading: false,
-    })
+    setState({ user, isAuthenticated: true, isLoading: false })
     return user
   }
 
   const logout = async (): Promise<void> => {
     await authLib.logout()
-    setState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-    })
+    setState({ user: null, isAuthenticated: false, isLoading: false })
   }
 
   const updateUser = async (updates: Partial<User | Brand | Influencer>): Promise<User | Brand | Influencer> => {
     const updatedUser = await authLib.updateUser(updates)
-    setState(prev => ({
-      ...prev,
-      user: updatedUser,
-    }))
+    setState(prev => ({ ...prev, user: updatedUser }))
     return updatedUser
   }
 
-  const refreshUser = () => {
-    const user = authLib.getCurrentUser()
-    setState(prev => ({
-      ...prev,
-      user,
-      isAuthenticated: !!user,
-    }))
+  const refreshUser = async (): Promise<void> => {
+    const user = await authLib.fetchCurrentUser()
+    setState(prev => ({ ...prev, user, isAuthenticated: !!user }))
   }
 
   return (

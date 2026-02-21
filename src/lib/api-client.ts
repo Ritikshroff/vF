@@ -1,7 +1,7 @@
 /**
  * API Client utility for frontend-to-backend communication
+ * Auth is handled via httpOnly cookies — no tokens in JS memory
  */
-import { getAccessToken } from '@/lib/auth'
 
 const API_BASE = '/api'
 
@@ -13,31 +13,36 @@ interface ApiResponse<T = unknown> {
 
 class ApiClient {
   private baseUrl: string
+  private isRefreshing = false
 
   constructor(baseUrl: string = API_BASE) {
     this.baseUrl = baseUrl
   }
 
-  private getAuthHeaders(): Record<string, string> {
-    const token = getAccessToken()
-    return token ? { Authorization: `Bearer ${token}` } : {}
-  }
-
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseUrl}${endpoint}`
       const response = await fetch(url, {
-        credentials: 'include', // send cookies (access_token, refresh_token)
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          ...this.getAuthHeaders(),
           ...options.headers,
         },
         ...options,
       })
+
+      // Auto-refresh on 401 (skip for auth routes and retries)
+      if (response.status === 401 && !isRetry && !endpoint.startsWith('/auth/')) {
+        const refreshed = await this.tryRefresh()
+        if (refreshed) {
+          return this.request<T>(endpoint, options, true)
+        }
+        return { error: 'Session expired' }
+      }
 
       const data = await response.json()
 
@@ -48,6 +53,22 @@ class ApiClient {
       return { data }
     } catch (err) {
       return { error: err instanceof Error ? err.message : 'Network error' }
+    }
+  }
+
+  private async tryRefresh(): Promise<boolean> {
+    if (this.isRefreshing) return false
+    this.isRefreshing = true
+    try {
+      const res = await fetch(`${this.baseUrl}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      return res.ok
+    } catch {
+      return false
+    } finally {
+      this.isRefreshing = false
     }
   }
 

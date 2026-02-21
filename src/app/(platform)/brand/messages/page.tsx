@@ -19,78 +19,56 @@ import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
 import { formatRelativeTime, getInitials } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-import { getConversations, getMessages, sendMessage, markAsRead } from '@/services/api/messaging'
+import { useConversations, useMessages } from '@/hooks/queries/use-messaging'
+import { useSendMessage, useMarkAsRead } from '@/hooks/mutations/use-messaging-mutations'
 
 export default function BrandMessagesPage() {
   const { user } = useAuth()
-  const [conversations, setConversations] = useState<any[]>([])
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [activeConversation, setActiveConversation] = useState<any>(null)
-  const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [showMobileList, setShowMobileList] = useState(true)
-  const [loading, setLoading] = useState(true)
-  const [loadingMessages, setLoadingMessages] = useState(false)
-  const [sending, setSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  const { data: conversationsRaw, isLoading: loading } = useConversations()
+  const conversations = Array.isArray(conversationsRaw) ? conversationsRaw : conversationsRaw?.data ?? []
+
+  const { data: messagesRaw, isLoading: loadingMessages } = useMessages(activeConversationId || '')
+  const messages = Array.isArray(messagesRaw) ? messagesRaw : messagesRaw?.data ?? []
+
+  const sendMessageMutation = useSendMessage()
+  const markAsReadMutation = useMarkAsRead()
+  const sending = sendMessageMutation.isPending
+
+  // Auto-select first conversation
   useEffect(() => {
-    loadConversations()
-  }, [])
+    if (conversations.length > 0 && !activeConversation) {
+      selectConversation(conversations[0])
+    }
+  }, [conversations])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const loadConversations = async () => {
-    try {
-      setLoading(true)
-      const data = await getConversations()
-      const convs = Array.isArray(data) ? data : data?.data ?? []
-      setConversations(convs)
-      if (convs.length > 0 && !activeConversation) {
-        selectConversation(convs[0])
-      }
-    } catch (err) {
-      console.error('Failed to load conversations:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const selectConversation = async (conversation: any) => {
+  const selectConversation = (conversation: any) => {
     setActiveConversation(conversation)
+    setActiveConversationId(conversation.id)
     setShowMobileList(false)
-    setLoadingMessages(true)
-    try {
-      const data = await getMessages(conversation.id)
-      const msgs = Array.isArray(data) ? data : data?.data ?? []
-      setMessages(msgs)
-      await markAsRead(conversation.id).catch(() => {})
-    } catch (err) {
-      console.error('Failed to load messages:', err)
-    } finally {
-      setLoadingMessages(false)
-    }
+    markAsReadMutation.mutate(conversation.id)
   }
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!newMessage.trim() || !activeConversation || sending) return
-    setSending(true)
-    try {
-      const sent = await sendMessage(activeConversation.id, newMessage)
-      setMessages(prev => [...prev, sent])
-      setNewMessage('')
-      setConversations(prev => prev.map(c =>
-        c.id === activeConversation.id
-          ? { ...c, lastMessage: { content: newMessage, senderId: user?.id, createdAt: new Date().toISOString() } }
-          : c
-      ))
-    } catch (err) {
-      console.error('Failed to send message:', err)
-    } finally {
-      setSending(false)
-    }
+    sendMessageMutation.mutate(
+      { conversationId: activeConversation.id, content: newMessage },
+      {
+        onSuccess: () => {
+          setNewMessage('')
+        },
+      }
+    )
   }
 
   const filteredConversations = conversations.filter(conv => {

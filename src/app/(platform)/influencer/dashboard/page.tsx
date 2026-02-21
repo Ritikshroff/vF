@@ -1,54 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Users, Megaphone, DollarSign, Star, Loader2 } from 'lucide-react'
+import { Users, Megaphone, DollarSign, Star, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatCompactNumber } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { fadeInUp } from '@/lib/animations'
-import { getWallet } from '@/services/api/wallet'
-import { getCollaborations } from '@/services/api/collaborations'
-import { getMyApplications } from '@/services/api/marketplace'
+import { useWallet } from '@/hooks/queries/use-wallet'
+import { useCollaborations } from '@/hooks/queries/use-collaborations'
+import { useMyApplications } from '@/hooks/queries/use-marketplace'
 import { EmailVerificationBanner } from '@/components/shared/email-verification-banner'
 
 export default function InfluencerDashboardPage() {
-  const [loading, setLoading] = useState(true)
-  const [walletData, setWalletData] = useState<any>(null)
-  const [collaborations, setCollaborations] = useState<any[]>([])
-  const [applications, setApplications] = useState<any[]>([])
+  const { data: walletData, isLoading: walletLoading } = useWallet()
+  const { data: collabData, isLoading: collabLoading } = useCollaborations()
+  const { data: appsData, isLoading: appsLoading } = useMyApplications()
 
-  useEffect(() => {
-    loadDashboard()
-  }, [])
-
-  const loadDashboard = async () => {
-    try {
-      const [walletRes, collabRes, appsRes] = await Promise.allSettled([
-        getWallet(),
-        getCollaborations(),
-        getMyApplications(),
-      ])
-
-      if (walletRes.status === 'fulfilled' && walletRes.value) {
-        setWalletData(walletRes.value)
-      }
-      if (collabRes.status === 'fulfilled') {
-        const data = collabRes.value
-        setCollaborations(Array.isArray(data) ? data : data?.data ?? [])
-      }
-      if (appsRes.status === 'fulfilled') {
-        const data = appsRes.value
-        setApplications(Array.isArray(data) ? data : data?.data ?? [])
-      }
-    } catch (err) {
-      console.error('Failed to load dashboard:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const loading = walletLoading || collabLoading || appsLoading
+  const collaborations: any[] = collabData ? (Array.isArray(collabData) ? collabData : collabData?.data ?? []) : []
+  const applications: any[] = appsData ? (Array.isArray(appsData) ? appsData : appsData?.data ?? []) : []
 
   if (loading) {
     return (

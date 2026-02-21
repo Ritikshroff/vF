@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   TrendingUp,
@@ -17,8 +17,8 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/contexts/auth-context'
-import { getInfluencerAnalytics } from '@/services/api/analytics'
-import { api } from '@/lib/api-client'
+import { useInfluencerAnalytics } from '@/hooks/queries/use-analytics'
+import { useInfluencerProfile } from '@/hooks/queries/use-discovery'
 import { formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import {
@@ -74,54 +74,12 @@ function formatPlatformName(platform: string): string {
 
 export default function InfluencerAnalyticsPage() {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [analytics, setAnalytics] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
+  const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = useInfluencerAnalytics(user?.influencerId || '')
+  const { data: profile, isLoading: profileLoading, error: profileError } = useInfluencerProfile(user?.influencerId || '')
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
 
-  const loadAnalytics = useCallback(async () => {
-    if (!user?.influencerId) return
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const [profileResult, analyticsResult] = await Promise.allSettled([
-        api.get<any>(`/discovery/influencers/${user.influencerId}`),
-        getInfluencerAnalytics(user.influencerId),
-      ])
-
-      if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-        setProfile(profileResult.value.data)
-      } else if (profileResult.status === 'rejected') {
-        console.error('Failed to load profile:', profileResult.reason)
-      }
-
-      if (analyticsResult.status === 'fulfilled') {
-        setAnalytics(analyticsResult.value)
-      } else if (analyticsResult.status === 'rejected') {
-        console.error('Failed to load analytics:', analyticsResult.reason)
-      }
-
-      // If both failed, show error
-      if (
-        profileResult.status === 'rejected' &&
-        analyticsResult.status === 'rejected'
-      ) {
-        setError('Failed to load analytics data. Please try again later.')
-      }
-    } catch (err) {
-      console.error('Error loading analytics:', err)
-      setError('An unexpected error occurred.')
-    } finally {
-      setLoading(false)
-    }
-  }, [user?.influencerId])
-
-  useEffect(() => {
-    loadAnalytics()
-  }, [loadAnalytics])
+  const isLoading = analyticsLoading || profileLoading
+  const error = analyticsError && profileError ? 'Failed to load analytics data. Please try again later.' : null
 
   // No influencer ID available
   if (!user?.influencerId) {
@@ -139,7 +97,7 @@ export default function InfluencerAnalyticsPage() {
   }
 
   // Loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container py-4 sm:py-6 lg:py-8">
         <div className="animate-pulse space-y-4 sm:space-y-6">
@@ -168,7 +126,7 @@ export default function InfluencerAnalyticsPage() {
           <h2 className="text-xl font-semibold mb-2">Unable to Load Analytics</h2>
           <p className="text-[rgb(var(--muted))] max-w-md mb-4">{error}</p>
           <button
-            onClick={loadAnalytics}
+            onClick={() => window.location.reload()}
             className="px-6 py-2 min-h-[44px] rounded-lg bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white font-medium hover:opacity-90 transition-opacity"
           >
             Try Again

@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/auth-context'
-import { api } from '@/lib/api-client'
+import { useInfluencerProfile } from '@/hooks/queries/use-discovery'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 
 /** Map UPPERCASE platform enum to a display name */
@@ -72,10 +72,12 @@ function formatMemberSince(dateStr: string | undefined): string {
 
 export default function InfluencerProfilePage() {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
+  const { data: influencer, isLoading, error: queryError } = useInfluencerProfile(user?.influencerId || '')
   const [saving, setSaving] = useState(false)
-  const [influencer, setInfluencer] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
+
+  const error = !user?.influencerId
+    ? 'No influencer profile linked to this account. Please complete onboarding first.'
+    : queryError ? 'Failed to load profile. Please try again later.' : null
 
   // Form state
   const [formData, setFormData] = useState({
@@ -93,53 +95,23 @@ export default function InfluencerProfilePage() {
   const [platforms, setPlatforms] = useState<any[]>([])
   const [newCategory, setNewCategory] = useState('')
 
+  // Populate form when profile data loads
   useEffect(() => {
-    loadProfile()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
-
-  const loadProfile = async () => {
-    if (!user) return
-
-    if (!user.influencerId) {
-      setError('No influencer profile linked to this account. Please complete onboarding first.')
-      setLoading(false)
-      return
+    if (influencer) {
+      setFormData({
+        name: influencer.fullName || '',
+        bio: influencer.bio || '',
+        email: user?.email || '',
+        location: influencer.location || '',
+        website: '',
+        categories: influencer.categories || [],
+        pricing_min: Number(influencer.pricing?.instagramPost || 0),
+        pricing_max: Number(influencer.pricing?.youtubeVideo || influencer.pricing?.tiktokVideo || 0),
+        available: influencer.availability === 'AVAILABLE',
+      })
+      setPlatforms(influencer.platforms || [])
     }
-
-    try {
-      setError(null)
-      const res = await api.get<any>(`/discovery/influencers/${user.influencerId}`)
-
-      if (res.error) {
-        setError(res.error)
-        setLoading(false)
-        return
-      }
-
-      const inf = res.data
-      if (inf) {
-        setInfluencer(inf)
-        setFormData({
-          name: inf.fullName || '',
-          bio: inf.bio || '',
-          email: user.email || '',
-          location: inf.location || '',
-          website: '',
-          categories: inf.categories || [],
-          pricing_min: Number(inf.pricing?.instagramPost || 0),
-          pricing_max: Number(inf.pricing?.youtubeVideo || inf.pricing?.tiktokVideo || 0),
-          available: inf.availability === 'AVAILABLE',
-        })
-        setPlatforms(inf.platforms || [])
-      }
-    } catch (err) {
-      console.error('Error loading profile:', err)
-      setError('Failed to load profile. Please try again later.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [influencer, user?.email])
 
   const handleSave = async () => {
     setSaving(true)
@@ -171,7 +143,7 @@ export default function InfluencerProfilePage() {
     })
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container py-4 sm:py-6 lg:py-8">
         <div className="animate-pulse space-y-4 sm:space-y-6">
@@ -190,7 +162,7 @@ export default function InfluencerProfilePage() {
             <AlertCircle className="h-12 w-12 text-orange-500 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Profile Unavailable</h2>
             <p className="text-[rgb(var(--muted))] max-w-md">{error}</p>
-            <Button variant="outline" className="mt-6" onClick={() => { setLoading(true); setError(null); loadProfile() }}>
+            <Button variant="outline" className="mt-6" onClick={() => window.location.reload()}>
               Try Again
             </Button>
           </CardContent>

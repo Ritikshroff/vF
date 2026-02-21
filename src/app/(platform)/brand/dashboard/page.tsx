@@ -1,52 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Users, Megaphone, DollarSign, Plus, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatCompactNumber } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { fadeInUp } from '@/lib/animations'
-import { getWallet } from '@/services/api/wallet'
-import { fetchBrandCampaigns } from '@/services/api/campaigns'
-import { getCollaborations } from '@/services/api/collaborations'
+import { useWallet } from '@/hooks/queries/use-wallet'
+import { useBrandCampaigns } from '@/hooks/queries/use-campaigns'
+import { useCollaborations } from '@/hooks/queries/use-collaborations'
 import { EmailVerificationBanner } from '@/components/shared/email-verification-banner'
 
 export default function BrandDashboardPage() {
-  const [loading, setLoading] = useState(true)
-  const [walletBalance, setWalletBalance] = useState(0)
-  const [campaigns, setCampaigns] = useState<any[]>([])
-  const [collaborationCount, setCollaborationCount] = useState(0)
+  const { data: walletData, isLoading: walletLoading } = useWallet()
+  const { data: campaignsData, isLoading: campaignsLoading } = useBrandCampaigns()
+  const { data: collabData, isLoading: collabLoading } = useCollaborations()
 
-  useEffect(() => {
-    loadDashboard()
-  }, [])
-
-  const loadDashboard = async () => {
-    try {
-      const [walletData, campaignsData, collabData] = await Promise.allSettled([
-        getWallet(),
-        fetchBrandCampaigns(),
-        getCollaborations(),
-      ])
-
-      if (walletData.status === 'fulfilled') {
-        setWalletBalance(Number(walletData.value?.balance ?? 0))
-      }
-      if (campaignsData.status === 'fulfilled') {
-        setCampaigns(campaignsData.value ?? [])
-      }
-      if (collabData.status === 'fulfilled') {
-        setCollaborationCount(collabData.value?.data?.length ?? 0)
-      }
-    } catch (err) {
-      console.error('Failed to load dashboard:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const loading = walletLoading || campaignsLoading || collabLoading
+  const walletBalance = Number((walletData as any)?.balance ?? 0)
+  const campaigns: any[] = campaignsData ?? []
+  const collaborationCount = collabData?.data?.length ?? 0
 
   const activeCampaigns = campaigns.filter((c: any) => c.status === 'ACTIVE')
   const totalSpent = campaigns.reduce((sum: number, c: any) => sum + Number(c.budgetMax || 0), 0)

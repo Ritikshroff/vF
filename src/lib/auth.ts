@@ -2,12 +2,10 @@ import { User, Brand, Influencer, SignUpData, LoginData } from '@/types/auth'
 
 const AUTH_STORAGE_KEY = 'viralfluencer_auth'
 
-// --- Token / User persistence ---
+// --- User persistence (tokens live in httpOnly cookies only) ---
 
 interface StoredAuth {
   user: User | Brand | Influencer
-  accessToken: string
-  expiresAt: string
 }
 
 export const getStoredAuth = (): StoredAuth | null => {
@@ -25,16 +23,30 @@ export const getCurrentUser = (): (User | Brand | Influencer) | null => {
   return getStoredAuth()?.user ?? null
 }
 
-export const getAccessToken = (): string | null => {
-  return getStoredAuth()?.accessToken ?? null
+const setStoredUser = (user: User | Brand | Influencer): void => {
+  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user }))
 }
 
-const setStoredAuth = (auth: StoredAuth): void => {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth))
-}
-
-const clearStoredAuth = (): void => {
+export const clearStoredAuth = (): void => {
   localStorage.removeItem(AUTH_STORAGE_KEY)
+}
+
+/**
+ * Validate session against the server and return the current user.
+ * Uses httpOnly cookies (sent automatically via credentials: 'include').
+ */
+export const fetchCurrentUser = async (): Promise<(User | Brand | Influencer) | null> => {
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include' })
+    if (!res.ok) return null
+    const data = await res.json()
+    const user = data.user ?? null
+    if (user) setStoredUser(user)
+    else clearStoredAuth()
+    return user
+  } catch {
+    return null
+  }
 }
 
 // --- API helpers ---
@@ -71,9 +83,9 @@ export const signUp = async (data: SignUpData): Promise<User> => {
     }),
   })
 
-  const { user, accessToken, expiresAt } = res
-  setStoredAuth({ user, accessToken, expiresAt })
-  return user
+  // Tokens are set as httpOnly cookies by the server — only store user locally
+  setStoredUser(res.user)
+  return res.user
 }
 
 export const login = async (data: LoginData): Promise<User | Brand | Influencer> => {
@@ -90,9 +102,9 @@ export const login = async (data: LoginData): Promise<User | Brand | Influencer>
     }),
   })
 
-  const { user, accessToken, expiresAt } = res
-  setStoredAuth({ user, accessToken, expiresAt })
-  return user
+  // Tokens are set as httpOnly cookies by the server — only store user locally
+  setStoredUser(res.user)
+  return res.user
 }
 
 export const logout = async (): Promise<void> => {
@@ -121,7 +133,7 @@ export const verifyEmail = async (token: string): Promise<void> => {
   const auth = getStoredAuth()
   if (auth) {
     auth.user.emailVerified = true
-    setStoredAuth(auth)
+    setStoredUser(auth.user)
   }
 }
 
@@ -143,9 +155,8 @@ export const updateUser = async (updates: Partial<User | Brand | Influencer>): P
   const auth = getStoredAuth()
   if (!auth?.user) throw new Error('Not authenticated')
 
-  // Update locally for now (server update happens via specific API endpoints)
   const updatedUser = { ...auth.user, ...updates }
-  setStoredAuth({ ...auth, user: updatedUser })
+  setStoredUser(updatedUser)
   return updatedUser
 }
 
@@ -153,11 +164,9 @@ export const completeBrandOnboarding = async (data: Partial<Brand>): Promise<Bra
   const auth = getStoredAuth()
   if (!auth?.user) throw new Error('Not authenticated')
 
-  // Call onboarding API
   const res = await apiRequest<{ brand: Brand }>('/api/onboarding/brand', {
     method: 'POST',
     body: JSON.stringify(data),
-    headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
   })
 
   const brandUser: Brand = {
@@ -166,7 +175,7 @@ export const completeBrandOnboarding = async (data: Partial<Brand>): Promise<Bra
     role: 'BRAND',
     onboardingCompleted: true,
   }
-  setStoredAuth({ ...auth, user: brandUser })
+  setStoredUser(brandUser)
   return brandUser
 }
 
@@ -177,7 +186,6 @@ export const completeInfluencerOnboarding = async (data: Partial<Influencer>): P
   const res = await apiRequest<{ influencer: Influencer }>('/api/onboarding/influencer', {
     method: 'POST',
     body: JSON.stringify(data),
-    headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
   })
 
   const influencerUser: Influencer = {
@@ -186,6 +194,6 @@ export const completeInfluencerOnboarding = async (data: Partial<Influencer>): P
     role: 'INFLUENCER',
     onboardingCompleted: true,
   }
-  setStoredAuth({ ...auth, user: influencerUser })
+  setStoredUser(influencerUser)
   return influencerUser
 }

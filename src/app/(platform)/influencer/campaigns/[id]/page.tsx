@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -25,46 +24,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/auth-context'
-import { getListingById, applyToListing } from '@/services/api/marketplace'
+import { useListingDetail } from '@/hooks/queries/use-marketplace'
+import { useApplyToListing } from '@/hooks/mutations/use-marketplace-mutations'
 import { formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 
 export default function CampaignDetailPage() {
   const params = useParams()
   const { user } = useAuth()
-  const [listing, setListing] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [applying, setApplying] = useState(false)
-
-  useEffect(() => {
-    loadListing()
-  }, [params.id])
-
-  const loadListing = async () => {
-    try {
-      const id = params.id as string
-      const data = await getListingById(id)
-      setListing(data)
-    } catch (error) {
-      console.error('Error loading listing:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const id = params.id as string
+  const { data: listing, isLoading } = useListingDetail(id)
+  const applyMutation = useApplyToListing()
 
   const handleApply = async () => {
     if (!listing) return
-
-    setApplying(true)
-    try {
-      await applyToListing(listing.id, {})
-      alert('Application submitted successfully!')
-      loadListing()
-    } catch (error: any) {
-      alert(error.message || 'Failed to apply')
-    } finally {
-      setApplying(false)
-    }
+    applyMutation.mutate({ listingId: listing.id, data: {} })
   }
 
   const getPlatformIcon = (platform: string) => {
@@ -80,7 +54,7 @@ export default function CampaignDetailPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container py-4 sm:py-6 lg:py-8">
         <div className="flex items-center justify-center py-20">
@@ -245,9 +219,9 @@ export default function CampaignDetailPage() {
                         size="lg"
                         className="flex-1 min-h-[44px]"
                         onClick={handleApply}
-                        disabled={applying}
+                        disabled={applyMutation.isPending}
                       >
-                        {applying ? (
+                        {applyMutation.isPending ? (
                           <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                         ) : (
                           <Send className="h-5 w-5 mr-2" />

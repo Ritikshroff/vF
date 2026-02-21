@@ -52,23 +52,3 @@ export function useLocalStorage<T>(
   return [storedValue, setValue]
 }
 
-/**
- * Hook to get user role from localStorage
- */
-export function useUserRole() {
-  return useLocalStorage<'brand' | 'influencer' | null>('userRole', null)
-}
-
-/**
- * Hook to manage saved/favorited influencers
- */
-export function useSavedInfluencers() {
-  return useLocalStorage<string[]>('savedInfluencers', [])
-}
-
-/**
- * Hook to manage filter preferences
- */
-export function useFilterPreferences() {
-  return useLocalStorage<Record<string, unknown>>('filterPreferences', {})
-}

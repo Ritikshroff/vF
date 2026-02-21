@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Heart,
@@ -21,8 +21,8 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
-import { useAuth } from '@/contexts/auth-context'
-import { getCRMContacts, deleteContact } from '@/services/api/crm'
+import { useCRMContacts } from '@/hooks/queries/use-crm'
+import { useDeleteContact } from '@/hooks/mutations/use-crm-mutations'
 import { formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 
@@ -46,37 +46,16 @@ interface CRMContact {
 }
 
 export default function SavedInfluencersPage() {
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [contacts, setContacts] = useState<CRMContact[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState<'all' | string>('all')
 
-  const loadSavedInfluencers = useCallback(async () => {
-    if (!user) return
+  const { data: contactsRaw, isLoading: loading } = useCRMContacts()
+  const deleteContactMutation = useDeleteContact()
 
-    try {
-      const result = await getCRMContacts()
-      const contactList: CRMContact[] = result?.data ?? []
-      setContacts(contactList)
-    } catch (error) {
-      console.error('Error loading saved influencers:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [user])
+  const contacts: CRMContact[] = contactsRaw?.data ?? []
 
-  useEffect(() => {
-    loadSavedInfluencers()
-  }, [loadSavedInfluencers])
-
-  const handleUnsave = async (contactId: string) => {
-    try {
-      await deleteContact(contactId)
-      setContacts((prev) => prev.filter((c) => c.id !== contactId))
-    } catch (error) {
-      console.error('Error removing contact:', error)
-    }
+  const handleUnsave = (contactId: string) => {
+    deleteContactMutation.mutate(contactId)
   }
 
   const filteredContacts = contacts.filter((contact) => {

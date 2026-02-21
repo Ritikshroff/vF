@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
@@ -27,7 +27,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { api } from '@/lib/api-client'
+import { useInfluencerProfile } from '@/hooks/queries/use-discovery'
 import { formatCompactNumber, formatCurrency } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import {
@@ -46,12 +46,6 @@ import {
 } from 'recharts'
 
 const COLORS = ['#8B5CF6', '#3B82F6', '#10B981']
-
-async function fetchInfluencerProfile(id: string) {
-  const res = await api.get<any>(`/discovery/influencers/${id}`)
-  if (res.error) throw new Error(res.error)
-  return res.data
-}
 
 /** Map of pricing field keys to human-readable labels */
 const PRICING_FIELDS: { key: string; label: string }[] = [
@@ -105,27 +99,12 @@ function formatAvailability(availability: string) {
 export default function InfluencerProfilePage() {
   const params = useParams()
   const router = useRouter()
-  const [influencer, setInfluencer] = useState<any | null>(null)
-  const [loading, setLoading] = useState(true)
   const [isSaved, setIsSaved] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'content'>('overview')
 
-  useEffect(() => {
-    loadInfluencer()
-  }, [params.id])
+  const { data: influencer, isLoading } = useInfluencerProfile(params.id as string)
 
-  const loadInfluencer = async () => {
-    try {
-      const data = await fetchInfluencerProfile(params.id as string)
-      setInfluencer(data)
-    } catch (error) {
-      console.error('Error loading influencer:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container py-4 sm:py-6 lg:py-8">
         <div className="animate-pulse space-y-4 sm:space-y-6">

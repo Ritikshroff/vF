@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Heart,
@@ -27,78 +27,49 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/auth-context'
 import { formatRelativeTime, formatCompactNumber, getInitials } from '@/lib/utils'
 import { staggerContainer, staggerItem, fadeInUp } from '@/lib/animations'
-import { getFeed, createPost, toggleLike, sharePost } from '@/services/api/feed'
+import { useFeed } from '@/hooks/queries/use-feed'
+import { useCreatePost, useToggleLike, useSharePost } from '@/hooks/mutations/use-feed-mutations'
 
 export default function FeedPage() {
   const { user } = useAuth()
-  const [posts, setPosts] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [newPostContent, setNewPostContent] = useState('')
   const [showComposer, setShowComposer] = useState(false)
   const [activeTab, setActiveTab] = useState<'foryou' | 'following' | 'trending'>('foryou')
-  const [posting, setPosting] = useState(false)
 
-  useEffect(() => {
-    loadFeed()
-  }, [activeTab])
+  const feedParams: Record<string, string> = {}
+  if (activeTab === 'following') feedParams.followingOnly = 'true'
+  const { data: feedData, isLoading } = useFeed(feedParams)
+  const posts: any[] = feedData?.data ?? []
 
-  const loadFeed = async () => {
-    try {
-      setLoading(true)
-      const params: Record<string, string> = {}
-      if (activeTab === 'following') params.followingOnly = 'true'
-      const data = await getFeed(params)
-      setPosts(data?.data ?? [])
-    } catch (err) {
-      console.error('Failed to load feed:', err)
-    } finally {
-      setLoading(false)
-    }
+  const createPostMutation = useCreatePost()
+  const toggleLikeMutation = useToggleLike()
+  const sharePostMutation = useSharePost()
+
+  const handleLike = (postId: string) => {
+    toggleLikeMutation.mutate(postId)
   }
 
-  const handleLike = async (postId: string) => {
-    try {
-      const result = await toggleLike(postId)
-      setPosts(prev => prev.map(p =>
-        p.id === postId
-          ? { ...p, likesCount: result?.liked ? p.likesCount + 1 : p.likesCount - 1, _isLiked: result?.liked }
-          : p
-      ))
-    } catch (err) {
-      console.error('Failed to toggle like:', err)
-    }
+  const handleShare = (postId: string) => {
+    sharePostMutation.mutate(postId)
   }
 
-  const handleShare = async (postId: string) => {
-    try {
-      await sharePost(postId)
-      setPosts(prev => prev.map(p =>
-        p.id === postId ? { ...p, sharesCount: p.sharesCount + 1 } : p
-      ))
-    } catch (err) {
-      console.error('Failed to share:', err)
-    }
-  }
-
-  const handlePost = async () => {
+  const handlePost = () => {
     if (!newPostContent.trim() || !user) return
-    setPosting(true)
-    try {
-      const hashtags = newPostContent.match(/#(\w+)/g)?.map((t: string) => t.slice(1)) ?? []
-      await createPost({
+    const hashtags = newPostContent.match(/#(\w+)/g)?.map((t: string) => t.slice(1)) ?? []
+    createPostMutation.mutate(
+      {
         type: 'TEXT',
         content: newPostContent,
         visibility: 'PUBLIC',
         hashtags,
-      })
-      setNewPostContent('')
-      setShowComposer(false)
-      loadFeed()
-    } catch (err) {
-      console.error('Failed to create post:', err)
-    } finally {
-      setPosting(false)
-    }
+      },
+      {
+        onSuccess: () => {
+          setNewPostContent('')
+          setShowComposer(false)
+        },
+      }
+    )
   }
 
   return (
@@ -182,10 +153,10 @@ export default function FeedPage() {
                               variant="gradient"
                               size="sm"
                               onClick={handlePost}
-                              disabled={!newPostContent.trim() || posting}
+                              disabled={!newPostContent.trim() || createPostMutation.isPending}
                             >
                               <Send className="h-4 w-4 mr-1" />
-                              {posting ? 'Posting...' : 'Post'}
+                              {createPostMutation.isPending ? 'Posting...' : 'Post'}
                             </Button>
                           </div>
                         </div>
@@ -198,7 +169,7 @@ export default function FeedPage() {
           </AnimatePresence>
 
           {/* Feed Posts */}
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
             </div>

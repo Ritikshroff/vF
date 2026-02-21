@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Wallet,
@@ -23,63 +23,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-import { getWallet, getEscrows, getInvoices, depositFunds } from '@/services/api/wallet'
+import { useWallet, useEscrows, useInvoices } from '@/hooks/queries/use-wallet'
+import { useDepositFunds } from '@/hooks/mutations/use-wallet-mutations'
 
 export default function BrandWalletPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'invoices'>('overview')
   const [txFilter, setTxFilter] = useState<string>('all')
-  const [loading, setLoading] = useState(true)
-  const [walletData, setWalletData] = useState<any>(null)
-  const [transactions, setTransactions] = useState<any[]>([])
-  const [escrows, setEscrows] = useState<any[]>([])
-  const [invoices, setInvoices] = useState<any[]>([])
   const [depositAmount, setDepositAmount] = useState('')
-  const [depositing, setDepositing] = useState(false)
 
-  useEffect(() => {
-    loadWalletData()
-  }, [])
+  const { data: walletData, isLoading: walletLoading } = useWallet()
+  const { data: escrowsRaw, isLoading: escrowsLoading } = useEscrows()
+  const { data: invoicesRaw, isLoading: invoicesLoading } = useInvoices()
+  const depositMutation = useDepositFunds()
 
-  const loadWalletData = async () => {
-    try {
-      const [wallet, escrowData, invoiceData] = await Promise.allSettled([
-        getWallet(),
-        getEscrows(),
-        getInvoices(),
-      ])
+  const isLoading = walletLoading || escrowsLoading || invoicesLoading
+  const transactions = walletData?.transactions ?? []
+  const escrows = Array.isArray(escrowsRaw) ? escrowsRaw : escrowsRaw?.data ?? []
+  const invoices = Array.isArray(invoicesRaw) ? invoicesRaw : invoicesRaw?.data ?? []
 
-      if (wallet.status === 'fulfilled' && wallet.value) {
-        setWalletData(wallet.value)
-        setTransactions(wallet.value.transactions ?? [])
-      }
-      if (escrowData.status === 'fulfilled') {
-        const data = escrowData.value
-        setEscrows(Array.isArray(data) ? data : data?.data ?? [])
-      }
-      if (invoiceData.status === 'fulfilled') {
-        const data = invoiceData.value
-        setInvoices(Array.isArray(data) ? data : data?.data ?? [])
-      }
-    } catch (err) {
-      console.error('Failed to load wallet:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleDeposit = async () => {
+  const handleDeposit = () => {
     const amount = parseFloat(depositAmount)
     if (!amount || amount <= 0) return
-    setDepositing(true)
-    try {
-      await depositFunds(amount)
-      setDepositAmount('')
-      loadWalletData()
-    } catch (err) {
-      console.error('Deposit failed:', err)
-    } finally {
-      setDepositing(false)
-    }
+    depositMutation.mutate({ amount }, {
+      onSuccess: () => {
+        setDepositAmount('')
+      },
+    })
   }
 
   const balance = Number(walletData?.balance ?? 0)
@@ -104,7 +73,7 @@ export default function BrandWalletPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
@@ -131,9 +100,9 @@ export default function BrandWalletPage() {
                   onChange={e => setDepositAmount(e.target.value)}
                   className="w-28 px-3 py-2 rounded-lg bg-[rgb(var(--surface))] border border-[rgb(var(--border))] text-sm outline-none"
                 />
-                <Button variant="gradient" onClick={handleDeposit} disabled={depositing}>
+                <Button variant="gradient" onClick={handleDeposit} disabled={depositMutation.isPending}>
                   <Plus className="h-4 w-4 mr-2" />
-                  {depositing ? 'Adding...' : 'Add Funds'}
+                  {depositMutation.isPending ? 'Adding...' : 'Add Funds'}
                 </Button>
               </div>
             </div>

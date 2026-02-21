@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -25,7 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth-context";
-import { api } from "@/lib/api-client";
+import { useListings, useMyApplications } from "@/hooks/queries/use-marketplace";
+import { useCollaborations } from "@/hooks/queries/use-collaborations";
 import { formatCurrency, formatCompactNumber } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
@@ -92,47 +93,17 @@ type CampaignStatus =
 
 export default function InfluencerCampaignsPage() {
   const { user } = useAuth();
-  const [listings, setListings] = useState<MarketplaceListing[]>([]);
-  const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
-  const [myApplications, setMyApplications] = useState<MyApplication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: listingsData, isLoading: listingsLoading } = useListings({ pageSize: "50" });
+  const { data: collabData, isLoading: collabLoading } = useCollaborations();
+  const { data: appsData, isLoading: appsLoading } = useMyApplications();
+
+  const listings: MarketplaceListing[] = listingsData?.data ?? [];
+  const collaborations: Collaboration[] = collabData?.data ?? [];
+  const myApplications: MyApplication[] = appsData?.data ?? [];
+  const isLoading = listingsLoading || collabLoading || appsLoading;
+
   const [filter, setFilter] = useState<CampaignStatus>("available");
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    loadCampaigns();
-  }, [user]);
-
-  const loadCampaigns = async () => {
-    if (!user) return;
-
-    try {
-      const [listingsRes, collabRes, appsRes] = await Promise.allSettled([
-        api.get<{ data: MarketplaceListing[]; total: number }>(
-          "/marketplace/listings",
-          { pageSize: "50" }
-        ),
-        api.get<{ data: Collaboration[]; total: number }>("/collaborations"),
-        api.get<{ data: MyApplication[]; total: number }>(
-          "/marketplace/my-applications"
-        ),
-      ]);
-
-      if (listingsRes.status === "fulfilled" && !listingsRes.value.error) {
-        setListings(listingsRes.value.data?.data || []);
-      }
-      if (collabRes.status === "fulfilled" && !collabRes.value.error) {
-        setCollaborations(collabRes.value.data?.data || []);
-      }
-      if (appsRes.status === "fulfilled" && !appsRes.value.error) {
-        setMyApplications(appsRes.value.data?.data || []);
-      }
-    } catch (error) {
-      console.error("Error loading campaigns:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Filter data by tab + search query
   const filteredItems = useMemo(() => {
@@ -652,7 +623,7 @@ export default function InfluencerCampaignsPage() {
           </motion.div>
 
           {/* Campaigns Grid - Mobile Optimized */}
-          {loading ? (
+          {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="animate-pulse">

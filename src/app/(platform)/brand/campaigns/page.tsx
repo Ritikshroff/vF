@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Plus,
@@ -21,32 +21,17 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { fetchBrandCampaigns } from '@/services/api/campaigns'
+import { useBrandCampaigns } from '@/hooks/queries/use-campaigns'
 import { formatCurrency } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 
 export default function BrandCampaignsPage() {
-  const [campaigns, setCampaigns] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: campaignsData, isLoading } = useBrandCampaigns()
+  const campaigns: any[] = campaignsData ?? []
   const [filter, setFilter] = useState<'all' | 'DRAFT' | 'ACTIVE' | 'CLOSED' | 'PAUSED'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  useEffect(() => {
-    loadCampaigns()
-  }, [])
-
-  const loadCampaigns = async () => {
-    try {
-      const data = await fetchBrandCampaigns()
-      setCampaigns(data)
-    } catch (error) {
-      console.error('Error loading campaigns:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const filteredCampaigns = campaigns.filter((listing) => {
+  const filteredCampaigns = campaigns.filter((listing: any) => {
     const matchesFilter = filter === 'all' || listing.status === filter
     const matchesSearch =
       listing.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -180,7 +165,7 @@ export default function BrandCampaignsPage() {
           </motion.div>
 
           {/* Campaigns List */}
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--brand-primary))]" />
             </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users,
@@ -29,44 +29,25 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { formatRelativeTime, getInitials } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-import { getCRMContacts, getCRMDashboard } from '@/services/api/crm'
+import { useCRMContacts, useCRMDashboard } from '@/hooks/queries/use-crm'
 
 export default function CRMDashboardPage() {
-  const [contacts, setContacts] = useState<any[]>([])
-  const [activities, setActivities] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
-  useEffect(() => {
-    loadCRM()
+  const contactsParams = useMemo(() => {
+    const params: Record<string, string> = {}
+    if (statusFilter !== 'all') params.status = statusFilter.toUpperCase()
+    return params
   }, [statusFilter])
 
-  const loadCRM = async () => {
-    try {
-      setLoading(true)
-      const params: Record<string, string> = {}
-      if (statusFilter !== 'all') params.status = statusFilter.toUpperCase()
+  const { data: contactsRaw, isLoading: contactsLoading } = useCRMContacts(contactsParams)
+  const { data: dashboardData, isLoading: dashboardLoading } = useCRMDashboard()
 
-      const [contactsRes, dashboardRes] = await Promise.allSettled([
-        getCRMContacts(params),
-        getCRMDashboard(),
-      ])
-
-      if (contactsRes.status === 'fulfilled') {
-        const data = contactsRes.value
-        setContacts(Array.isArray(data) ? data : data?.data ?? [])
-      }
-      if (dashboardRes.status === 'fulfilled' && dashboardRes.value) {
-        setActivities(dashboardRes.value.recentActivities ?? [])
-      }
-    } catch (err) {
-      console.error('Failed to load CRM:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const isLoading = contactsLoading || dashboardLoading
+  const contacts = Array.isArray(contactsRaw) ? contactsRaw : contactsRaw?.data ?? []
+  const activities = dashboardData?.recentActivities ?? []
 
   const filteredContacts = contacts.filter(c => {
     if (!searchQuery) return true
@@ -95,7 +76,7 @@ export default function CRMDashboardPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
