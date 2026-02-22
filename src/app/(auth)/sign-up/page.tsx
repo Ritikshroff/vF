@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, Building2, UserCircle } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -35,17 +36,23 @@ export default function SignUpPage() {
     setError('')
 
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields')
+      const msg = 'Please fill in all fields'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
+      const msg = 'Passwords do not match'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long')
+      const msg = 'Password must be at least 8 characters long'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
@@ -53,9 +60,12 @@ export default function SignUpPage() {
 
     try {
       await signUp({ ...formData, role: selectedRole })
+      toast.success('Account created successfully!')
       router.push(`/onboarding/${selectedRole.toLowerCase()}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create account')
+      const msg = err instanceof Error ? err.message : 'Failed to create account'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

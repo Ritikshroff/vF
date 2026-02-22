@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Mail, ArrowLeft, ArrowRight, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -22,7 +23,9 @@ export default function ForgotPasswordPage() {
     setSuccess(false)
 
     if (!email) {
-      setError('Please enter your email address')
+      const msg = 'Please enter your email address'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
@@ -31,8 +34,11 @@ export default function ForgotPasswordPage() {
     try {
       await sendPasswordResetEmail(email)
       setSuccess(true)
+      toast.success('Password reset email sent!')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send reset email')
+      const msg = err instanceof Error ? err.message : 'Failed to send reset email'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

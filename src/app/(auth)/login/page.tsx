@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -33,7 +34,9 @@ export default function LoginPage() {
     setError('')
 
     if (!formData.email || !formData.password) {
-      setError('Please fill in all fields')
+      const msg = 'Please fill in all fields'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
@@ -41,6 +44,7 @@ export default function LoginPage() {
 
     try {
       const user = await login(formData)
+      toast.success('Logged in successfully!')
 
       // Redirect based on user state
       const rolePath = user.role?.toLowerCase()
@@ -52,7 +56,9 @@ export default function LoginPage() {
         router.push('/sign-up')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to log in')
+      const msg = err instanceof Error ? err.message : 'Failed to log in'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

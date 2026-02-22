@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withAuth, successResponse, validateBody, getPagination } from '@/lib/api/with-middleware'
 import { errorHandler } from '@/middleware/error.middleware'
@@ -61,7 +61,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     if (action === 'deposit') {
       // Only brands can deposit
       if (user.role !== 'BRAND' && user.role !== 'ADMIN') {
-        return successResponse({ error: 'Only brands can deposit funds' }, 403)
+        return NextResponse.json({ error: 'Only brands can deposit funds' }, { status: 403 })
       }
 
       const body = await validateBody(request, depositSchema)
@@ -73,7 +73,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     if (action === 'withdraw') {
       // Only influencers can withdraw
       if (user.role !== 'INFLUENCER' && user.role !== 'ADMIN') {
-        return successResponse({ error: 'Only influencers can withdraw funds' }, 403)
+        return NextResponse.json({ error: 'Only influencers can withdraw funds' }, { status: 403 })
       }
 
       const body = await validateBody(request, withdrawSchema)
@@ -82,7 +82,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return successResponse(transaction)
     }
 
-    return successResponse({ error: 'Invalid action' }, 400)
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (error) {
     return errorHandler(error)
   }

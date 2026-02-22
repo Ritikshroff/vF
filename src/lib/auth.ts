@@ -59,7 +59,16 @@ async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
   })
   const data = await res.json()
   if (!res.ok) {
-    throw new Error(data.error || data.message || `Request failed (${res.status})`)
+    let errorMessage = data.error || data.message || `Request failed (${res.status})`
+    // Extract field-level validation errors if present
+    if (data.details && Array.isArray(data.details) && data.details.length > 0) {
+      errorMessage = data.details.map((d: { path?: string; message?: string }) => {
+        const field = d.path?.split('.').pop()
+        const label = field ? field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1') : ''
+        return label ? `${label}: ${d.message}` : d.message
+      }).join('. ')
+    }
+    throw new Error(errorMessage)
   }
   return data
 }

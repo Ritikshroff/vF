@@ -47,7 +47,16 @@ class ApiClient {
       const data = await response.json()
 
       if (!response.ok) {
-        return { error: data.error || `Request failed with status ${response.status}` }
+        // Extract user-friendly message from Zod validation details if available
+        let errorMessage = data.error || `Request failed with status ${response.status}`
+        if (data.details && Array.isArray(data.details) && data.details.length > 0) {
+          errorMessage = data.details.map((d: { path?: string; message?: string }) => {
+            const field = d.path?.split('.').pop()
+            const label = field ? field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1') : ''
+            return label ? `${label}: ${d.message}` : d.message
+          }).join('. ')
+        }
+        return { error: errorMessage }
       }
 
       return { data }

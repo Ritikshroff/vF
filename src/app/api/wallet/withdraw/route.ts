@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withAuth, successResponse, validateBody } from '@/lib/api/with-middleware'
 import { errorHandler, AuthorizationError } from '@/middleware/error.middleware'
@@ -27,11 +27,9 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     // Check balance first
     const balance = await getWalletBalance(user.id)
     if (balance.available < body.amount) {
-      return successResponse({
-        error: 'Insufficient balance',
-        available: balance.available,
-        requested: body.amount,
-      }, 400)
+      return NextResponse.json({
+        error: `Insufficient balance. Available: $${balance.available.toFixed(2)}, Requested: $${body.amount.toFixed(2)}`,
+      }, { status: 400 })
     }
 
     const transaction = await withdrawFromWallet(user.id, {

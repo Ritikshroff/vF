@@ -29,14 +29,16 @@ export function Providers({ children, ...props }: ThemeProviderProps) {
         <AuthProvider>
           {children}
           <Toaster
-            position="top-right"
+            position="top-center"
             richColors
             closeButton
             duration={4000}
+            mobileOffset={16}
             toastOptions={{
               style: {
                 borderRadius: '12px',
                 fontSize: '14px',
+                maxWidth: '420px',
               },
             }}
           />
