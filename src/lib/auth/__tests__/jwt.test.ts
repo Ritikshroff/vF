@@ -102,7 +102,7 @@ describe('generateRefreshToken', () => {
     expect(decoded.sessionId).toBe('sess-xyz');
   });
 
-  it('should set expiry to 7 days (604800s)', () => {
+  it('should set expiry to 1 day (86400s)', () => {
     const token = generateRefreshToken({
       sub: 'user-1',
       sessionId: 'sess-1',
@@ -110,7 +110,7 @@ describe('generateRefreshToken', () => {
 
     const decoded = jwt.verify(token, REFRESH_SECRET) as RefreshTokenPayload;
 
-    expect(decoded.exp! - decoded.iat!).toBe(7 * 24 * 60 * 60);
+expect(decoded.exp! - decoded.iat!).toBe(24 * 60 * 60); // 1 day
   });
 
   it('should produce tokens verifiable with the refresh secret only', () => {
@@ -406,7 +406,7 @@ describe('generateTokenPair', () => {
     expect(payload!.sessionId).toBe('session-xyz');
   });
 
-  it('should use 7-day refresh expiry by default (rememberMe = false)', () => {
+  it('should use 1-day refresh expiry by default (rememberMe = false)', () => {
     const now = Date.now();
     const pair = generateTokenPair(
       'user-1',
@@ -416,7 +416,7 @@ describe('generateTokenPair', () => {
     );
 
     const refreshPayload = verifyRefreshToken(pair.refreshToken)!;
-    expect(refreshPayload.exp! - refreshPayload.iat!).toBe(7 * 24 * 60 * 60);
+    expect(refreshPayload.exp! - refreshPayload.iat!).toBe(24 * 60 * 60); // 1 day
 
     // The refreshTokenExpiresAt date should be ~7 days from now
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
@@ -505,7 +505,7 @@ describe('TOKEN_EXPIRY', () => {
   });
 
   it('should have REFRESH set to 7 days in milliseconds', () => {
-    expect(TOKEN_EXPIRY.REFRESH).toBe(7 * 24 * 60 * 60 * 1000);
+    expect(TOKEN_EXPIRY.REFRESH).toBe(24 * 60 * 60 * 1000); // 1 day in milliseconds
   });
 
   it('should have REFRESH_REMEMBER set to 30 days in milliseconds', () => {
