@@ -146,17 +146,32 @@ function AnimatedCounter({
 
 // Floating particles component
 function FloatingParticles() {
-  const particles = Array.from({ length: 30 });
+  const [particles, setParticles] = useState<
+    Array<{ left: number; top: number; duration: number; delay: number }>
+  >([]);
+
+  useEffect(() => {
+    setParticles(
+      Array.from({ length: 30 }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: 3 + Math.random() * 2,
+        delay: Math.random() * 2,
+      })),
+    );
+  }, []);
+
+  if (particles.length === 0) return null;
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((_, i) => (
+      {particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute w-1 h-1 bg-[rgb(var(--brand-primary))] rounded-full"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            left: `${p.left}%`,
+            top: `${p.top}%`,
           }}
           animate={{
             y: [0, -30, 0],
@@ -164,9 +179,52 @@ function FloatingParticles() {
             scale: [0, 1, 0],
           }}
           transition={{
-            duration: 3 + Math.random() * 2,
+            duration: p.duration,
             repeat: Infinity,
-            delay: Math.random() * 2,
+            delay: p.delay,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function FloatingDots() {
+  const [dots, setDots] = useState<
+    Array<{ left: number; top: number; duration: number; delay: number }>
+  >([]);
+
+  useEffect(() => {
+    setDots(
+      Array.from({ length: 20 }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: 3 + Math.random() * 2,
+        delay: Math.random() * 2,
+      })),
+    );
+  }, []);
+
+  if (dots.length === 0) return null;
+
+  return (
+    <div className="absolute inset-0">
+      {dots.map((d, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-2 h-2 bg-white/20 rounded-full"
+          style={{
+            left: `${d.left}%`,
+            top: `${d.top}%`,
+          }}
+          animate={{
+            y: [0, -20, 0],
+            opacity: [0.2, 0.5, 0.2],
+          }}
+          transition={{
+            duration: d.duration,
+            repeat: Infinity,
+            delay: d.delay,
           }}
         />
       ))}
@@ -908,27 +966,7 @@ export default function HomePage() {
         />
 
         {/* Floating Elements */}
-        <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-white/20 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -20, 0],
-                opacity: [0.2, 0.5, 0.2],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
-        </div>
+        <FloatingDots />
 
         <div className="container relative z-10">
           <motion.div
