@@ -213,7 +213,7 @@ export function setAuthCookies(
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    maxAge: rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60, // 30 or 7 days
+    maxAge: rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60, // 30 days or 24 hours
     path: '/api/auth',
   });
 

@@ -5,7 +5,7 @@ import { UserRole } from '@prisma/client';
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
 const ACCESS_TOKEN_EXPIRY = 15 * 60;            // 15 minutes in seconds
-const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60;  // 7 days in seconds
+const REFRESH_TOKEN_EXPIRY = 24 * 60 * 60;       // 24 hours in seconds
 
 // Token payload interfaces
 export interface AccessTokenPayload {
@@ -98,7 +98,7 @@ export function generateTokenPair(
   const accessToken = generateAccessToken({ sub: userId, email, role });
 
   // Use longer expiry for "remember me"
-  const refreshExpiresIn = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
+  const refreshExpiresIn = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60; // 30 days or 24 hours
   const refreshToken = generateRefreshTokenWithExpiry(
     { sub: userId, sessionId },
     refreshExpiresIn
@@ -107,7 +107,7 @@ export function generateTokenPair(
   // Calculate expiry dates
   const accessTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
   const refreshTokenExpiresAt = new Date(
-    Date.now() + (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000
+    Date.now() + (rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000) // 30 days or 24 hours
   );
 
   return {
@@ -129,7 +129,7 @@ export function extractBearerToken(authHeader: string | null): string | null {
 // Token expiry constants (in milliseconds)
 export const TOKEN_EXPIRY = {
   ACCESS: 15 * 60 * 1000,           // 15 minutes
-  REFRESH: 7 * 24 * 60 * 60 * 1000, // 7 days
+  REFRESH: 24 * 60 * 60 * 1000, // 24 hours
   REFRESH_REMEMBER: 30 * 24 * 60 * 60 * 1000, // 30 days
   PASSWORD_RESET: 60 * 60 * 1000,   // 1 hour
   EMAIL_VERIFICATION: 24 * 60 * 60 * 1000, // 24 hours

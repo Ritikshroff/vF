@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
 import {
   motion,
   useScroll,
@@ -233,11 +235,20 @@ function FloatingDots() {
 }
 
 export default function HomePage() {
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
 
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [activeTab, setActiveTab] = useState<"brands" | "creators">("brands");
+
+  // Auto-redirect logged-in users to their dashboard
+  useEffect(() => {
+    if (!isLoading && user?.onboardingCompleted && user?.role) {
+      router.replace(`/${user.role.toLowerCase()}/dashboard`);
+    }
+  }, [user, isLoading, router]);
   const featuredTestimonials = testimonials.filter((t) => t.featured);
   const featuredCaseStudies = caseStudies.filter((c) => c.featured).slice(0, 3);
 
@@ -355,42 +366,19 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col overflow-hidden">
-      {/* Hero Section - Ultra Modern with Interactive Elements */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative min-h-[85vh] md:min-h-screen flex items-center overflow-hidden pt-16 md:pt-0">
         {/* Animated Mesh Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--background))] via-[rgb(var(--brand-primary))]/5 to-[rgb(var(--brand-secondary))]/10" />
 
-        {/* Floating Particles */}
-        <FloatingParticles />
+        {/* Floating Particles - hidden on mobile for performance */}
+        <div className="hidden md:block">
+          <FloatingParticles />
+        </div>
 
-        {/* Large Gradient Orbs */}
-        <motion.div
-          className="absolute top-0 left-0 w-[600px] h-[600px] bg-[rgb(var(--brand-primary))]/20 rounded-full blur-[120px]"
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 50, 0],
-            y: [0, 30, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-0 right-0 w-[700px] h-[700px] bg-[rgb(var(--brand-secondary))]/20 rounded-full blur-[120px]"
-          animate={{
-            scale: [1, 1.3, 1],
-            x: [0, -50, 0],
-            y: [0, -30, 0],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2,
-          }}
-        />
+        {/* Large Gradient Orbs - smaller on mobile */}
+        <div className="absolute top-0 left-0 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-[rgb(var(--brand-primary))]/15 rounded-full blur-[80px] md:blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-[350px] h-[350px] md:w-[700px] md:h-[700px] bg-[rgb(var(--brand-secondary))]/15 rounded-full blur-[80px] md:blur-[120px]" />
 
         <div className="container relative z-10">
           <motion.div
@@ -403,19 +391,19 @@ export default function HomePage() {
               variants={staggerContainer}
               className="text-center"
             >
-              <motion.div variants={staggerItem} className="mb-8">
+              <motion.div variants={staggerItem} className="mb-4 md:mb-8">
                 <Badge
                   variant="primary"
-                  className="text-base px-8 py-3 backdrop-blur-sm bg-[rgb(var(--brand-primary))]/10 border-[rgb(var(--brand-primary))]/20"
+                  className="text-xs md:text-sm px-4 md:px-6 py-1.5 md:py-2 backdrop-blur-sm bg-[rgb(var(--brand-primary))]/10 border-[rgb(var(--brand-primary))]/20"
                 >
-                  <Rocket className="w-4 h-4 mr-2 inline" />
+                  <Rocket className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2 inline" />
                   Trusted by 15,000+ Brands Worldwide
                 </Badge>
               </motion.div>
 
               <motion.h1
                 variants={staggerItem}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight mb-6 sm:mb-8 lg:mb-10 leading-[0.95]"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-4 md:mb-6 lg:mb-8 leading-[0.95]"
               >
                 Where Brands Meet
                 <br />
@@ -424,7 +412,7 @@ export default function HomePage() {
 
               <motion.p
                 variants={staggerItem}
-                className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[rgb(var(--muted))] mb-8 sm:mb-10 lg:mb-14 max-w-4xl mx-auto leading-relaxed font-light"
+                className="text-sm sm:text-base md:text-lg lg:text-xl text-[rgb(var(--muted))] mb-6 md:mb-10 lg:mb-12 max-w-3xl mx-auto leading-relaxed font-light px-4 md:px-0"
               >
                 The most powerful platform for influencer marketing.
                 <br className="hidden md:block" />
@@ -434,44 +422,44 @@ export default function HomePage() {
 
               <motion.div
                 variants={staggerItem}
-                className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-10 sm:mb-12 lg:mb-16"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 md:mb-10 lg:mb-14 px-4 md:px-0"
               >
                 <Link href="/sign-up">
                   <Button
                     size="lg"
                     variant="gradient"
-                    className="text-base sm:text-lg lg:text-xl px-8 sm:px-10 lg:px-12 py-6 sm:py-7 lg:py-8 h-auto group rounded-full shadow-2xl shadow-[rgb(var(--brand-primary))]/30"
+                    className="text-sm md:text-base lg:text-lg px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 h-auto rounded-full shadow-lg shadow-[rgb(var(--brand-primary))]/20 w-full sm:w-auto"
                   >
                     Start Free Trial
-                    <ArrowRight className="ml-2 sm:ml-3 h-5 w-5 sm:h-6 sm:w-6 group-hover:translate-x-2 transition-transform" />
+                    <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
                   </Button>
                 </Link>
-                <Link href="#demo">
+                <Link href="/login">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-base sm:text-lg lg:text-xl px-8 sm:px-10 lg:px-12 py-6 sm:py-7 lg:py-8 h-auto group rounded-full backdrop-blur-sm border-2"
+                    className="text-sm md:text-base lg:text-lg px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 h-auto rounded-full backdrop-blur-sm border-2 w-full sm:w-auto"
                   >
-                    <Play className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-125 transition-transform" />
-                    Watch Demo
+                    Log In
+                    <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
                   </Button>
                 </Link>
               </motion.div>
 
               <motion.div
                 variants={staggerItem}
-                className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-10 text-xs sm:text-sm text-[rgb(var(--muted))]"
+                className="flex flex-wrap items-center justify-center gap-3 md:gap-6 lg:gap-8 text-xs md:text-sm text-[rgb(var(--muted))]"
               >
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500" />
                   No credit card required
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500" />
                   14-day free trial
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500" />
                   Cancel anytime
                 </div>
               </motion.div>
@@ -479,15 +467,15 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator - hidden on mobile */}
         <motion.div
-          className="absolute bottom-12 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 12, 0] }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block"
+          animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          <div className="w-8 h-12 border-2 border-[rgb(var(--muted))]/30 rounded-full flex justify-center">
+          <div className="w-6 h-10 border-2 border-[rgb(var(--muted))]/30 rounded-full flex justify-center">
             <motion.div
-              className="w-1.5 h-3 bg-[rgb(var(--brand-primary))] rounded-full mt-2"
+              className="w-1 h-2.5 bg-[rgb(var(--brand-primary))] rounded-full mt-2"
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
@@ -516,35 +504,30 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Animated Stats Section with Hover Effects */}
-      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
+      {/* Animated Stats Section */}
+      <section className="py-8 md:py-16 lg:py-24 bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
         <div className="container">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 lg:gap-10">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, scale: 0.5 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{
                   delay: index * 0.1,
                   duration: 0.6,
                   type: "spring",
                 }}
-                whileHover={{ scale: 1.05 }}
-                className="text-center group cursor-pointer"
+                className="text-center group"
               >
-                <motion.div
-                  className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 mb-4 sm:mb-5 lg:mb-6 group-hover:from-[rgb(var(--brand-primary))]/30 group-hover:to-[rgb(var(--brand-secondary))]/30 transition-all"
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <stat.icon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-[rgb(var(--brand-primary))]" />
-                </motion.div>
-                <div className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-2 sm:mb-3 gradient-text">
+                <div className="inline-flex items-center justify-center w-10 h-10 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 mb-2 md:mb-4">
+                  <stat.icon className="h-5 w-5 md:h-7 md:w-7 lg:h-8 lg:w-8 text-[rgb(var(--brand-primary))]" />
+                </div>
+                <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 md:mb-2 gradient-text">
                   <AnimatedCounter end={stat.value} suffix={stat.suffix} />
                 </div>
-                <div className="text-base text-[rgb(var(--muted))] group-hover:text-[rgb(var(--foreground))] transition-colors">
+                <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
                   {stat.label}
                 </div>
               </motion.div>
@@ -554,23 +537,23 @@ export default function HomePage() {
       </section>
 
       {/* Tab-Based Platform Features */}
-      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 bg-[rgb(var(--background))]">
+      <section className="py-8 md:py-16 lg:py-24 bg-[rgb(var(--background))]">
         <div className="container">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-8 sm:mb-12 lg:mb-16"
+            className="text-center mb-6 md:mb-10 lg:mb-14"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-4 sm:mb-6">
+              <Badge variant="primary" className="mb-3 md:mb-4">
                 For Everyone
               </Badge>
             </motion.div>
             <motion.h2
               variants={staggerItem}
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-6"
             >
               Built for <span className="gradient-text">Brands</span> &{" "}
               <span className="gradient-text">Creators</span>
@@ -578,12 +561,12 @@ export default function HomePage() {
           </motion.div>
 
           {/* Tab Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-8 sm:mb-12 lg:mb-16">
+          <div className="flex justify-center gap-2 md:gap-4 mb-6 md:mb-10 lg:mb-14">
             <button
               onClick={() => setActiveTab("brands")}
-              className={`px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-full text-base sm:text-lg font-semibold transition-all ${
+              className={`px-5 md:px-8 py-2.5 md:py-3.5 rounded-full text-sm md:text-base font-semibold transition-all ${
                 activeTab === "brands"
-                  ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-xl shadow-[rgb(var(--brand-primary))]/30"
+                  ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg shadow-[rgb(var(--brand-primary))]/20"
                   : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
               }`}
             >
@@ -591,9 +574,9 @@ export default function HomePage() {
             </button>
             <button
               onClick={() => setActiveTab("creators")}
-              className={`px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-full text-base sm:text-lg font-semibold transition-all ${
+              className={`px-5 md:px-8 py-2.5 md:py-3.5 rounded-full text-sm md:text-base font-semibold transition-all ${
                 activeTab === "creators"
-                  ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-xl shadow-[rgb(var(--brand-primary))]/30"
+                  ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg shadow-[rgb(var(--brand-primary))]/20"
                   : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
               }`}
             >
@@ -609,19 +592,19 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6 max-w-5xl mx-auto"
             >
               {platformFeatures[activeTab].map((feature) => (
                 <TiltCard key={feature.title} className="h-full">
-                  <Card className="h-full border-2 border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/40 transition-all">
-                    <CardContent className="p-6 sm:p-8 lg:p-10 text-center">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 mx-auto">
-                        <feature.icon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-[rgb(var(--brand-primary))]" />
+                  <Card className="h-full border border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/40 transition-all">
+                    <CardContent className="p-4 md:p-6 lg:p-8 text-center">
+                      <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 flex items-center justify-center mb-3 md:mb-4 mx-auto">
+                        <feature.icon className="h-5 w-5 md:h-7 md:w-7 text-[rgb(var(--brand-primary))]" />
                       </div>
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4">
+                      <h3 className="text-sm md:text-lg lg:text-xl font-bold mb-2 md:mb-3">
                         {feature.title}
                       </h3>
-                      <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))] leading-relaxed">
+                      <p className="text-xs md:text-sm lg:text-base text-[rgb(var(--muted))] leading-relaxed">
                         {feature.description}
                       </p>
                     </CardContent>
@@ -633,24 +616,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Enhanced Features Grid with 3D Cards */}
-      <section className="py-12 sm:py-16 lg:py-24 xl:py-32 bg-gradient-to-b from-[rgb(var(--surface))] to-[rgb(var(--background))]">
+      {/* Features Grid */}
+      <section className="py-8 md:py-16 lg:py-24 bg-gradient-to-b from-[rgb(var(--surface))] to-[rgb(var(--background))]">
         <div className="container">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-10 sm:mb-12 lg:mb-16 xl:mb-20"
+            className="text-center mb-6 md:mb-10 lg:mb-16"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-4 sm:mb-6">
+              <Badge variant="primary" className="mb-3 md:mb-4">
                 Platform Features
               </Badge>
             </motion.div>
             <motion.h2
               variants={staggerItem}
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-5"
             >
               Everything You Need to
               <br />
@@ -658,41 +641,37 @@ export default function HomePage() {
             </motion.h2>
             <motion.p
               variants={staggerItem}
-              className="text-base sm:text-lg lg:text-xl xl:text-2xl text-[rgb(var(--muted))] max-w-4xl mx-auto"
+              className="text-xs sm:text-sm md:text-base lg:text-lg text-[rgb(var(--muted))] max-w-3xl mx-auto px-4 md:px-0"
             >
               From discovery to deployment, our platform handles every aspect of
               influencer marketing with precision and ease.
             </motion.p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 lg:gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.08 }}
               >
                 <TiltCard className="h-full">
-                  <Card className="h-full border-2 border-transparent hover:border-[rgb(var(--brand-primary))]/20 transition-all duration-300 group overflow-hidden relative backdrop-blur-sm">
+                  <Card className="h-full border border-transparent hover:border-[rgb(var(--brand-primary))]/20 transition-all duration-300 group overflow-hidden relative">
                     {/* Gradient Background on Hover */}
                     <div
                       className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}
                     />
 
-                    <CardContent className="p-6 sm:p-8 lg:p-10 relative z-10">
-                      <motion.div
-                        className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[rgb(var(--brand-primary))]/10 to-[rgb(var(--brand-secondary))]/10 flex items-center justify-center mb-4 sm:mb-6 lg:mb-8 group-hover:scale-110 transition-transform duration-300"
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.6 }}
-                      >
-                        <feature.icon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-[rgb(var(--brand-primary))]" />
-                      </motion.div>
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4">
+                    <CardContent className="p-3 md:p-5 lg:p-8 relative z-10">
+                      <div className="w-9 h-9 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-[rgb(var(--brand-primary))]/10 to-[rgb(var(--brand-secondary))]/10 flex items-center justify-center mb-2.5 md:mb-4 lg:mb-5">
+                        <feature.icon className="h-4 w-4 md:h-6 md:w-6 lg:h-7 lg:w-7 text-[rgb(var(--brand-primary))]" />
+                      </div>
+                      <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1.5 md:mb-2">
                         {feature.title}
                       </h3>
-                      <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))] leading-relaxed">
+                      <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-[rgb(var(--muted))] leading-relaxed">
                         {feature.description}
                       </p>
                     </CardContent>
@@ -704,67 +683,55 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Interactive Video/Demo Section */}
-      <section id="demo" className="py-32 bg-[rgb(var(--background))]">
+      {/* Video/Demo Section */}
+      <section id="demo" className="py-10 md:py-20 lg:py-28 bg-[rgb(var(--background))]">
         <div className="container">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative aspect-video rounded-3xl overflow-hidden bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 flex items-center justify-center group cursor-pointer border-2 border-[rgb(var(--border))]"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
+              className="relative aspect-video rounded-2xl md:rounded-3xl overflow-hidden bg-gradient-to-br from-[rgb(var(--brand-primary))]/20 to-[rgb(var(--brand-secondary))]/20 flex items-center justify-center group cursor-pointer border border-[rgb(var(--border))]"
             >
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgxMzksMTkyLDI0NiwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30" />
 
-              <motion.div
-                className="relative z-10 w-28 h-28 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border-4 border-white/20 group-hover:bg-white/20 transition-all duration-300"
-                whileHover={{ scale: 1.2 }}
-              >
-                <Play className="h-14 w-14 text-white ml-1" />
-              </motion.div>
+              <div className="relative z-10 w-16 h-16 md:w-24 md:h-24 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border-2 md:border-4 border-white/20 group-hover:bg-white/20 transition-all duration-300">
+                <Play className="h-7 w-7 md:h-10 md:w-10 text-white ml-0.5" />
+              </div>
 
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center text-white p-8">
-                  <h3 className="text-4xl font-bold mb-3">
+                <div className="text-center text-white p-4 md:p-8">
+                  <h3 className="text-lg md:text-2xl lg:text-3xl font-bold mb-1.5 md:mb-3">
                     See ViralFluencer in Action
                   </h3>
-                  <p className="text-xl opacity-90">
+                  <p className="text-xs md:text-base opacity-90">
                     Watch how we transform influencer marketing
                   </p>
                 </div>
               </div>
-
-              {/* Animated rings */}
-              <motion.div
-                className="absolute inset-0 border-4 border-white/10 rounded-3xl"
-                animate={{ scale: [1, 1.05, 1], opacity: [0.1, 0.3, 0.1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Case Studies - Modern Grid with Hover Effects */}
-      <section className="py-32 bg-gradient-to-b from-[rgb(var(--surface))] to-[rgb(var(--background))]">
+      {/* Case Studies */}
+      <section className="py-10 md:py-20 lg:py-28 bg-gradient-to-b from-[rgb(var(--surface))] to-[rgb(var(--background))]">
         <div className="container">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-20"
+            className="text-center mb-8 md:mb-14"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-6">
+              <Badge variant="primary" className="mb-3 md:mb-4">
                 Success Stories
               </Badge>
             </motion.div>
             <motion.h2
               variants={staggerItem}
-              className="text-5xl md:text-7xl font-bold mb-8"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-5"
             >
               Real Results from
               <br />
@@ -772,44 +739,45 @@ export default function HomePage() {
             </motion.h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 lg:gap-6">
             {featuredCaseStudies.map((study, index) => (
               <motion.div
                 key={study.id}
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
+                transition={{ delay: index * 0.1 }}
+                className={`${index === 2 ? "col-span-2 md:col-span-1" : ""}`}
               >
                 <Link href={`/case-studies/${study.id}`}>
                   <TiltCard className="h-full">
-                    <Card className="h-full overflow-hidden group border-2 border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/40 transition-all">
+                    <Card className="h-full overflow-hidden group border border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/40 transition-all">
                       <div className="aspect-[16/10] bg-gradient-to-br from-[rgb(var(--brand-primary))]/10 to-[rgb(var(--brand-secondary))]/10 relative overflow-hidden">
                         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgxMzksMTkyLDI0NiwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50" />
-                        <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold opacity-10 group-hover:opacity-20 transition-opacity">
+                        <div className="absolute inset-0 flex items-center justify-center text-2xl md:text-4xl lg:text-5xl font-bold opacity-10 group-hover:opacity-20 transition-opacity">
                           {study.client}
                         </div>
                       </div>
-                      <CardContent className="p-8">
-                        <Badge variant="outline" className="mb-4">
+                      <CardContent className="p-3 md:p-5 lg:p-6">
+                        <Badge variant="outline" className="mb-2 md:mb-3 text-[10px] md:text-xs">
                           {study.industry}
                         </Badge>
-                        <h3 className="text-2xl font-bold mb-3 group-hover:text-[rgb(var(--brand-primary))] transition-colors line-clamp-2">
+                        <h3 className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold mb-1.5 md:mb-2 group-hover:text-[rgb(var(--brand-primary))] transition-colors line-clamp-2">
                           {study.title}
                         </h3>
-                        <p className="text-[rgb(var(--muted))] mb-6 line-clamp-2">
+                        <p className="text-[10px] sm:text-xs md:text-sm text-[rgb(var(--muted))] mb-3 md:mb-4 line-clamp-2 hidden sm:block">
                           {study.summary}
                         </p>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-2 md:gap-3">
                           {study.results.slice(0, 2).map((result) => (
                             <div
                               key={result.metric}
-                              className="p-4 rounded-xl bg-[rgb(var(--surface))] group-hover:bg-[rgb(var(--surface-elevated))] transition-colors"
+                              className="p-2 md:p-3 rounded-lg bg-[rgb(var(--surface))]"
                             >
-                              <div className="text-3xl font-bold gradient-text mb-1">
+                              <div className="text-sm md:text-xl lg:text-2xl font-bold gradient-text mb-0.5">
                                 {result.value}
                               </div>
-                              <div className="text-xs text-[rgb(var(--muted))]">
+                              <div className="text-[9px] md:text-xs text-[rgb(var(--muted))]">
                                 {result.metric}
                               </div>
                             </div>
@@ -827,77 +795,77 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mt-16"
+            className="text-center mt-8 md:mt-12"
           >
             <Link href="/case-studies">
               <Button
                 variant="outline"
                 size="lg"
-                className="text-lg px-10 py-7 h-auto rounded-full border-2"
+                className="text-xs md:text-sm px-5 md:px-8 py-2.5 md:py-3.5 h-auto rounded-full border"
               >
-                View All Success Stories <ArrowRight className="ml-2 h-5 w-5" />
+                View All Success Stories <ArrowRight className="ml-1.5 h-3.5 w-3.5 md:h-4 md:w-4" />
               </Button>
             </Link>
           </motion.div>
         </div>
       </section>
 
-      {/* Testimonials - Interactive Slider with Better Design */}
-      <section className="py-32 bg-[rgb(var(--background))]">
+      {/* Testimonials */}
+      <section className="py-10 md:py-20 lg:py-28 bg-[rgb(var(--background))]">
         <div className="container">
           <motion.div
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center mb-20"
+            className="text-center mb-6 md:mb-12"
           >
             <motion.div variants={staggerItem}>
-              <Badge variant="primary" className="mb-6">
+              <Badge variant="primary" className="mb-3 md:mb-4">
                 Testimonials
               </Badge>
             </motion.div>
             <motion.h2
               variants={staggerItem}
-              className="text-5xl md:text-7xl font-bold mb-8"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold"
             >
               Loved by <span className="gradient-text">Thousands</span>
             </motion.h2>
           </motion.div>
 
-          <div className="max-w-5xl mx-auto relative">
+          <div className="max-w-4xl mx-auto relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentTestimonial}
-                initial={{ opacity: 0, x: 100 }}
+                initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -100 }}
-                transition={{ duration: 0.4 }}
-                className="bg-gradient-to-br from-[rgb(var(--surface))] to-[rgb(var(--surface-elevated))] p-12 md:p-20 rounded-3xl border-2 border-[rgb(var(--border))] relative overflow-hidden"
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+                className="bg-gradient-to-br from-[rgb(var(--surface))] to-[rgb(var(--surface-elevated))] p-5 md:p-10 lg:p-14 rounded-2xl md:rounded-3xl border border-[rgb(var(--border))] relative overflow-hidden"
               >
                 {/* Decorative quote mark */}
-                <div className="absolute top-8 left-8 text-8xl text-[rgb(var(--brand-primary))]/10 font-serif">
-                  "
+                <div className="absolute top-3 left-4 md:top-6 md:left-6 text-4xl md:text-6xl text-[rgb(var(--brand-primary))]/10 font-serif">
+                  &ldquo;
                 </div>
 
-                <div className="flex gap-2 mb-8 justify-center">
+                <div className="flex gap-1 md:gap-1.5 mb-4 md:mb-6 justify-center">
                   {[
                     ...Array(featuredTestimonials[currentTestimonial].rating),
                   ].map((_, i) => (
                     <Star
                       key={i}
-                      className="h-7 w-7 fill-[rgb(var(--warning))] text-[rgb(var(--warning))]"
+                      className="h-4 w-4 md:h-5 md:w-5 fill-[rgb(var(--warning))] text-[rgb(var(--warning))]"
                     />
                   ))}
                 </div>
-                <blockquote className="text-2xl md:text-4xl font-medium text-center mb-10 leading-relaxed relative z-10">
+                <blockquote className="text-sm md:text-lg lg:text-xl font-medium text-center mb-5 md:mb-8 leading-relaxed relative z-10">
                   {featuredTestimonials[currentTestimonial].content}
                 </blockquote>
                 <div className="text-center relative z-10">
-                  <div className="font-bold text-xl mb-2">
+                  <div className="font-bold text-sm md:text-base mb-1">
                     {featuredTestimonials[currentTestimonial].author}
                   </div>
-                  <div className="text-[rgb(var(--muted))] text-lg">
+                  <div className="text-[rgb(var(--muted))] text-xs md:text-sm">
                     {featuredTestimonials[currentTestimonial].role} at{" "}
                     {featuredTestimonials[currentTestimonial].company}
                   </div>
@@ -906,25 +874,25 @@ export default function HomePage() {
             </AnimatePresence>
 
             {/* Navigation */}
-            <div className="flex items-center justify-center gap-6 mt-12">
+            <div className="flex items-center justify-center gap-4 md:gap-5 mt-6 md:mt-8">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={prevTestimonial}
-                className="rounded-full w-14 h-14 border-2"
+                className="rounded-full w-9 h-9 md:w-10 md:h-10 border"
               >
-                <ChevronLeft className="h-6 w-6" />
+                <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 {featuredTestimonials.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentTestimonial(index)}
-                    className={`h-3 rounded-full transition-all ${
+                    className={`h-2 rounded-full transition-all ${
                       index === currentTestimonial
-                        ? "w-12 bg-[rgb(var(--brand-primary))]"
-                        : "w-3 bg-[rgb(var(--border))] hover:bg-[rgb(var(--muted))]"
+                        ? "w-8 bg-[rgb(var(--brand-primary))]"
+                        : "w-2 bg-[rgb(var(--border))] hover:bg-[rgb(var(--muted))]"
                     }`}
                   />
                 ))}
@@ -934,39 +902,32 @@ export default function HomePage() {
                 variant="outline"
                 size="icon"
                 onClick={nextTestimonial}
-                className="rounded-full w-14 h-14 border-2"
+                className="rounded-full w-9 h-9 md:w-10 md:h-10 border"
               >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Final CTA - Bold & Gradient */}
-      <section className="py-32 md:py-48 relative overflow-hidden">
+      {/* Final CTA */}
+      <section className="py-14 md:py-24 lg:py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--brand-primary))] via-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))]" />
 
-        {/* Animated Background Pattern */}
-        <motion.div
-          className="absolute inset-0"
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
+        {/* Subtle Background Pattern */}
+        <div
+          className="absolute inset-0 opacity-10"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)",
-            backgroundSize: "200% 200%",
+              "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.15) 0%, transparent 50%)",
           }}
         />
 
-        {/* Floating Elements */}
-        <FloatingDots />
+        {/* Floating Elements - hidden on mobile */}
+        <div className="hidden md:block">
+          <FloatingDots />
+        </div>
 
         <div className="container relative z-10">
           <motion.div
@@ -974,38 +935,38 @@ export default function HomePage() {
             whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="text-center max-w-5xl mx-auto text-white"
+            className="text-center max-w-4xl mx-auto text-white"
           >
             <motion.h2
               variants={staggerItem}
-              className="text-6xl md:text-8xl font-bold mb-10 leading-tight"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 md:mb-6 leading-tight"
             >
               Ready to Go Viral?
             </motion.h2>
             <motion.p
               variants={staggerItem}
-              className="text-2xl md:text-3xl mb-16 opacity-90 max-w-3xl mx-auto leading-relaxed"
+              className="text-sm md:text-base lg:text-lg mb-6 md:mb-10 opacity-90 max-w-2xl mx-auto leading-relaxed px-4 md:px-0"
             >
               Join thousands of brands and creators transforming their marketing
               with ViralFluencer.
             </motion.p>
             <motion.div
               variants={staggerItem}
-              className="flex flex-col sm:flex-row gap-8 justify-center mb-16"
+              className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-6 md:mb-10 px-4 md:px-0"
             >
               <Link href="/sign-up">
                 <Button
                   size="lg"
-                  className="bg-white text-[rgb(var(--brand-primary))] hover:bg-white/90 text-xl px-14 py-9 h-auto border-none shadow-2xl rounded-full font-semibold"
+                  className="bg-white text-[rgb(var(--brand-primary))] hover:bg-white/90 text-sm md:text-base px-6 md:px-8 py-3 md:py-4 h-auto border-none shadow-lg rounded-full font-semibold w-full sm:w-auto"
                 >
-                  Get Started Free <ArrowRight className="ml-3 h-7 w-7" />
+                  Get Started Free <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </Link>
               <Link href="/pricing">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-white border-white/40 hover:bg-white/10 text-xl px-14 py-9 h-auto rounded-full border-2 backdrop-blur-sm"
+                  className="text-white border-white/40 hover:bg-white/10 text-sm md:text-base px-6 md:px-8 py-3 md:py-4 h-auto rounded-full border backdrop-blur-sm w-full sm:w-auto"
                 >
                   View Pricing
                 </Button>
@@ -1014,18 +975,18 @@ export default function HomePage() {
 
             <motion.div
               variants={staggerItem}
-              className="flex flex-wrap items-center justify-center gap-10 text-base opacity-90"
+              className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-xs md:text-sm opacity-90"
             >
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-6 w-6" />
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 Free 14-day trial
               </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-6 w-6" />
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 No credit card needed
               </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-6 w-6" />
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 Cancel anytime
               </div>
             </motion.div>

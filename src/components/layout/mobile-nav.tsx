@@ -136,12 +136,12 @@ export function MobileNav({ open, onClose, variant = 'marketing' }: MobileNavPro
               {/* Footer Actions */}
               {variant === 'marketing' && (
                 <div className="p-6 space-y-3 border-t border-[rgb(var(--border))]">
-                  <Link href="/role-selector" onClick={onClose} className="block">
+                  <Link href="/login" onClick={onClose} className="block">
                     <Button variant="outline" className="w-full">
                       Log In
                     </Button>
                   </Link>
-                  <Link href="/role-selector" onClick={onClose} className="block">
+                  <Link href="/sign-up" onClick={onClose} className="block">
                     <Button variant="gradient" className="w-full">
                       Get Started
                     </Button>
