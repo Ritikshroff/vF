@@ -4,6 +4,7 @@ export interface User {
   name: string
   role: 'BRAND' | 'INFLUENCER' | 'ADMIN' | null
   avatar?: string | null
+  authProvider?: string
   emailVerified: boolean
   onboardingCompleted: boolean
   brandId?: string

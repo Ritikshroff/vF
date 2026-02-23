@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Generate tokens for auto-login after registration
     const { accessToken, refreshToken, accessTokenExpiresAt, refreshTokenExpiresAt } =
-      generateTokenPair(user.id, user.email, user.role, '', false);
+      generateTokenPair(user.id, user.email, user.role!, '', false);
 
     // Create session
     await prisma.session.create({

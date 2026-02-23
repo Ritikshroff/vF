@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
+import { NotificationsDropdown } from '@/components/notifications/notifications-dropdown'
 import { UserMenu } from './user-menu'
 import { MobileNav } from './mobile-nav'
 import { MARKETING_NAV_LINKS, APP_NAME } from '@/lib/constants'
@@ -62,7 +63,10 @@ export function Header({ variant = 'marketing', className }: HeaderProps) {
             {mounted && !isLoading && (
               <>
                 {user ? (
-                  <UserMenu />
+                  <>
+                    {variant === 'platform' && <NotificationsDropdown />}
+                    <UserMenu />
+                  </>
                 ) : (
                   variant === 'marketing' && (
                     <>

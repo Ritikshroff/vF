@@ -47,7 +47,7 @@ export const POST = withAuth(async (
     }
 
     // Check if the action is valid for this user's role
-    const userRole = user.role === 'ADMIN' ? 'admin' : user.role.toLowerCase() as 'brand' | 'influencer'
+    const userRole = user.role === 'ADMIN' ? 'admin' : user.role!.toLowerCase() as 'brand' | 'influencer'
     const availableActions = getAvailableActions(collaboration.status, userRole)
 
     if (!availableActions.includes(body.action)) {
@@ -103,7 +103,7 @@ export const GET = withAuth(async (
       throw new AuthorizationError('You do not have access to this collaboration')
     }
 
-    const userRole = user.role === 'ADMIN' ? 'admin' : user.role.toLowerCase() as 'brand' | 'influencer'
+    const userRole = user.role === 'ADMIN' ? 'admin' : user.role!.toLowerCase() as 'brand' | 'influencer'
     const availableActions = getAvailableActions(collaboration.status, userRole)
 
     return successResponse({

@@ -16,7 +16,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     await validateBody(request, signSchema)
     const ipAddress = request.headers.get('x-forwarded-for') || 'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'
-    const result = await signContract(id, user.id, user.role, ipAddress, userAgent)
+    const result = await signContract(id, user.id, user.role!, ipAddress, userAgent)
     return successResponse(result)
   } catch (error) {
     return errorHandler(error)

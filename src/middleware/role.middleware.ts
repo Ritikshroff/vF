@@ -23,7 +23,7 @@ export function roleMiddleware(...allowedRoles: UserRole[]) {
     }
 
     // Check if user's role is in allowed roles
-    if (!allowedRoles.includes(authUser.role)) {
+    if (!authUser.role || !allowedRoles.includes(authUser.role)) {
       return NextResponse.json(
         {
           error: 'Insufficient permissions',

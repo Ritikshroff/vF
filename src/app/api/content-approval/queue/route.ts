@@ -9,7 +9,7 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
   try {
     const { page, pageSize } = getPagination(request)
     const status = request.nextUrl.searchParams.get('status') as ApprovalStatus | null
-    const result = await listPendingApprovals(user.id, user.role, { status: status || undefined, page, pageSize })
+    const result = await listPendingApprovals(user.id, user.role!, { status: status || undefined, page, pageSize })
     return successResponse(result)
   } catch (error) {
     return errorHandler(error)

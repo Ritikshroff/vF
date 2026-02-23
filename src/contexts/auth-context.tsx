@@ -7,6 +7,7 @@ import * as authLib from '@/lib/auth'
 interface AuthContextType extends AuthState {
   signUp: (data: SignUpData) => Promise<User>
   login: (data: LoginData) => Promise<User | Brand | Influencer>
+  loginWithOAuth: (provider: string) => void
   logout: () => Promise<void>
   updateUser: (updates: Partial<User | Brand | Influencer>) => Promise<User | Brand | Influencer>
   refreshUser: () => Promise<void>
@@ -65,6 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return updatedUser
   }
 
+  const loginWithOAuth = (provider: string): void => {
+    authLib.loginWithOAuth(provider)
+  }
+
   const refreshUser = async (): Promise<void> => {
     const user = await authLib.fetchCurrentUser()
     setState(prev => ({ ...prev, user, isAuthenticated: !!user }))
@@ -76,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...state,
         signUp,
         login,
+        loginWithOAuth,
         logout,
         updateUser,
         refreshUser,

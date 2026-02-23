@@ -36,6 +36,11 @@ export async function POST(request: NextRequest) {
       return successResponse;
     }
 
+    if (!user.passwordHash) {
+      // OAuth-only user — silently skip (same response to prevent email enumeration)
+      return successResponse;
+    }
+
     // Delete any existing reset tokens for this user
     await prisma.passwordReset.deleteMany({
       where: { userId: user.id },

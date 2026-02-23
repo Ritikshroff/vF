@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, Building2, UserCircle } from 'lucide-react'
@@ -9,13 +9,15 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
+import { GoogleIcon } from '@/components/icons/google-icon'
 import { useAuth } from '@/contexts/auth-context'
 import { fadeInUp } from '@/lib/animations'
 import { cn } from '@/lib/utils'
 
 export default function SignUpPage() {
   const router = useRouter()
-  const { signUp } = useAuth()
+  const searchParams = useSearchParams()
+  const { signUp, loginWithOAuth } = useAuth()
   const [selectedRole, setSelectedRole] = useState<'BRAND' | 'INFLUENCER'>('BRAND')
   const [formData, setFormData] = useState({
     name: '',
@@ -25,6 +27,21 @@ export default function SignUpPage() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Handle OAuth error redirects
+  useEffect(() => {
+    const oauthError = searchParams.get('error')
+    if (oauthError) {
+      const messages: Record<string, string> = {
+        oauth_denied: 'Google sign-in was cancelled',
+        oauth_failed: 'Google sign-in failed. Please try again.',
+        invalid_state: 'Session expired. Please try again.',
+      }
+      const msg = messages[oauthError] || 'Sign-in failed. Please try again.'
+      setError(msg)
+      toast.error(msg)
+    }
+  }, [searchParams])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -72,7 +89,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-6 sm:py-10 lg:py-12 px-4 sm:px-6">
+    <div className="min-h-[calc(100vh-4rem)] flex items-start md:items-center justify-center py-4 md:py-10 px-4 sm:px-6">
       <motion.div
         initial="initial"
         animate="animate"
@@ -216,6 +233,29 @@ export default function SignUpPage() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
+              </Button>
+
+              {/* OAuth Divider */}
+              <div className="relative my-2">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-[rgb(var(--border))]" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-[rgb(var(--surface-elevated))] px-2 text-[rgb(var(--muted))]">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => loginWithOAuth('google')}
+                disabled={loading}
+              >
+                <GoogleIcon className="h-4 w-4 mr-2" />
+                Continue with Google
               </Button>
 
               <div className="text-center text-sm">

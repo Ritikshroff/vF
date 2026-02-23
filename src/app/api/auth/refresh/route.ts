@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const newAccessToken = generateAccessToken({
       sub: session.user.id,
       email: session.user.email,
-      role: session.user.role,
+      role: session.user.role!,
     });
 
     // Update session with new access token

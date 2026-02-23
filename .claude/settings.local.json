@@ -21,7 +21,18 @@
       "Bash(curl:*)",
       "Bash(python3:*)",
       "Bash(__NEW_LINE_7fe295c4a34736ef__ echo \"\")",
-      "Bash(__NEW_LINE_6194646909da13d1__ echo \"\")"
+      "Bash(__NEW_LINE_6194646909da13d1__ echo \"\")",
+      "Bash(nc:*)",
+      "Bash(echo:*)",
+      "Bash(nslookup:*)",
+      "Bash(sudo dscacheutil:*)",
+      "Bash(sudo killall:*)",
+      "Bash(ping:*)",
+      "Bash(dig:*)",
+      "Bash(host:*)",
+      "Bash(psql:*)",
+      "Bash(postgres:*)",
+      "Bash(brew list:*)"
     ]
   }
 }

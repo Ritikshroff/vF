@@ -72,7 +72,7 @@ export function withMiddleware(
 
       // Run role middleware if roles specified
       if (roles.length > 0 && user) {
-        if (!roles.includes(user.role)) {
+        if (!user.role || !roles.includes(user.role)) {
           return NextResponse.json(
             { error: 'Insufficient permissions', code: 'FORBIDDEN' },
             { status: 403 }

@@ -188,6 +188,25 @@ export const completeBrandOnboarding = async (data: Partial<Brand>): Promise<Bra
   return brandUser
 }
 
+/**
+ * Initiate OAuth login — redirects the browser to the provider's consent screen
+ */
+export const loginWithOAuth = (provider: string): void => {
+  window.location.href = `/api/auth/${provider}`
+}
+
+/**
+ * Select role for OAuth users who signed up without one
+ */
+export const selectRole = async (role: 'BRAND' | 'INFLUENCER'): Promise<User> => {
+  const res = await apiRequest<{ user: User }>('/api/auth/select-role', {
+    method: 'POST',
+    body: JSON.stringify({ role }),
+  })
+  setStoredUser(res.user)
+  return res.user
+}
+
 export const completeInfluencerOnboarding = async (data: Partial<Influencer>): Promise<Influencer> => {
   const auth = getStoredAuth()
   if (!auth?.user) throw new Error('Not authenticated')

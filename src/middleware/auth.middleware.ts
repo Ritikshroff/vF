@@ -7,7 +7,7 @@ import { UserRole } from '@prisma/client';
 export interface AuthenticatedUser {
   id: string;
   email: string;
-  role: UserRole;
+  role: UserRole | null;
   brandId?: string;
   influencerId?: string;
 }
@@ -88,7 +88,9 @@ export async function authMiddleware(
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-user-id', authUser.id);
     requestHeaders.set('x-user-email', authUser.email);
-    requestHeaders.set('x-user-role', authUser.role);
+    if (authUser.role) {
+      requestHeaders.set('x-user-role', authUser.role);
+    }
     if (authUser.brandId) {
       requestHeaders.set('x-brand-id', authUser.brandId);
     }

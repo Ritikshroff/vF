@@ -39,6 +39,14 @@ export async function POST(request: NextRequest) {
       throw new AuthenticationError('This account has been deactivated');
     }
 
+    // Block OAuth-only users from password login
+    if (!user.passwordHash) {
+      audit({ action: 'auth.failed_login', userId: user.id, ...clientInfo, metadata: { reason: 'oauth_only_account' } });
+      throw new AuthenticationError(
+        'This account uses Google sign-in. Please use "Continue with Google" to log in.'
+      );
+    }
+
     // Verify password
     const isPasswordValid = await comparePassword(password, user.passwordHash);
 
@@ -49,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Create session
     const { accessToken, refreshToken, accessTokenExpiresAt, refreshTokenExpiresAt } =
-      generateTokenPair(user.id, user.email, user.role, '', rememberMe);
+      generateTokenPair(user.id, user.email, user.role!, '', rememberMe);
 
     // Store session in database
     const session = await prisma.session.create({
