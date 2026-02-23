@@ -43,34 +43,34 @@ export default function CaseStudiesPage() {
           </motion.div>
 
           {/* Case Studies Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 lg:gap-6">
             {caseStudies.map((study, index) => (
               <motion.div
                 key={study.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.08 }}
               >
                 <Card hoverable className="h-full overflow-hidden">
                   <div className="aspect-video bg-gradient-to-br from-[rgb(var(--brand-primary)_/_0.1)] to-[rgb(var(--brand-secondary)_/_0.1)]" />
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                      <Badge variant="outline" className="text-xs">{study.industry}</Badge>
+                  <CardContent className="p-3 md:p-5">
+                    <div className="flex items-center gap-2 mb-1.5 md:mb-2">
+                      <Badge variant="outline" className="text-[10px] md:text-xs">{study.industry}</Badge>
                     </div>
-                    <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2 sm:mb-3 line-clamp-2">
+                    <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold mb-1 md:mb-2 line-clamp-2">
                       {study.title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4 line-clamp-2">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-[rgb(var(--muted))] mb-2 md:mb-3 line-clamp-2 hidden sm:block">
                       {study.summary}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                    <div className="grid grid-cols-2 gap-2 md:gap-3 mb-2 md:mb-3">
                       {study.results.slice(0, 2).map((result) => (
                         <div key={result.metric}>
-                          <div className="text-xl sm:text-2xl font-bold text-[rgb(var(--brand-primary))]">
+                          <div className="text-sm md:text-xl font-bold text-[rgb(var(--brand-primary))]">
                             {result.value}
                           </div>
-                          <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
+                          <div className="text-[9px] md:text-xs text-[rgb(var(--muted))]">
                             {result.metric}
                           </div>
                         </div>
@@ -79,9 +79,9 @@ export default function CaseStudiesPage() {
 
                     <Link
                       href={`/case-studies/${study.id}`}
-                      className="text-[rgb(var(--brand-primary))] hover:underline text-xs sm:text-sm font-medium inline-flex items-center"
+                      className="text-[rgb(var(--brand-primary))] hover:underline text-[10px] md:text-xs font-medium inline-flex items-center"
                     >
-                      Read Full Story <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+                      Read Full Story <ArrowRight className="ml-1 h-2.5 w-2.5 md:h-3.5 md:w-3.5" />
                     </Link>
                   </CardContent>
                 </Card>

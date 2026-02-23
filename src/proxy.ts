@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Root middleware for Viralfluencer
+ * Root proxy for Viralfluencer
  * Handles: route protection, rate limiting headers, security
  *
- * Note: This is an Edge middleware - it runs BEFORE the request reaches
+ * Note: This is an Edge proxy - it runs BEFORE the request reaches
  * the API route or page. Keep it lightweight (no Prisma, no heavy imports).
  * Detailed auth checks happen in the API-level middleware (withAuth, etc.)
  */
@@ -67,7 +67,7 @@ if (typeof globalThis !== 'undefined') {
   }, 5 * 60 * 1000);
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 

@@ -24,10 +24,10 @@ export default function PricingPage() {
             <motion.div variants={staggerItem}>
               <Badge variant="primary" className="mb-3 sm:mb-4">Pricing</Badge>
             </motion.div>
-            <motion.h1 variants={staggerItem} className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
+            <motion.h1 variants={staggerItem} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-5">
               Simple, <span className="gradient-text">Transparent Pricing</span>
             </motion.h1>
-            <motion.p variants={staggerItem} className="text-base sm:text-lg lg:text-xl text-[rgb(var(--muted))]">
+            <motion.p variants={staggerItem} className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))] px-4 md:px-0">
               Choose the perfect plan for your business. No hidden fees, no surprises.
             </motion.p>
           </motion.div>

@@ -91,20 +91,20 @@ export default function ForBrandsPage() {
             </motion.h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 lg:gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.08 }}
               >
                 <Card hoverable className="h-full">
-                  <CardContent className="p-4 sm:p-6 lg:p-8">
-                    <feature.icon className="h-10 w-10 sm:h-12 sm:w-12 text-[rgb(var(--brand-primary))] mb-3 sm:mb-4" />
-                    <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-1.5 sm:mb-2">{feature.title}</h3>
-                    <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">{feature.description}</p>
+                  <CardContent className="p-3 md:p-5 lg:p-7">
+                    <feature.icon className="h-6 w-6 md:h-9 md:w-9 lg:h-10 lg:w-10 text-[rgb(var(--brand-primary))] mb-2 md:mb-3" />
+                    <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold mb-1 md:mb-1.5">{feature.title}</h3>
+                    <p className="text-[10px] sm:text-xs md:text-sm text-[rgb(var(--muted))] leading-relaxed">{feature.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -130,10 +130,10 @@ export default function ForBrandsPage() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-text mb-1 sm:mb-2">
+                <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold gradient-text mb-0.5 md:mb-1">
                   {stat.value}
                 </div>
-                <div className="text-xs sm:text-sm text-[rgb(var(--muted))]">{stat.label}</div>
+                <div className="text-[10px] md:text-xs lg:text-sm text-[rgb(var(--muted))]">{stat.label}</div>
               </motion.div>
             ))}
           </div>
