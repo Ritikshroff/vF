@@ -484,9 +484,9 @@ export default function HomePage() {
       </section>
 
       {/* Infinite Logo Marquee */}
-      <section className="py-8 sm:py-12 lg:py-16 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]/50 backdrop-blur-sm overflow-hidden">
-        <div className="mb-4 sm:mb-6 lg:mb-8">
-          <p className="text-center text-sm text-[rgb(var(--muted))] uppercase tracking-widest font-semibold">
+      <section className="py-4 md:py-8 lg:py-12 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]/50 backdrop-blur-sm overflow-hidden">
+        <div className="mb-2 md:mb-4 lg:mb-6">
+          <p className="text-center text-[10px] md:text-xs text-[rgb(var(--muted))] uppercase tracking-widest font-semibold">
             Trusted by Industry Leaders
           </p>
         </div>
@@ -495,7 +495,7 @@ export default function HomePage() {
             {[...brands, ...brands].map((brand, i) => (
               <div
                 key={i}
-                className="mx-6 sm:mx-8 lg:mx-12 text-xl sm:text-2xl lg:text-3xl font-bold text-[rgb(var(--muted))]/40 hover:text-[rgb(var(--foreground))] transition-colors"
+                className="mx-4 md:mx-8 lg:mx-10 text-sm md:text-xl lg:text-2xl font-bold text-[rgb(var(--muted))]/40 hover:text-[rgb(var(--foreground))] transition-colors"
               >
                 {brand}
               </div>
