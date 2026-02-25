@@ -60,6 +60,7 @@ export default function BrandDashboardPage() {
   const recentCampaigns = campaigns.slice(0, 5)
 
   return (
+    <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
     <div className="container py-4 sm:py-6 lg:py-8">
       <motion.div
         initial="initial"
@@ -72,7 +73,7 @@ export default function BrandDashboardPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 lg:mb-8">
           <div>
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">Brand Dashboard</h1>
-            <p className="text-sm sm:text-base text-[rgb(var(--muted))]">Welcome back! Here's your campaign overview.</p>
+            <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">Welcome back! Here's your campaign overview.</p>
           </div>
           <Link href="/brand/campaigns/new" className="w-full sm:w-auto">
             <Button variant="gradient" className="w-full sm:w-auto min-h-[44px]">
@@ -83,7 +84,7 @@ export default function BrandDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -92,15 +93,15 @@ export default function BrandDashboardPage() {
               transition={{ delay: index * 0.1 }}
             >
               <Card>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div className={`p-2 rounded-lg bg-[rgb(var(--surface))]`}>
-                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-[rgb(var(--brand-primary))]/10">
+                      <stat.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[rgb(var(--brand-primary))]" />
                     </div>
+                    <span className="text-[10px] sm:text-xs text-[rgb(var(--muted))] truncate">{stat.title}</span>
                   </div>
-                  <div className="text-lg sm:text-2xl font-bold mb-1">{stat.value}</div>
-                  <div className="text-sm text-[rgb(var(--muted))] mb-2">{stat.title}</div>
-                  <div className="text-xs text-[rgb(var(--success))]">{stat.change}</div>
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold mb-0.5">{stat.value}</div>
+                  <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">{stat.change}</div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -152,44 +153,45 @@ export default function BrandDashboardPage() {
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-4 sm:mt-6 lg:mt-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
           <Card hoverable>
-            <CardContent className="p-4 sm:p-6">
-              <h3 className="font-semibold mb-2">Discover Influencers</h3>
-              <p className="text-sm text-[rgb(var(--muted))] mb-4">
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-semibold text-sm sm:text-base mb-1 sm:mb-2">Discover Influencers</h3>
+              <p className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4">
                 Find the perfect creators for your next campaign
               </p>
               <Link href="/brand/discover">
-                <Button variant="outline" className="w-full">Browse</Button>
+                <Button variant="outline" className="w-full" size="sm">Browse</Button>
               </Link>
             </CardContent>
           </Card>
 
           <Card hoverable>
-            <CardContent className="p-4 sm:p-6">
-              <h3 className="font-semibold mb-2">Campaign Analytics</h3>
-              <p className="text-sm text-[rgb(var(--muted))] mb-4">
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-semibold text-sm sm:text-base mb-1 sm:mb-2">Campaign Analytics</h3>
+              <p className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4">
                 View detailed performance metrics and insights
               </p>
               <Link href="/brand/analytics">
-                <Button variant="outline" className="w-full">View Analytics</Button>
+                <Button variant="outline" className="w-full" size="sm">View Analytics</Button>
               </Link>
             </CardContent>
           </Card>
 
-          <Card hoverable>
-            <CardContent className="p-4 sm:p-6">
-              <h3 className="font-semibold mb-2">Messages</h3>
-              <p className="text-sm text-[rgb(var(--muted))] mb-4">
+          <Card hoverable className="col-span-2 lg:col-span-1">
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-semibold text-sm sm:text-base mb-1 sm:mb-2">Messages</h3>
+              <p className="text-xs sm:text-sm text-[rgb(var(--muted))] mb-3 sm:mb-4">
                 Chat with influencers and manage collaborations
               </p>
               <Link href="/brand/messages">
-                <Button variant="outline" className="w-full">Open Messages</Button>
+                <Button variant="outline" className="w-full" size="sm">Open Messages</Button>
               </Link>
             </CardContent>
           </Card>
         </div>
       </motion.div>
+    </div>
     </div>
   )
 }

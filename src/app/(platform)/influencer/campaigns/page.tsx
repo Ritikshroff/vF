@@ -206,7 +206,7 @@ export default function InfluencerCampaignsPage() {
           {/* Header */}
           <div className="mb-3 sm:mb-4">
             <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
-              <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
+              <h3 className="text-sm sm:text-base lg:text-lg font-bold line-clamp-2 flex-1">
                 {listing.title}
               </h3>
               <Badge variant="outline" className="shrink-0">
@@ -342,7 +342,7 @@ export default function InfluencerCampaignsPage() {
           {/* Header */}
           <div className="mb-3 sm:mb-4">
             <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
-              <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
+              <h3 className="text-sm sm:text-base lg:text-lg font-bold line-clamp-2 flex-1">
                 {collab.campaign.title}
               </h3>
               <Badge variant="outline" className="shrink-0">
@@ -444,7 +444,7 @@ export default function InfluencerCampaignsPage() {
           {/* Header */}
           <div className="mb-3 sm:mb-4">
             <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
-              <h3 className="text-base sm:text-lg lg:text-xl font-bold line-clamp-2 flex-1">
+              <h3 className="text-sm sm:text-base lg:text-lg font-bold line-clamp-2 flex-1">
                 {app.listing.title}
               </h3>
               {app.listing.campaign?.category && (
@@ -548,10 +548,10 @@ export default function InfluencerCampaignsPage() {
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2 gradient-text">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 gradient-text">
                   Browse Campaigns
                 </h1>
-                <p className="text-sm sm:text-base lg:text-lg text-muted">
+                <p className="text-xs sm:text-sm text-muted">
                   Find exciting collaboration opportunities
                 </p>
               </div>
@@ -567,30 +567,26 @@ export default function InfluencerCampaignsPage() {
               {
                 label: "Available",
                 value: stats.available,
-                color: "from-blue-500 to-cyan-500",
               },
               {
                 label: "Invited",
                 value: stats.invited,
-                color: "from-purple-500 to-pink-500",
               },
               {
                 label: "Applied",
                 value: stats.applied,
-                color: "from-orange-500 to-yellow-500",
               },
               {
                 label: "Active",
                 value: stats.active,
-                color: "from-green-500 to-emerald-500",
               },
             ].map((stat) => (
-              <Card key={stat.label} className="border-2">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-1">
+              <Card key={stat.label} className="border border-border hover:border-[rgb(var(--brand-primary))]/30 transition-colors">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[rgb(var(--foreground))] mb-0.5">
                     {stat.value}
                   </div>
-                  <div className="text-xs sm:text-sm text-[rgb(var(--muted))]">
+                  <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                     {stat.label}
                   </div>
                 </CardContent>
@@ -626,8 +622,8 @@ export default function InfluencerCampaignsPage() {
                   onClick={() => setFilter(tab.value)}
                   className={`px-4 sm:px-6 py-2 sm:py-3 min-h-[44px] rounded-full text-sm sm:text-base font-medium whitespace-nowrap transition-all ${
                     filter === tab.value
-                      ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg"
-                      : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
+                      ? "bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white"
+                      : "bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))] border border-border"
                   }`}
                 >
                   {tab.label}
@@ -654,10 +650,10 @@ export default function InfluencerCampaignsPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
                   <Search className="h-8 w-8 sm:h-10 sm:w-10 text-[rgb(var(--muted))]" />
                 </div>
-                <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2">
+                <h3 className="text-sm sm:text-base lg:text-lg font-semibold mb-2">
                   No campaigns found
                 </h3>
-                <p className="text-sm sm:text-base text-[rgb(var(--muted))]">
+                <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">
                   {searchQuery
                     ? "Try adjusting your search"
                     : `No ${filter} campaigns at the moment`}

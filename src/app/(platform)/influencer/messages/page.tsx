@@ -151,7 +151,7 @@ export default function MessagesPage() {
           initial="initial"
           animate="animate"
           variants={staggerContainer}
-          className="h-[calc(100vh-8rem)] md:h-[calc(100vh-12rem)]"
+          className="h-[calc(100vh-11rem)] sm:h-[calc(100vh-9rem)] lg:h-[calc(100vh-10rem)]"
         >
           {/* Header - Mobile Only */}
           <motion.div variants={staggerItem} className="mb-4 sm:hidden">
@@ -160,15 +160,15 @@ export default function MessagesPage() {
 
           {/* Desktop Header */}
           <motion.div variants={staggerItem} className="hidden sm:block mb-4 sm:mb-6">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 gradient-text">Messages</h1>
-            <p className="text-base sm:text-lg text-[rgb(var(--muted))]">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-0.5 gradient-text">Messages</h1>
+            <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">
               Chat with brands and manage collaborations
             </p>
           </motion.div>
 
           {/* Messages Container */}
           <motion.div variants={staggerItem} className="h-full">
-            <Card className="h-full border-2">
+            <Card className="h-full border border-[rgb(var(--border))]">
               <CardContent className="p-0 h-full flex">
                 {/* Conversations List - Hidden on mobile when chat is open */}
                 <div

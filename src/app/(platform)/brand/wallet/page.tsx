@@ -76,8 +76,18 @@ export default function BrandWalletPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
+      <div className="min-h-screen bg-linear-to-b from-background to-surface">
+        <div className="container py-4 sm:py-6 lg:py-8">
+          <div className="animate-pulse space-y-4 sm:space-y-6">
+            <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-24 sm:h-28 bg-[rgb(var(--surface))] rounded-xl" />
+              ))}
+            </div>
+            <div className="h-64 bg-[rgb(var(--surface))] rounded-xl" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -90,7 +100,7 @@ export default function BrandWalletPage() {
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold gradient-text">Wallet & Payments</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text">Wallet & Payments</h1>
                 <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">Manage your funds, escrow, and invoices</p>
               </div>
               <div className="flex gap-2 items-center">
@@ -99,7 +109,7 @@ export default function BrandWalletPage() {
                   placeholder="Amount"
                   value={depositAmount}
                   onChange={e => setDepositAmount(e.target.value)}
-                  className="w-28 px-3 py-2 rounded-lg bg-[rgb(var(--surface))] border border-[rgb(var(--border))] text-sm outline-none"
+                  className="w-24 sm:w-28 px-3 py-2 rounded-lg bg-[rgb(var(--surface))] border border-[rgb(var(--border))] text-sm outline-none min-h-[44px]"
                 />
                 <Button variant="gradient" onClick={handleDeposit} disabled={depositMutation.isPending}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -141,10 +151,10 @@ export default function BrandWalletPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
                   activeTab === tab.value
-                    ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
-                    : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                    ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white'
+                    : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))] border border-[rgb(var(--border))]'
                 }`}
               >
                 {tab.label}

@@ -209,10 +209,10 @@ export default function CampaignBuilderPage() {
         </div>
 
         <div className="mb-4 sm:mb-6 lg:mb-8">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-3 gradient-text">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-0.5 gradient-text">
             Create New Campaign
           </h1>
-          <p className="text-base sm:text-lg text-[rgb(var(--muted))]">
+          <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">
             Launch your influencer marketing campaign in just a few steps
           </p>
         </div>
@@ -275,8 +275,8 @@ export default function CampaignBuilderPage() {
             exit="exit"
             variants={slideInRight}
           >
-            <Card className="border-2">
-              <CardContent className="p-4 sm:p-6 lg:p-8">
+            <Card className="border border-[rgb(var(--border))]">
+              <CardContent className="p-4 sm:p-6">
                 {/* Step 1: Basic Info */}
                 {step === 1 && (
                   <div className="space-y-4 sm:space-y-6">

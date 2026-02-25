@@ -119,8 +119,18 @@ export default function CRMDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted" />
+      <div className="min-h-screen bg-linear-to-b from-background to-surface">
+        <div className="container py-4 sm:py-6 lg:py-8">
+          <div className="animate-pulse space-y-4 sm:space-y-6">
+            <div className="h-8 bg-surface rounded w-1/3" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-20 sm:h-24 bg-surface rounded-xl" />
+              ))}
+            </div>
+            <div className="h-64 bg-surface rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -137,7 +147,7 @@ export default function CRMDashboardPage() {
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold gradient-text">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text">
                   Influencer CRM
                 </h1>
                 <p className="text-xs sm:text-sm text-muted">

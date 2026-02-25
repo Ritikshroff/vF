@@ -180,12 +180,12 @@ export default function BrandCampaignDetailPage() {
 
           {/* Header Section */}
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
-            <Card className="border-2">
-              <CardContent className="p-3 sm:p-4 lg:p-8">
+            <Card className="border border-border">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6 mb-4 sm:mb-6">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
-                      <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-4xl font-bold flex-1 min-w-0">
+                      <h1 className="text-lg sm:text-xl lg:text-2xl font-bold flex-1 min-w-0">
                         {listingData.title}
                       </h1>
                       <Badge
@@ -294,8 +294,8 @@ export default function BrandCampaignDetailPage() {
                   onClick={() => setActiveTab(tab.value)}
                   className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm lg:text-base font-medium whitespace-nowrap transition-all min-h-[44px] ${
                     activeTab === tab.value
-                      ? "bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-lg"
-                      : "bg-surface text-muted hover:text-foreground"
+                      ? "bg-gradient-to-r from-brand-primary to-brand-secondary text-white"
+                      : "bg-surface text-muted hover:text-foreground border border-border"
                   }`}
                 >
                   {tab.label}
@@ -414,7 +414,7 @@ export default function BrandCampaignDetailPage() {
                 </Card>
 
                 {/* Spots Remaining */}
-                <Card className="border-2 border-brand-primary/20">
+                <Card className="border border-brand-primary/20">
                   <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2">
                     <CardTitle className="flex items-center gap-2 text-sm sm:text-base lg:text-lg">
                       <Users className="h-4 w-4 sm:h-5 sm:w-5 text-brand-primary" />
@@ -422,7 +422,7 @@ export default function BrandCampaignDetailPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
-                    <div className="text-xl sm:text-2xl lg:text-4xl font-bold gradient-text mb-1.5">
+                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-1.5">
                       {spotsRemaining} spots
                     </div>
                     <div className="text-[10px] sm:text-xs text-muted mb-3">
@@ -461,7 +461,7 @@ export default function BrandCampaignDetailPage() {
                     {pendingApplications.map((application) => (
                       <Card
                         key={application.id}
-                        className="border-2 hover:border-brand-primary/40 transition-all"
+                        className="border border-border hover:border-brand-primary/40 transition-all"
                       >
                         <CardContent className="p-3 sm:p-4 lg:p-6">
                           <div className="flex gap-3 sm:gap-4">
@@ -625,7 +625,7 @@ export default function BrandCampaignDetailPage() {
                     {acceptedCollaborations.map((collab) => (
                       <Card
                         key={collab.id}
-                        className="border-2 border-green-500/20 bg-green-500/5"
+                        className="border border-brand-primary/20 bg-brand-primary/5"
                       >
                         <CardContent className="p-3 sm:p-4 lg:p-6">
                           <div className="flex flex-col items-center text-center">

@@ -100,7 +100,7 @@ export default function CampaignDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
-      <div className="container py-4 md:py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <motion.div
           initial="initial"
           animate="animate"
@@ -118,8 +118,8 @@ export default function CampaignDetailPage() {
 
           {/* Header Section */}
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
-            <Card className="border-2">
-              <CardContent className="p-3 sm:p-4 lg:p-8">
+            <Card className="border border-[rgb(var(--border))]">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
                   {/* Brand Logo */}
                   <div className="shrink-0">
@@ -134,7 +134,7 @@ export default function CampaignDetailPage() {
                   {/* Campaign Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
-                      <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold flex-1 min-w-0">
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold flex-1 min-w-0">
                         {listing.title}
                       </h1>
                       <Badge variant={listing.status === 'ACTIVE' ? 'success' : 'default'}>
@@ -161,7 +161,7 @@ export default function CampaignDetailPage() {
                     {/* Quick Stats */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                        <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-[rgb(var(--brand-primary))]" />
                         <div>
                           <div className="text-xs text-[rgb(var(--muted))]">Budget</div>
                           <div className="font-bold text-sm sm:text-base">
@@ -171,7 +171,7 @@ export default function CampaignDetailPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-[rgb(var(--brand-primary))]" />
                         <div>
                           <div className="text-xs text-[rgb(var(--muted))]">Slots</div>
                           <div className="font-bold text-sm sm:text-base">
@@ -182,7 +182,7 @@ export default function CampaignDetailPage() {
 
                       {deadline && (
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
+                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-[rgb(var(--brand-primary))]" />
                           <div>
                             <div className="text-xs text-[rgb(var(--muted))]">Deadline</div>
                             <div className="font-bold text-sm sm:text-base">
@@ -197,7 +197,7 @@ export default function CampaignDetailPage() {
 
                       {durationDays && (
                         <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+                          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-[rgb(var(--brand-primary))]" />
                           <div>
                             <div className="text-xs text-[rgb(var(--muted))]">Duration</div>
                             <div className="font-bold text-sm sm:text-base">
@@ -425,15 +425,15 @@ export default function CampaignDetailPage() {
 
               {/* Compensation */}
               <motion.div variants={staggerItem}>
-                <Card className="border-2 border-green-500/20 bg-green-500/5">
+                <Card className="border border-[rgb(var(--brand-primary))]/20 bg-[rgb(var(--brand-primary))]/5">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-green-500" />
+                      <DollarSign className="h-5 w-5 text-[rgb(var(--brand-primary))]" />
                       Compensation
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold gradient-text mb-2">
+                    <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
                       {formatCurrency(budgetMin)} - {formatCurrency(budgetMax)}
                     </div>
                     <div className="text-sm text-[rgb(var(--muted))] mb-3">

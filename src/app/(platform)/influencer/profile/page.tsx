@@ -145,10 +145,12 @@ export default function InfluencerProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="container py-4 sm:py-6 lg:py-8">
-        <div className="animate-pulse space-y-4 sm:space-y-6">
-          <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
-          <div className="h-64 bg-[rgb(var(--surface))] rounded" />
+      <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
+        <div className="container py-4 sm:py-6 lg:py-8">
+          <div className="animate-pulse space-y-4 sm:space-y-6">
+            <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
+            <div className="h-64 bg-[rgb(var(--surface))] rounded" />
+          </div>
         </div>
       </div>
     )
@@ -156,24 +158,26 @@ export default function InfluencerProfilePage() {
 
   if (error) {
     return (
-      <div className="container py-4 sm:py-6 lg:py-8">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <AlertCircle className="h-12 w-12 text-orange-500 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Profile Unavailable</h2>
-            <p className="text-[rgb(var(--muted))] max-w-md">{error}</p>
-            <Button variant="outline" className="mt-6" onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
+        <div className="container py-4 sm:py-6 lg:py-8">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 text-center">
+              <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-orange-500 mb-4" />
+              <h2 className="text-lg sm:text-xl font-semibold mb-2">Profile Unavailable</h2>
+              <p className="text-sm text-[rgb(var(--muted))] max-w-md">{error}</p>
+              <Button variant="outline" className="mt-4 sm:mt-6" onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
-      <div className="container py-4 md:py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <motion.div
           initial="initial"
           animate="animate"
@@ -183,19 +187,19 @@ export default function InfluencerProfilePage() {
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2 gradient-text">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-0.5 gradient-text">
                   Profile Settings
                 </h1>
-                <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))]">
+                <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">
                   Manage your profile and account settings
                 </p>
               </div>
               <Button
                 variant="gradient"
-                size="lg"
+                size="sm"
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full md:w-auto"
+                className="w-full sm:w-auto min-h-[44px]"
               >
                 <Save className="h-5 w-5 mr-2" />
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -232,7 +236,7 @@ export default function InfluencerProfilePage() {
                         value={formData.bio}
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                         placeholder="Tell brands about yourself..."
-                        className="w-full min-h-[120px] px-4 py-3 rounded-lg border-2 border-[rgb(var(--border))] bg-[rgb(var(--background))] focus:border-[rgb(var(--brand-primary))] focus:outline-none resize-none"
+                        className="w-full min-h-[120px] px-4 py-3 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] focus:border-[rgb(var(--brand-primary))] focus:outline-none resize-none"
                       />
                     </div>
 
@@ -327,8 +331,8 @@ export default function InfluencerProfilePage() {
                       </div>
                     ))}
 
-                    <Button variant="outline" className="w-full" size="lg">
-                      <Plus className="h-5 w-5 mr-2" />
+                    <Button variant="outline" className="w-full min-h-[44px]" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
                       Add Social Account
                     </Button>
                   </CardContent>
@@ -369,8 +373,8 @@ export default function InfluencerProfilePage() {
                           onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
                           className="h-12"
                         />
-                        <Button onClick={handleAddCategory} size="lg">
-                          <Plus className="h-5 w-5" />
+                        <Button onClick={handleAddCategory} size="sm" className="min-h-[44px]">
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </div>
 

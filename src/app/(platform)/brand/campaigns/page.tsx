@@ -78,26 +78,26 @@ export default function BrandCampaignsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
-      <div className="container py-4 md:py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <motion.div
           initial="initial"
           animate="animate"
           variants={staggerContainer}
         >
           {/* Header */}
-          <motion.div variants={staggerItem} className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-2 gradient-text">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-0.5 gradient-text">
                   My Campaigns
                 </h1>
-                <p className="text-sm md:text-lg text-[rgb(var(--muted))]">
+                <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">
                   Manage and track your influencer campaigns
                 </p>
               </div>
-              <Link href="/brand/campaigns/new" className="w-full md:w-auto">
-                <Button variant="gradient" size="lg" className="w-full md:w-auto">
-                  <Plus className="h-5 w-5 mr-2" />
+              <Link href="/brand/campaigns/new" className="w-full sm:w-auto">
+                <Button variant="gradient" size="sm" className="w-full sm:w-auto min-h-[44px]">
+                  <Plus className="h-4 w-4 mr-2" />
                   New Campaign
                 </Button>
               </Link>
@@ -107,20 +107,20 @@ export default function BrandCampaignsPage() {
           {/* Stats Cards */}
           <motion.div
             variants={staggerItem}
-            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6"
           >
             {[
-              { label: 'Total', value: stats.total, color: 'from-purple-500 to-pink-500' },
-              { label: 'Active', value: stats.active, color: 'from-green-500 to-emerald-500' },
-              { label: 'Draft', value: stats.draft, color: 'from-orange-500 to-yellow-500' },
-              { label: 'Closed', value: stats.closed, color: 'from-blue-500 to-cyan-500' },
+              { label: 'Total', value: stats.total },
+              { label: 'Active', value: stats.active },
+              { label: 'Draft', value: stats.draft },
+              { label: 'Closed', value: stats.closed },
             ].map((stat) => (
-              <Card key={stat.label} className="border-2">
-                <CardContent className="p-4 md:p-6">
-                  <div className="text-2xl md:text-3xl font-bold gradient-text mb-1">
+              <Card key={stat.label} className="border border-[rgb(var(--border))]">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[rgb(var(--foreground))] mb-0.5">
                     {stat.value}
                   </div>
-                  <div className="text-xs md:text-sm text-[rgb(var(--muted))]">
+                  <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                     {stat.label}
                   </div>
                 </CardContent>
@@ -129,7 +129,7 @@ export default function BrandCampaignsPage() {
           </motion.div>
 
           {/* Search & Filters */}
-          <motion.div variants={staggerItem} className="mb-6 space-y-4">
+          <motion.div variants={staggerItem} className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
             <div className="flex flex-col md:flex-row gap-3 md:gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-[rgb(var(--muted))]" />
@@ -137,7 +137,7 @@ export default function BrandCampaignsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search campaigns..."
-                  className="pl-10 md:pl-12 h-12 md:h-14"
+                  className="pl-10 h-9 sm:h-10 text-sm"
                 />
               </div>
             </div>
@@ -152,10 +152,10 @@ export default function BrandCampaignsPage() {
                 <button
                   key={tab.value}
                   onClick={() => setFilter(tab.value)}
-                  className={`px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base font-medium whitespace-nowrap transition-all ${
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                     filter === tab.value
-                      ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
-                      : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                      ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white'
+                      : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))] border border-[rgb(var(--border))]'
                   }`}
                 >
                   {tab.label}
@@ -187,7 +187,7 @@ export default function BrandCampaignsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4 md:space-y-6">
+            <div className="space-y-3 sm:space-y-4">
               {filteredCampaigns.map((listing) => {
                 const StatusIcon = getStatusIcon(listing.status)
                 return (
@@ -196,13 +196,13 @@ export default function BrandCampaignsPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all">
-                      <CardContent className="p-4 md:p-6">
+                    <Card className="border border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/40 transition-all">
+                      <CardContent className="p-3 sm:p-4 lg:p-6">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-3 mb-3">
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-lg md:text-xl font-bold mb-2 line-clamp-1">
+                                <h3 className="text-sm sm:text-base lg:text-lg font-bold mb-1 sm:mb-2 line-clamp-1">
                                   {listing.title}
                                 </h3>
                                 <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-3">

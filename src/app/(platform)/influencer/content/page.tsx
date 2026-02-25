@@ -106,13 +106,15 @@ export default function ContentLibraryPage() {
 
   if (!user?.influencerId) {
     return (
-      <div className="container py-8">
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <AlertCircle className="h-12 w-12 text-[rgb(var(--muted))] mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Influencer Profile Required</h2>
-          <p className="text-[rgb(var(--muted))] max-w-md">
-            Complete your onboarding to access the content library.
-          </p>
+      <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
+        <div className="container py-4 sm:py-6 lg:py-8">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center">
+            <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-[rgb(var(--muted))] mb-3 sm:mb-4" />
+            <h2 className="text-lg sm:text-xl font-semibold mb-2">Influencer Profile Required</h2>
+            <p className="text-xs sm:text-sm text-[rgb(var(--muted))] max-w-md">
+              Complete your onboarding to access the content library.
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -120,13 +122,20 @@ export default function ContentLibraryPage() {
 
   if (isLoading) {
     return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
-          <div className="grid md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-[rgb(var(--surface))] rounded" />
-            ))}
+      <div className="min-h-screen bg-gradient-to-b from-[rgb(var(--background))] to-[rgb(var(--surface))]">
+        <div className="container py-4 sm:py-6 lg:py-8">
+          <div className="animate-pulse space-y-4 sm:space-y-6">
+            <div className="h-7 sm:h-8 bg-[rgb(var(--surface))] rounded w-1/3" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-24 sm:h-32 bg-[rgb(var(--surface))] rounded-xl" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-48 sm:h-56 bg-[rgb(var(--surface))] rounded-xl" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -145,15 +154,15 @@ export default function ContentLibraryPage() {
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6 lg:mb-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-1 sm:mb-2 gradient-text">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 gradient-text">
                   Content Library
                 </h1>
-                <p className="text-sm sm:text-base lg:text-lg text-[rgb(var(--muted))]">
+                <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">
                   Manage your portfolio and showcase your best work
                 </p>
               </div>
-              <Button variant="gradient" size="lg" className="w-full sm:w-auto">
-                <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <Button variant="gradient" size="sm" className="w-full sm:w-auto min-h-[36px] sm:min-h-[40px] text-xs sm:text-sm">
+                <Upload className="h-4 w-4 mr-2" />
                 Upload Content
               </Button>
             </div>
@@ -165,65 +174,65 @@ export default function ContentLibraryPage() {
               variants={staggerItem}
               className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8"
             >
-              <Card className="border-2">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                    <div className="p-1.5 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
-                      <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
+              <Card className="border border-[rgb(var(--border))]">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-[rgb(var(--brand-primary))]/10">
+                      <ImageIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[rgb(var(--brand-primary))]" />
                     </div>
                   </div>
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-0.5 sm:mb-1">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[rgb(var(--foreground))] mb-0.5">
                     {stats.total_content}
                   </div>
-                  <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
+                  <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                     Total Content
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-2">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                    <div className="p-1.5 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
-                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
+              <Card className="border border-[rgb(var(--border))]">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-[rgb(var(--brand-primary))]/10">
+                      <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[rgb(var(--brand-primary))]" />
                     </div>
                   </div>
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-0.5 sm:mb-1">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[rgb(var(--foreground))] mb-0.5">
                     {formatCompactNumber(stats.total_views)}
                   </div>
-                  <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
+                  <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                     Total Views
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-2">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                    <div className="p-1.5 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
-                      <Heart className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
+              <Card className="border border-[rgb(var(--border))]">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-[rgb(var(--brand-primary))]/10">
+                      <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[rgb(var(--brand-primary))]" />
                     </div>
                   </div>
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-0.5 sm:mb-1">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[rgb(var(--foreground))] mb-0.5">
                     {formatCompactNumber(stats.total_likes)}
                   </div>
-                  <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
+                  <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                     Total Likes
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-2">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                    <div className="p-1.5 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-500">
-                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
+              <Card className="border border-[rgb(var(--border))]">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-[rgb(var(--brand-primary))]/10">
+                      <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[rgb(var(--brand-primary))]" />
                     </div>
                   </div>
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-0.5 sm:mb-1">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[rgb(var(--foreground))] mb-0.5">
                     {stats.avg_engagement.toFixed(1)}%
                   </div>
-                  <div className="text-[10px] sm:text-xs lg:text-sm text-[rgb(var(--muted))]">
+                  <div className="text-[10px] sm:text-xs text-[rgb(var(--muted))]">
                     Avg Engagement
                   </div>
                 </CardContent>
@@ -240,7 +249,7 @@ export default function ContentLibraryPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search content..."
-                  className="pl-9 sm:pl-10 lg:pl-12 h-10 sm:h-12 lg:h-14 text-sm sm:text-base"
+                  className="pl-9 sm:pl-10 h-9 sm:h-10 text-sm"
                 />
               </div>
 
@@ -271,8 +280,8 @@ export default function ContentLibraryPage() {
                   onClick={() => setFilterPlatform(platform)}
                   className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                     filterPlatform === platform
-                      ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
-                      : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                      ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white'
+                      : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))] border border-[rgb(var(--border))]'
                   }`}
                 >
                   {platform === 'all' ? 'All Platforms' : formatPlatformName(platform)}
@@ -321,7 +330,7 @@ export default function ContentLibraryPage() {
                     animate={{ opacity: 1, y: 0 }}
                     whileHover={{ y: -4 }}
                   >
-                    <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all overflow-hidden">
+                    <Card className="border border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/40 transition-all overflow-hidden">
                       {/* Thumbnail */}
                       <div className="relative aspect-square overflow-hidden bg-[rgb(var(--surface))]">
                         {item.thumbnail ? (
@@ -419,11 +428,11 @@ export default function ContentLibraryPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <Card className="border-2 hover:border-[rgb(var(--brand-primary))]/40 transition-all">
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
+                    <Card className="border border-[rgb(var(--border))] hover:border-[rgb(var(--brand-primary))]/40 transition-all">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex gap-3 sm:gap-4">
                           {/* Thumbnail */}
-                          <div className="relative w-32 h-32 shrink-0 rounded-lg overflow-hidden bg-[rgb(var(--surface))]">
+                          <div className="relative w-24 h-24 sm:w-32 sm:h-32 shrink-0 rounded-lg overflow-hidden bg-[rgb(var(--surface))]">
                             {item.thumbnail ? (
                               <img
                                 src={item.thumbnail}

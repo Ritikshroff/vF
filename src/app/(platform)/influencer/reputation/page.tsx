@@ -136,7 +136,7 @@ export default function ReputationPage() {
         <motion.div initial="initial" animate="animate" variants={staggerContainer}>
           {/* Header */}
           <motion.div variants={staggerItem} className="mb-4 sm:mb-6">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text">Reputation & Reviews</h1>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text">Reputation & Reviews</h1>
             <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">Build trust and showcase your track record</p>
           </motion.div>
 
@@ -195,8 +195,8 @@ export default function ReputationPage() {
                 onClick={() => setActiveTab(tab.value)}
                 className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                   activeTab === tab.value
-                    ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white shadow-lg'
-                    : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]'
+                    ? 'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white'
+                    : 'bg-[rgb(var(--surface))] text-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))] border border-[rgb(var(--border))]'
                 }`}
               >
                 {tab.label}
