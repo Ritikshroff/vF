@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api-client";
 import { INFLUENCER_CATEGORIES, SOCIAL_PLATFORMS } from "@/lib/constants";
 import { formatCompactNumber, formatCurrency } from "@/lib/utils";
+import { EmptyState } from "@/components/shared/empty-state";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/animations";
 
 type DiscoveryInfluencer = {
@@ -486,19 +487,13 @@ export default function InfluencerDiscoveryPage() {
             ))}
           </div>
         ) : influencers.length === 0 ? (
-          <Card className="text-center py-16">
-            <CardContent>
-              <Users className="h-16 w-16 mx-auto mb-4 text-[rgb(var(--muted))]" />
-              <h3 className="text-xl font-semibold mb-2">
-                No influencers found
-              </h3>
-              <p className="text-[rgb(var(--muted))] mb-6">
-                Try adjusting your filters or search criteria
-              </p>
-              <Button variant="outline" onClick={clearAllFilters}>
-                Clear Filters
-              </Button>
-            </CardContent>
+          <Card>
+            <EmptyState
+              icon={Users}
+              title="No influencers found"
+              description="Try adjusting your filters or search criteria"
+              action={{ label: 'Clear Filters', onClick: clearAllFilters }}
+            />
           </Card>
         ) : (
           <motion.div

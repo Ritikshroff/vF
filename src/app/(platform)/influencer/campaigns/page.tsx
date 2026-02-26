@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth-context";
 import { useListings, useMyApplications } from "@/hooks/queries/use-marketplace";
 import { useCollaborations } from "@/hooks/queries/use-collaborations";
+import { EmptyState } from "@/components/shared/empty-state";
 import { formatCurrency, formatCompactNumber } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
@@ -645,20 +646,12 @@ export default function InfluencerCampaignsPage() {
               ))}
             </div>
           ) : filteredItems.length === 0 ? (
-            <Card className="text-center py-8 sm:py-12 lg:py-16">
-              <CardContent>
-                <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
-                  <Search className="h-8 w-8 sm:h-10 sm:w-10 text-[rgb(var(--muted))]" />
-                </div>
-                <h3 className="text-sm sm:text-base lg:text-lg font-semibold mb-2">
-                  No campaigns found
-                </h3>
-                <p className="text-xs sm:text-sm text-[rgb(var(--muted))]">
-                  {searchQuery
-                    ? "Try adjusting your search"
-                    : `No ${filter} campaigns at the moment`}
-                </p>
-              </CardContent>
+            <Card>
+              <EmptyState
+                icon={Search}
+                title="No campaigns found"
+                description={searchQuery ? "Try adjusting your search" : `No ${filter} campaigns at the moment`}
+              />
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">

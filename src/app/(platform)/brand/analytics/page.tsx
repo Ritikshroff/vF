@@ -19,6 +19,7 @@ import { useBrandCampaigns } from '@/hooks/queries/use-campaigns'
 import { useCollaborations } from '@/hooks/queries/use-collaborations'
 import { formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
+import { EmptyState } from '@/components/shared/empty-state'
 import {
   AreaChart,
   Area,
@@ -35,8 +36,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
-// Theme-aligned gold palette for charts
-const CHART_COLORS = ['#D4AF37', '#B8860B', '#CD7F32', '#FFD700', '#92600B', '#E6C066']
+// Theme-aligned blue/purple palette for charts
+const CHART_COLORS = ['#2563EB', '#7C3AED', '#6366F1', '#3B82F6', '#8B5CF6', '#60A5FA']
 
 // Custom tooltip that respects theme
 function ChartTooltip({ active, payload, label }: any) {
@@ -267,8 +268,8 @@ export default function BrandAnalyticsPage() {
                       <AreaChart data={spendingTrend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.25} />
-                            <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#2563EB" stopOpacity={0.25} />
+                            <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid
@@ -294,13 +295,13 @@ export default function BrandAnalyticsPage() {
                         <Area
                           type="monotone"
                           dataKey="spend"
-                          stroke="#D4AF37"
+                          stroke="#2563EB"
                           strokeWidth={2}
                           fillOpacity={1}
                           fill="url(#colorSpend)"
                           name="Spend ($)"
                           dot={false}
-                          activeDot={{ r: 4, fill: '#D4AF37', stroke: '#fff', strokeWidth: 2 }}
+                          activeDot={{ r: 4, fill: '#2563EB', stroke: '#fff', strokeWidth: 2 }}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -355,14 +356,14 @@ export default function BrandAnalyticsPage() {
                           />
                           <Bar
                             dataKey="applications"
-                            fill="#D4AF37"
+                            fill="#2563EB"
                             radius={[4, 4, 0, 0]}
                             name="Applications"
                             maxBarSize={32}
                           />
                           <Bar
                             dataKey="budget"
-                            fill="#B8860B"
+                            fill="#7C3AED"
                             radius={[4, 4, 0, 0]}
                             name="Budget ($)"
                             maxBarSize={32}
@@ -439,9 +440,7 @@ export default function BrandAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-3 sm:p-4 lg:p-5">
                 {collaborations.length === 0 ? (
-                  <p className="text-center py-8 text-sm text-[rgb(var(--muted))]">
-                    No collaborations yet. Create a campaign to get started!
-                  </p>
+                  <EmptyState icon={Users} title="No collaborations yet" description="Create a campaign to get started!" className="py-6" />
                 ) : (
                   <div className="space-y-2 sm:space-y-3">
                     {/* Status Summary */}

@@ -28,6 +28,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/auth-context'
 import { useInfluencerProfile } from '@/hooks/queries/use-discovery'
 import { staggerContainer, staggerItem } from '@/lib/animations'
+import { toast } from 'sonner'
 
 /** Map UPPERCASE platform enum to a display name */
 function platformDisplayName(platform: string): string {
@@ -118,9 +119,9 @@ export default function InfluencerProfilePage() {
     try {
       // No update API available yet -- show a placeholder toast
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      alert('Profile updated successfully!')
+      toast.success('Profile updated successfully!')
     } catch {
-      alert('Failed to update profile')
+      toast.error('Failed to update profile')
     } finally {
       setSaving(false)
     }

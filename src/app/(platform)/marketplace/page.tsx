@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
+import { EmptyState } from '@/components/shared/empty-state'
 import { formatCurrency, formatCompactNumber, formatRelativeTime } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useListings } from '@/hooks/queries/use-marketplace'
@@ -208,14 +209,12 @@ export default function MarketplacePage() {
             </h2>
 
             {filteredListings.length === 0 ? (
-              <Card className="text-center py-12 sm:py-16">
-                <CardContent>
-                  <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
-                    <Search className="h-8 w-8 sm:h-10 sm:w-10 text-[rgb(var(--muted))]" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2">No campaigns found</h3>
-                  <p className="text-sm sm:text-base text-[rgb(var(--muted))]">Try adjusting your search or filters</p>
-                </CardContent>
+              <Card>
+                <EmptyState
+                  icon={Search}
+                  title="No campaigns found"
+                  description="Try adjusting your search or filters"
+                />
               </Card>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

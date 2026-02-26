@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { formatCurrency, formatCompactNumber, getInitials } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import { EmptyState } from "@/components/shared/empty-state";
 import { useListingDetail, useListingApplications } from "@/hooks/queries/use-marketplace";
 import { useCollaborations } from "@/hooks/queries/use-collaborations";
 import { useReviewApplication } from "@/hooks/mutations/use-marketplace-mutations";
@@ -447,14 +448,12 @@ export default function BrandCampaignDetailPage() {
             {activeTab === "applicants" && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {pendingApplications.length === 0 ? (
-                  <Card className="text-center py-8 sm:py-16">
-                    <CardContent>
-                      <Users className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />
-                      <h3 className="text-base sm:text-xl font-semibold mb-2">No applicants yet</h3>
-                      <p className="text-xs sm:text-sm text-muted">
-                        Check back later for influencer applications
-                      </p>
-                    </CardContent>
+                  <Card>
+                    <EmptyState
+                      icon={Users}
+                      title="No applicants yet"
+                      description="Check back later for influencer applications"
+                    />
                   </Card>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -609,16 +608,12 @@ export default function BrandCampaignDetailPage() {
             {activeTab === "accepted" && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {acceptedCollaborations.length === 0 ? (
-                  <Card className="text-center py-8 sm:py-16">
-                    <CardContent>
-                      <CheckCircle2 className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />
-                      <h3 className="text-base sm:text-xl font-semibold mb-2">
-                        No accepted influencers
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted">
-                        Review and accept applicants to get started
-                      </p>
-                    </CardContent>
+                  <Card>
+                    <EmptyState
+                      icon={CheckCircle2}
+                      title="No accepted influencers"
+                      description="Review and accept applicants to get started"
+                    />
                   </Card>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -702,16 +697,12 @@ export default function BrandCampaignDetailPage() {
             {activeTab === "rejected" && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {rejectedApplications.length === 0 ? (
-                  <Card className="text-center py-8 sm:py-16">
-                    <CardContent>
-                      <XCircle className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />
-                      <h3 className="text-base sm:text-xl font-semibold mb-2">
-                        No rejected applications
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted">
-                        Rejected applications will appear here
-                      </p>
-                    </CardContent>
+                  <Card>
+                    <EmptyState
+                      icon={XCircle}
+                      title="No rejected applications"
+                      description="Rejected applications will appear here"
+                    />
                   </Card>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -757,16 +748,12 @@ export default function BrandCampaignDetailPage() {
             {/* Performance Tab */}
             {activeTab === "performance" && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <Card className="text-center py-8 sm:py-16">
-                  <CardContent>
-                    <TrendingUp className="h-12 w-12 sm:h-16 sm:w-16 text-muted mx-auto mb-4" />
-                    <h3 className="text-base sm:text-xl font-semibold mb-2">
-                      No performance data yet
-                    </h3>
-                    <p className="text-xs sm:text-sm text-muted">
-                      Performance metrics will appear once influencers start delivering content
-                    </p>
-                  </CardContent>
+                <Card>
+                  <EmptyState
+                    icon={TrendingUp}
+                    title="No performance data yet"
+                    description="Performance metrics will appear once influencers start delivering content"
+                  />
                 </Card>
               </motion.div>
             )}

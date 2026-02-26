@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { useBrandCampaigns } from '@/hooks/queries/use-campaigns'
 import { formatCurrency } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
+import { EmptyState } from '@/components/shared/empty-state'
 
 export default function BrandCampaignsPage() {
   const { data: campaignsData, isLoading } = useBrandCampaigns()
@@ -170,21 +171,14 @@ export default function BrandCampaignsPage() {
               <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--brand-primary))]" />
             </div>
           ) : filteredCampaigns.length === 0 ? (
-            <Card className="text-center py-12 md:py-16">
-              <CardContent>
-                <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
-                  <Search className="h-8 w-8 md:h-10 md:w-10 text-[rgb(var(--muted))]" />
-                </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2">No campaigns found</h3>
-                <p className="text-sm md:text-base text-[rgb(var(--muted))] mb-6">
-                  {searchQuery
-                    ? 'Try adjusting your search'
-                    : 'Create your first campaign to get started'}
-                </p>
-                <Link href="/brand/campaigns/new">
-                  <Button variant="gradient">Create Campaign</Button>
-                </Link>
-              </CardContent>
+            <Card>
+              <EmptyState
+                icon={Search}
+                title="No campaigns found"
+                description={searchQuery ? 'Try adjusting your search' : 'Create your first campaign to get started'}
+                linkHref="/brand/campaigns/new"
+                linkLabel="Create Campaign"
+              />
             </Card>
           ) : (
             <div className="space-y-3 sm:space-y-4">

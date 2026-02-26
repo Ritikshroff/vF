@@ -69,7 +69,7 @@ const Dialog: React.FC<DialogProps> = ({
               onClick={(e) => e.stopPropagation()}
               className={cn(
                 'relative w-full rounded-2xl bg-[rgb(var(--surface-elevated))] p-6 border border-[rgb(var(--border))]',
-                'shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7),0_0_32px_-8px_rgb(212_175_55/0.1)]',
+                'shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7),0_0_32px_-8px_rgb(37_99_235/0.1)]',
                 dialogSizes[size],
                 className
               )}

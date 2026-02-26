@@ -30,6 +30,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { formatRelativeTime, getInitials } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useCRMContacts, useCRMDashboard } from "@/hooks/queries/use-crm";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default function CRMDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -271,9 +272,15 @@ export default function CRMDashboardPage() {
 
               {/* Contacts List */}
               {filteredContacts.length === 0 ? (
-                <div className="text-center py-12 text-muted">
-                  No contacts found.
-                </div>
+                <Card>
+                  <EmptyState
+                    icon={Users}
+                    title="No contacts found"
+                    description="Add influencers from the discover page to build your CRM"
+                    linkHref="/brand/discover"
+                    linkLabel="Discover Influencers"
+                  />
+                </Card>
               ) : viewMode === "list" ? (
                 <motion.div
                   variants={staggerItem}

@@ -32,7 +32,10 @@
       "Bash(host:*)",
       "Bash(psql:*)",
       "Bash(postgres:*)",
-      "Bash(brew list:*)"
+      "Bash(brew list:*)",
+      "Bash(cat \"/Users/Apple/Desktop/All Assingments and Learning/Viralfluencer-2026/src/app/\\(platform\\)/layout.tsx\")",
+      "Bash(cat src/app/\\\\\\(platform\\\\\\)/loading.tsx)",
+      "Bash(cat src/app/\\\\\\(platform\\\\\\)/brand/campaigns/page.tsx)"
     ]
   }
 }

@@ -115,7 +115,7 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
         {verified && (
           <span
             className={cn(
-              'absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-[rgb(var(--brand-primary))] text-[rgb(10,10,12)]',
+              'absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-[rgb(var(--brand-primary))] text-white',
               verifiedSizes[size || 'md']
             )}
           >

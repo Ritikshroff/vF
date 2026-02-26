@@ -31,6 +31,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useInfluencerProfile } from '@/hooks/queries/use-discovery'
 import { formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
+import { EmptyState } from '@/components/shared/empty-state'
 
 function getPlatformIcon(platform: string) {
   switch (platform) {
@@ -292,22 +293,12 @@ export default function ContentLibraryPage() {
 
           {/* Content Grid/List */}
           {filteredContent.length === 0 ? (
-            <Card className="text-center py-8 sm:py-12 lg:py-16">
-              <CardContent>
-                <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-[rgb(var(--surface))] mb-3 sm:mb-4">
-                  <ImageIcon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-[rgb(var(--muted))]" />
-                </div>
-                <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-1 sm:mb-2">No content found</h3>
-                <p className="text-xs sm:text-sm lg:text-base text-[rgb(var(--muted))] mb-4 sm:mb-6">
-                  {searchQuery
-                    ? 'Try adjusting your search or filters'
-                    : 'Upload your first piece of content to get started'}
-                </p>
-                <Button variant="gradient">
-                  <Upload className="h-5 w-5 mr-2" />
-                  Upload Content
-                </Button>
-              </CardContent>
+            <Card>
+              <EmptyState
+                icon={ImageIcon}
+                title="No content found"
+                description={searchQuery ? 'Try adjusting your search or filters' : 'Upload your first piece of content to get started'}
+              />
             </Card>
           ) : (
             <motion.div

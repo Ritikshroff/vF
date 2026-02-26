@@ -26,10 +26,10 @@ const cardVariants = cva(
           'glass-gold backdrop-blur-xl',
         // Gold Bordered - Elegant gold accent
         'gold-bordered':
-          'bg-[rgb(var(--surface-elevated))] border border-[rgb(var(--brand-primary)/0.3)] shadow-[0_0_20px_-5px_rgb(212_175_55/0.1)]',
+          'bg-[rgb(var(--surface-elevated))] border border-[rgb(var(--brand-primary)/0.3)] shadow-[0_0_20px_-5px_rgb(37_99_235/0.1)]',
         // Gold Glow - Premium with subtle gold glow
         'gold-glow':
-          'bg-[rgb(var(--surface-elevated))] border border-[rgb(var(--brand-primary)/0.2)] shadow-[0_0_40px_-10px_rgb(212_175_55/0.15)]',
+          'bg-[rgb(var(--surface-elevated))] border border-[rgb(var(--brand-primary)/0.2)] shadow-[0_0_40px_-10px_rgb(37_99_235/0.15)]',
         // Gradient Border - Animated gradient border effect
         'gradient-border':
           'bg-[rgb(var(--surface-elevated))] border border-transparent bg-clip-padding [background:linear-gradient(rgb(var(--surface-elevated)),rgb(var(--surface-elevated)))_padding-box,linear-gradient(135deg,rgb(var(--brand-primary)/0.5),rgb(var(--brand-accent)/0.5),rgb(var(--brand-secondary)/0.5))_border-box]',

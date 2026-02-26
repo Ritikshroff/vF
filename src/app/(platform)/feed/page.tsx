@@ -29,6 +29,7 @@ import { formatRelativeTime, formatCompactNumber, getInitials } from '@/lib/util
 import { staggerContainer, staggerItem, fadeInUp } from '@/lib/animations'
 import { useFeed } from '@/hooks/queries/use-feed'
 import { useCreatePost, useToggleLike, useSharePost } from '@/hooks/mutations/use-feed-mutations'
+import { EmptyState } from '@/components/shared/empty-state'
 
 export default function FeedPage() {
   const { user } = useAuth()
@@ -174,13 +175,12 @@ export default function FeedPage() {
               <Loader2 className="h-8 w-8 animate-spin text-[rgb(var(--muted))]" />
             </div>
           ) : posts.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-[rgb(var(--muted))] mb-4">No posts yet. Be the first to share something!</p>
-              <Button variant="gradient" onClick={() => setShowComposer(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Post
-              </Button>
-            </div>
+            <EmptyState
+              icon={MessageCircle}
+              title="No posts yet"
+              description="Be the first to share something!"
+              action={{ label: 'Create Post', onClick: () => setShowComposer(true) }}
+            />
           ) : (
             <div className="space-y-3 sm:space-y-4">
               {posts.map((post: any, index: number) => (

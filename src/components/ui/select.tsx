@@ -10,10 +10,10 @@ const selectVariants = cva(
       variant: {
         // Default - Elegant dark
         default:
-          'border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] hover:border-[rgb(var(--border-hover))] focus-visible:border-[rgb(var(--brand-primary)/0.5)] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.2)] focus-visible:shadow-[0_0_20px_-5px_rgb(212_175_55/0.15)]',
+          'border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] hover:border-[rgb(var(--border-hover))] focus-visible:border-[rgb(var(--brand-primary)/0.5)] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.2)] focus-visible:shadow-[0_0_20px_-5px_rgb(37_99_235/0.15)]',
         // Gold - Gold accent border
         gold:
-          'border-[rgb(var(--brand-primary)/0.3)] bg-[rgb(var(--surface-elevated))] hover:border-[rgb(var(--brand-primary)/0.5)] focus-visible:border-[rgb(var(--brand-primary))] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.3)] focus-visible:shadow-[0_0_24px_-4px_rgb(212_175_55/0.25)]',
+          'border-[rgb(var(--brand-primary)/0.3)] bg-[rgb(var(--surface-elevated))] hover:border-[rgb(var(--brand-primary)/0.5)] focus-visible:border-[rgb(var(--brand-primary))] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.3)] focus-visible:shadow-[0_0_24px_-4px_rgb(37_99_235/0.25)]',
         // Ghost - Minimal border
         ghost:
           'border-transparent bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-hover))] focus-visible:bg-[rgb(var(--surface-elevated))] focus-visible:ring-2 focus-visible:ring-[rgb(var(--brand-primary)/0.2)]',

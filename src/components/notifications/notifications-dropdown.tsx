@@ -1,10 +1,29 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Bell, CheckCheck, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Bell,
+  CheckCheck,
+  X,
+  Target,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  MessageCircle,
+  DollarSign,
+  ThumbsUp,
+  Pencil,
+  AlarmClock,
+  PartyPopper,
+  Handshake,
+  Star,
+  Info,
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { dropdownVariants, staggerContainerFast, staggerItem } from "@/lib/animations";
 
 interface Notification {
   id: string;
@@ -28,12 +47,29 @@ interface NotificationsResponse {
 
 const POLL_INTERVAL = 30_000; // 30 seconds
 
+const notificationIconMap: Record<string, { icon: typeof Bell; color: string }> = {
+  campaign_invite: { icon: Target, color: "text-blue-500" },
+  campaign_application: { icon: FileText, color: "text-purple-500" },
+  campaign_accepted: { icon: CheckCircle2, color: "text-green-500" },
+  campaign_rejected: { icon: XCircle, color: "text-red-500" },
+  message: { icon: MessageCircle, color: "text-sky-500" },
+  payment: { icon: DollarSign, color: "text-emerald-500" },
+  content_approved: { icon: ThumbsUp, color: "text-green-500" },
+  content_revision: { icon: Pencil, color: "text-orange-500" },
+  deadline_reminder: { icon: AlarmClock, color: "text-amber-500" },
+  milestone: { icon: PartyPopper, color: "text-pink-500" },
+  collaboration: { icon: Handshake, color: "text-indigo-500" },
+  review: { icon: Star, color: "text-yellow-500" },
+  system: { icon: Info, color: "text-[rgb(var(--muted))]" },
+};
+
 export function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchUnreadCount = useCallback(async () => {
     try {
@@ -53,7 +89,6 @@ export function NotificationsDropdown() {
       if (!res.ok) return;
       const data: NotificationsResponse = await res.json();
       setNotifications(data.data);
-      // Derive unread count from fetched data + total
       const unread = data.data.filter((n) => !n.read).length;
       setUnreadCount(unread);
     } catch {
@@ -79,8 +114,17 @@ export function NotificationsDropdown() {
     }
   }, [isOpen, fetchNotifications]);
 
+  // Keyboard: Escape to close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   const handleMarkAsRead = async (notificationId: string) => {
-    // Optimistic update
     setNotifications((prev) =>
       prev.map((n) =>
         n.id === notificationId ? { ...n, read: true } : n
@@ -91,13 +135,11 @@ export function NotificationsDropdown() {
     try {
       await fetch(`/api/notifications/${notificationId}`, { method: "PATCH" });
     } catch {
-      // Revert on failure
       fetchNotifications();
     }
   };
 
   const handleMarkAllAsRead = async () => {
-    // Optimistic update
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
 
@@ -109,22 +151,13 @@ export function NotificationsDropdown() {
   };
 
   const getNotificationIcon = (type: string) => {
-    const iconMap: Record<string, string> = {
-      campaign_invite: "🎯",
-      campaign_application: "📝",
-      campaign_accepted: "✅",
-      campaign_rejected: "❌",
-      message: "💬",
-      payment: "💰",
-      content_approved: "👍",
-      content_revision: "✏️",
-      deadline_reminder: "⏰",
-      milestone: "🎉",
-      collaboration: "🤝",
-      review: "⭐",
-      system: "🔔",
-    };
-    return iconMap[type] || "🔔";
+    const config = notificationIconMap[type] || notificationIconMap.system;
+    const IconComponent = config.icon;
+    return (
+      <div className={`p-1.5 rounded-lg bg-[rgb(var(--surface))] ${config.color}`}>
+        <IconComponent className="h-4 w-4" />
+      </div>
+    );
   };
 
   const getTimeAgo = (dateString: string) => {
@@ -139,7 +172,7 @@ export function NotificationsDropdown() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -147,125 +180,152 @@ export function NotificationsDropdown() {
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
       >
         <Bell className="h-5 w-5" />
-        {unreadCount > 0 && (
-          <Badge
-            variant="secondary"
-            className="absolute -top-1 -right-1 h-5 min-w-[20px] p-0 flex items-center justify-center text-xs bg-red-500 text-white border-0"
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </Badge>
-        )}
+        <AnimatePresence>
+          {unreadCount > 0 && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+            >
+              <Badge
+                variant="secondary"
+                className="absolute -top-1 -right-1 h-5 min-w-[20px] p-0 flex items-center justify-center text-xs bg-red-500 text-white border-0"
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </Badge>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </button>
 
       {/* Dropdown */}
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setIsOpen(false)}
+            />
 
-          {/* Dropdown Panel */}
-          <Card className="absolute right-0 top-full mt-2 w-[90vw] md:w-96 max-h-[80vh] z-50 border-2 shadow-2xl">
-            {/* Header */}
-            <div className="p-4 border-b border-[rgb(var(--border))] flex items-center justify-between">
-              <h3 className="font-bold text-lg">Notifications</h3>
-              <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={handleMarkAllAsRead}
-                    className="text-xs text-[rgb(var(--brand-primary))] hover:underline flex items-center gap-1"
-                  >
-                    <CheckCheck className="h-3 w-3" />
-                    Mark all read
-                  </button>
-                )}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-[rgb(var(--surface))] rounded"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Notifications List */}
-            <div className="max-h-[60vh] overflow-y-auto">
-              {isLoading && notifications.length === 0 ? (
-                <div className="p-8 text-center text-[rgb(var(--muted))]">
-                  <div className="h-6 w-6 mx-auto mb-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm">Loading...</p>
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="p-8 text-center text-[rgb(var(--muted))]">
-                  <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">No notifications yet</p>
-                  <p className="text-xs mt-1 opacity-75">
-                    You&apos;ll be notified about campaigns, payments, and messages here
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  {notifications.map((notification) => {
-                    const content = (
-                      <div className="flex gap-3">
-                        <div className="text-xl shrink-0 mt-0.5">
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-0.5">
-                            <h4 className="font-semibold text-sm line-clamp-1">
-                              {notification.title}
-                            </h4>
-                            {!notification.read && (
-                              <div className="w-2 h-2 rounded-full bg-[rgb(var(--brand-primary))] shrink-0 mt-1.5" />
-                            )}
-                          </div>
-                          <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-1">
-                            {notification.message}
-                          </p>
-                          <div className="text-xs text-[rgb(var(--muted))]">
-                            {getTimeAgo(notification.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                    );
-
-                    const className = `block p-4 border-b border-[rgb(var(--border))] hover:bg-[rgb(var(--surface))] transition-colors ${
-                      !notification.read ? "bg-[rgb(var(--brand-primary))]/5" : ""
-                    }`;
-
-                    return notification.link ? (
-                      <Link
-                        key={notification.id}
-                        href={notification.link}
-                        onClick={() => {
-                          if (!notification.read) handleMarkAsRead(notification.id);
-                          setIsOpen(false);
-                        }}
-                        className={className}
-                      >
-                        {content}
-                      </Link>
-                    ) : (
+            {/* Dropdown Panel */}
+            <motion.div
+              variants={dropdownVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="absolute right-0 top-full mt-2 z-50"
+            >
+              <Card className="w-[90vw] md:w-96 max-h-[80vh] border-2 shadow-2xl">
+                {/* Header */}
+                <div className="p-4 border-b border-[rgb(var(--border))] flex items-center justify-between">
+                  <h3 className="font-bold text-lg">Notifications</h3>
+                  <div className="flex items-center gap-2">
+                    {unreadCount > 0 && (
                       <button
-                        key={notification.id}
-                        onClick={() => {
-                          if (!notification.read) handleMarkAsRead(notification.id);
-                        }}
-                        className={`${className} w-full text-left`}
+                        onClick={handleMarkAllAsRead}
+                        className="text-xs text-[rgb(var(--brand-primary))] hover:underline flex items-center gap-1"
                       >
-                        {content}
+                        <CheckCheck className="h-3 w-3" />
+                        Mark all read
                       </button>
-                    );
-                  })}
+                    )}
+                    <button
+                      onClick={() => setIsOpen(false)}
+                      className="p-1 hover:bg-[rgb(var(--surface))] rounded"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          </Card>
-        </>
-      )}
+
+                {/* Notifications List */}
+                <div className="max-h-[60vh] overflow-y-auto">
+                  {isLoading && notifications.length === 0 ? (
+                    <div className="p-8 text-center text-[rgb(var(--muted))]">
+                      <div className="h-6 w-6 mx-auto mb-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <p className="text-sm">Loading...</p>
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="p-8 text-center text-[rgb(var(--muted))]">
+                      <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">No notifications yet</p>
+                      <p className="text-xs mt-1 opacity-75">
+                        You&apos;ll be notified about campaigns, payments, and messages here
+                      </p>
+                    </div>
+                  ) : (
+                    <motion.div
+                      variants={staggerContainerFast}
+                      initial="initial"
+                      animate="animate"
+                    >
+                      {notifications.map((notification) => {
+                        const content = (
+                          <motion.div variants={staggerItem} className="flex gap-3">
+                            <div className="shrink-0 mt-0.5">
+                              {getNotificationIcon(notification.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-0.5">
+                                <h4 className="font-semibold text-sm line-clamp-1">
+                                  {notification.title}
+                                </h4>
+                                {!notification.read && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="w-2 h-2 rounded-full bg-[rgb(var(--brand-primary))] shrink-0 mt-1.5"
+                                  />
+                                )}
+                              </div>
+                              <p className="text-sm text-[rgb(var(--muted))] line-clamp-2 mb-1">
+                                {notification.message}
+                              </p>
+                              <div className="text-xs text-[rgb(var(--muted))]">
+                                {getTimeAgo(notification.createdAt)}
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+
+                        const itemClassName = `block p-4 border-b border-[rgb(var(--border))] hover:bg-[rgb(var(--surface))] transition-colors ${
+                          !notification.read ? "bg-[rgb(var(--brand-primary))]/5" : ""
+                        }`;
+
+                        return notification.link ? (
+                          <Link
+                            key={notification.id}
+                            href={notification.link}
+                            onClick={() => {
+                              if (!notification.read) handleMarkAsRead(notification.id);
+                              setIsOpen(false);
+                            }}
+                            className={itemClassName}
+                          >
+                            {content}
+                          </Link>
+                        ) : (
+                          <button
+                            key={notification.id}
+                            onClick={() => {
+                              if (!notification.read) handleMarkAsRead(notification.id);
+                            }}
+                            className={`${itemClassName} w-full text-left`}
+                          >
+                            {content}
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </div>
+              </Card>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -7,10 +7,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary Gold - Main CTA
+        // Primary - Main CTA
         primary:
-          'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white hover:shadow-[var(--shadow-gold-lg)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:ring-[rgb(var(--brand-primary))]',
-        // Secondary - Subtle Gold
+          'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white hover:shadow-[var(--shadow-brand-lg)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:ring-[rgb(var(--brand-primary))]',
+        // Secondary - Subtle Brand
         secondary:
           'bg-[rgb(var(--brand-primary)/0.15)] text-[rgb(var(--brand-primary))] border border-[rgb(var(--brand-primary)/0.3)] hover:bg-[rgb(var(--brand-primary)/0.25)] hover:border-[rgb(var(--brand-primary)/0.5)] focus-visible:ring-[rgb(var(--brand-primary))]',
         // Outline - Elegant Border
@@ -21,16 +21,16 @@ const buttonVariants = cva(
           'bg-transparent hover:bg-[rgb(var(--surface-hover))] focus-visible:ring-[rgb(var(--brand-primary))]',
         // Gradient - Premium Feel
         gradient:
-          'bg-gradient-to-r from-[rgb(var(--brand-highlight))] via-[rgb(var(--brand-primary))] to-[rgb(var(--brand-accent))] text-white hover:shadow-[var(--shadow-gold-lg)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:ring-[rgb(var(--brand-primary))]',
+          'bg-gradient-to-r from-[rgb(var(--brand-highlight))] via-[rgb(var(--brand-primary))] to-[rgb(var(--brand-accent))] text-white hover:shadow-[var(--shadow-brand-lg)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:ring-[rgb(var(--brand-primary))]',
         // Danger - Refined Red
         danger:
           'bg-[rgb(var(--error))] text-white hover:bg-[rgb(var(--error)/0.9)] hover:shadow-[0_4px_20px_-4px_rgb(235_87_87/0.4)] focus-visible:ring-[rgb(var(--error))]',
         // Success - Elegant Green
         success:
           'bg-[rgb(var(--success))] text-white hover:bg-[rgb(var(--success)/0.9)] focus-visible:ring-[rgb(var(--success))]',
-        // Glass - Frosted Luxury
+        // Glass - Frosted
         glass:
-          'glass-gold hover:shadow-[0_4px_20px_-4px_rgb(212_175_55/0.25)] hover:border-[rgb(var(--brand-primary)/0.3)] focus-visible:ring-[rgb(var(--brand-primary))]',
+          'glass-gold hover:shadow-[0_4px_20px_-4px_rgb(37_99_235/0.25)] hover:border-[rgb(var(--brand-primary)/0.3)] focus-visible:ring-[rgb(var(--brand-primary))]',
         // Link - Text Only
         link:
           'text-[rgb(var(--brand-primary))] underline-offset-4 hover:underline bg-transparent p-0 h-auto',

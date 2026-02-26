@@ -12,6 +12,7 @@ import { useWallet } from '@/hooks/queries/use-wallet'
 import { useBrandCampaigns } from '@/hooks/queries/use-campaigns'
 import { useCollaborations } from '@/hooks/queries/use-collaborations'
 import { EmailVerificationBanner } from '@/components/shared/email-verification-banner'
+import { EmptyState } from '@/components/shared/empty-state'
 
 export default function BrandDashboardPage() {
   const { data: walletData, isLoading: walletLoading } = useWallet()
@@ -124,9 +125,14 @@ export default function BrandDashboardPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-[rgb(var(--muted))]" />
               </div>
             ) : recentCampaigns.length === 0 ? (
-              <div className="text-center py-8 text-[rgb(var(--muted))]">
-                <p>No campaigns yet. Create your first campaign to get started!</p>
-              </div>
+              <EmptyState
+                icon={Megaphone}
+                title="No campaigns yet"
+                description="Create your first campaign to get started!"
+                linkHref="/brand/campaigns/new"
+                linkLabel="Create Campaign"
+                className="py-6"
+              />
             ) : (
               <div className="space-y-4">
                 {recentCampaigns.map((campaign: any) => (

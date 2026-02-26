@@ -15,7 +15,7 @@ const badgeVariants = cva(
           'bg-[rgb(var(--brand-primary)/0.15)] text-[rgb(var(--brand-primary))] border border-[rgb(var(--brand-primary)/0.3)]',
         // Gold Solid - Solid gold for emphasis
         'gold-solid':
-          'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-[rgb(10,10,12)] font-semibold shadow-[0_2px_8px_-2px_rgb(212_175_55/0.4)]',
+          'bg-gradient-to-r from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] text-white font-semibold shadow-[0_2px_8px_-2px_rgb(37_99_235/0.4)]',
         // Secondary - Copper tones
         secondary:
           'bg-[rgb(var(--brand-secondary)/0.15)] text-[rgb(var(--brand-secondary))] border border-[rgb(var(--brand-secondary)/0.3)]',

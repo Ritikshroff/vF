@@ -25,6 +25,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useWallet, useEscrows, useInvoices } from '@/hooks/queries/use-wallet'
 import { useDepositFunds } from '@/hooks/mutations/use-wallet-mutations'
+import { EmptyState } from '@/components/shared/empty-state'
 
 export default function BrandWalletPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'invoices'>('overview')
@@ -185,7 +186,7 @@ export default function BrandWalletPage() {
                 </CardHeader>
                 <CardContent>
                   {filteredTxs.length === 0 ? (
-                    <div className="text-center py-8 text-[rgb(var(--muted))]">No transactions found.</div>
+                    <EmptyState icon={DollarSign} title="No transactions found" className="py-6" />
                   ) : (
                     <div className="space-y-2">
                       {filteredTxs.map((tx: any) => (
@@ -238,7 +239,7 @@ export default function BrandWalletPage() {
               </motion.div>
 
               {escrows.length === 0 ? (
-                <div className="text-center py-12 text-[rgb(var(--muted))]">No escrow accounts yet.</div>
+                <EmptyState icon={Shield} title="No escrow accounts yet" description="Escrow accounts will appear when you fund campaigns" className="py-6" />
               ) : (
                 escrows.map((escrow: any, index: number) => (
                   <motion.div
@@ -306,7 +307,7 @@ export default function BrandWalletPage() {
                 </CardHeader>
                 <CardContent>
                   {invoices.length === 0 ? (
-                    <div className="text-center py-8 text-[rgb(var(--muted))]">No invoices yet.</div>
+                    <EmptyState icon={FileText} title="No invoices yet" className="py-6" />
                   ) : (
                     <div className="space-y-2">
                       {invoices.map((invoice: any) => (

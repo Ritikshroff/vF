@@ -36,8 +36,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
-// Theme-aligned gold palette for charts
-const CHART_COLORS = ['#D4AF37', '#B8860B', '#CD7F32', '#FFD700', '#92600B', '#E6C066']
+// Theme-aligned blue/purple palette for charts
+const CHART_COLORS = ['#2563EB', '#7C3AED', '#6366F1', '#3B82F6', '#8B5CF6', '#60A5FA']
 
 // Custom tooltip that respects theme
 function ChartTooltip({ active, payload, label }: any) {
@@ -299,8 +299,8 @@ export default function InfluencerAnalyticsPage() {
                       <AreaChart data={growthTrend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorFollowers" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.25} />
-                            <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#2563EB" stopOpacity={0.25} />
+                            <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid
@@ -326,13 +326,13 @@ export default function InfluencerAnalyticsPage() {
                         <Area
                           type="monotone"
                           dataKey="followers"
-                          stroke="#D4AF37"
+                          stroke="#2563EB"
                           strokeWidth={2}
                           fillOpacity={1}
                           fill="url(#colorFollowers)"
                           name="Followers"
                           dot={false}
-                          activeDot={{ r: 4, fill: '#D4AF37', stroke: '#fff', strokeWidth: 2 }}
+                          activeDot={{ r: 4, fill: '#2563EB', stroke: '#fff', strokeWidth: 2 }}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -498,7 +498,7 @@ export default function InfluencerAnalyticsPage() {
                           <Tooltip content={<ChartTooltip />} />
                           <Bar
                             dataKey="percentage"
-                            fill="#D4AF37"
+                            fill="#2563EB"
                             radius={[4, 4, 0, 0]}
                             name="Percentage"
                             maxBarSize={36}

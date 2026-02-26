@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { useCRMContacts } from '@/hooks/queries/use-crm'
 import { useDeleteContact } from '@/hooks/mutations/use-crm-mutations'
+import { EmptyState } from '@/components/shared/empty-state'
 import { formatCompactNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 
@@ -166,23 +167,14 @@ export default function SavedInfluencersPage() {
 
           {/* Influencers Grid */}
           {filteredContacts.length === 0 ? (
-            <Card className="text-center py-12 md:py-16">
-              <CardContent>
-                <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-[rgb(var(--surface))] mb-4">
-                  <Heart className="h-8 w-8 md:h-10 md:w-10 text-[rgb(var(--muted))]" />
-                </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2">
-                  No saved influencers
-                </h3>
-                <p className="text-sm md:text-base text-[rgb(var(--muted))] mb-6">
-                  {searchQuery
-                    ? 'Try adjusting your search'
-                    : 'Start saving influencers to build your list'}
-                </p>
-                <Link href="/brand/discover">
-                  <Button variant="gradient">Discover Influencers</Button>
-                </Link>
-              </CardContent>
+            <Card>
+              <EmptyState
+                icon={Heart}
+                title="No saved influencers"
+                description={searchQuery ? 'Try adjusting your search' : 'Start saving influencers to build your list'}
+                linkHref="/brand/discover"
+                linkLabel="Discover Influencers"
+              />
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
